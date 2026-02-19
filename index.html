@@ -290,7 +290,7 @@ table.tbl .lbl{color:var(–ink2)}
   <div class="callout callout-teal">
     <div class="callout-icon">⚡</div>
     <div>
-      <div class="callout-title">Importa tu fichero del Mahr 828 para rellenar todo automáticamente</div>
+      <div class="callout-title">Importa tu fichero</div>
       Soporta ficheros .txt o .prn exportados desde el banco. Puedes arrastrarlo abajo o rellenar los campos manualmente.
     </div>
   </div>
@@ -300,7 +300,7 @@ table.tbl .lbl{color:var(–ink2)}
        ondragover="dzOver(event)" ondragleave="dzLeave(event)" ondrop="dzDrop(event)">
     <input type="file" id="file-import" accept=".txt,.prn,.csv" style="display:none" onchange="importFile(this)">
     <div class="drop-icon">📂</div>
-    <div class="drop-title">Arrastra el fichero Mahr 828 aquí</div>
+    <div class="drop-title">Arrastra el fichero aquí</div>
     <div class="drop-sub">Formatos: .txt · .prn · .csv — o haz clic para seleccionar</div>
   </div>
 
@@ -328,7 +328,7 @@ table.tbl .lbl{color:var(–ink2)}
       <div class="card-head"><div class="card-title"><div class="card-icon icon-blue">📋</div>Datos del proyecto</div></div>
       <div class="card-body">
         <div class="cols2">
-          <div class="field"><div class="label">Código proyecto <span class="label-req">*</span></div><input type="text" id="proj_code" value="CAL-2025-001"></div>
+          <div class="field"><div class="label">Número de Informe <span class="label-req">*</span></div><input type="text" id="proj_code" value="CAL-2025-001"></div>
           <div class="field"><div class="label">Fecha de medición</div><input type="date" id="meas_date"></div>
         </div>
         <div class="field"><div class="label">Laboratorio</div><input type="text" id="lab_name" value="Laboratorio de Metrología Dimensional"></div>
@@ -358,13 +358,13 @@ table.tbl .lbl{color:var(–ink2)}
     </div>
     <div class="field">
       <div class="label">Fuerza de palpado
-        <div class="tip-w"><span class="tip-i">ⓘ</span><div class="tip-b">Mahr 828 reporta "4 unidades". Verificar unidad con el certificado del banco. Típicamente: 4 cN = 0.04 N</div></div>
+        <div class="tip-w"><span class="tip-i">ⓘ</span><div class="tip-b">Verificar unidad con el certificado del banco</div></div>
       </div>
       <div class="input-group">
         <input type="number" id="meas_force" value="4" step="0.01" min="0">
         <select id="force_unit"><option value="cN" selected>cN</option><option value="N">N</option><option value="daN">daN</option></select>
       </div>
-      <div class="hint warn">⚠ El banco reporta "4 unidades" — confirmar unidad con hoja de especificaciones Mahr 828.</div>
+      <div class="hint warn">confirmar unidad con hoja de especificaciones</div>
     </div>
     <div class="cols2">
       <div class="field">
