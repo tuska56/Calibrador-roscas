@@ -1,0 +1,1032 @@
+<!DOCTYPE html>
+
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ThreadCal Pro — Calibración ISO 17025</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root{--white:#ffffff;--bg:#f4f6fa;--bg2:#eef1f7;--surface:#ffffff;--surf2:#f8f9fc;--border:#e2e7f0;--border2:#cbd3e3;--ink:#111827;--ink2:#374151;--ink3:#6b7280;--ink4:#9ca3af;--blue:#2563eb;--blue-l:#eff4ff;--blue-m:#dbeafe;--green:#059669;--green-l:#ecfdf5;--amber:#d97706;--amber-l:#fffbeb;--red:#dc2626;--red-l:#fef2f2;--teal:#0d9488;--teal-l:#f0fdfa;--purple:#7c3aed;--r:4px;--r2:8px;--r3:12px;--shadow-s:0 1px 3px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.04);--shadow:0 4px 16px rgba(0,0,0,.07),0 1px 4px rgba(0,0,0,.04);--shadow-l:0 8px 32px rgba(0,0,0,.10),0 2px 8px rgba(0,0,0,.05)}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(--ink);font-size:14px;line-height:1.55;min-height:100vh}
+
+/* TOPBAR */
+.topbar{background:var(–white);border-bottom:1px solid var(–border);position:sticky;top:0;z-index:200;box-shadow:var(–shadow-s)}
+.topbar-inner{max-width:1100px;margin:0 auto;padding:0 24px;height:60px;display:flex;align-items:center;justify-content:space-between}
+.brand{display:flex;align-items:center;gap:12px}
+.brand-mark{width:36px;height:36px;background:linear-gradient(135deg,var(–blue) 0%,#1d4ed8 100%);border-radius:9px;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(37,99,235,.35)}
+.brand-name{font-weight:700;font-size:17px;letter-spacing:-.3px}
+.brand-name span{color:var(–blue)}
+.brand-tag{font-size:10px;color:var(–ink3);font-weight:500;letter-spacing:.04em;text-transform:uppercase;margin-top:-1px}
+.topbar-badges{display:flex;gap:8px;align-items:center}
+.chip{font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;letter-spacing:.02em}
+.chip-blue{background:var(–blue-m);color:var(–blue)}
+.chip-teal{background:var(–teal-l);color:var(–teal)}
+.chip-purple{background:#ede9fe;color:var(–purple)}
+
+/* WIZARD */
+.wizard-bar{background:var(–white);border-bottom:1px solid var(–border)}
+.wizard-inner{max-width:1100px;margin:0 auto;display:flex;align-items:stretch;padding:0 24px}
+.wstep{flex:1;display:flex;align-items:center;gap:10px;padding:12px 10px;cursor:pointer;border-bottom:2px solid transparent;transition:all .2s}
+.wstep:hover .wlabel{color:var(–ink2)}
+.wstep.active{border-bottom-color:var(–blue)}
+.wstep.done{border-bottom-color:var(–green)}
+.wstep-num{width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;background:var(–bg2);color:var(–ink3);transition:all .2s}
+.wstep.active .wstep-num{background:var(–blue);color:#fff}
+.wstep.done .wstep-num{background:var(–green);color:#fff}
+.wlabel{font-size:12px;font-weight:500;color:var(–ink3);transition:.2s}
+.wstep.active .wlabel{color:var(–blue);font-weight:600}
+.wstep.done .wlabel{color:var(–green)}
+.wdesc{font-size:10px;color:var(–ink4)}
+@media(max-width:700px){.wdesc{display:none}}
+.wstep-sep{width:1px;background:var(–border);align-self:stretch;margin:8px 0}
+
+/* LAYOUT */
+.app{max-width:1100px;margin:0 auto;padding:24px 24px 60px}
+.tab-panel{display:none;animation:fadeUp .22s ease both}
+.tab-panel.active{display:block}
+@keyframes fadeUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+
+/* CARDS */
+.card{background:var(–surface);border:1px solid var(–border);border-radius:var(–r3);box-shadow:var(–shadow-s);overflow:hidden}
+.gap{height:16px}
+.card-head{padding:14px 20px;border-bottom:1px solid var(–border);display:flex;align-items:center;justify-content:space-between}
+.card-title{font-weight:600;font-size:14px;display:flex;align-items:center;gap:8px}
+.card-icon{width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
+.icon-blue{background:var(–blue-m)}
+.icon-teal{background:var(–teal-l)}
+.icon-amber{background:var(–amber-l)}
+.icon-green{background:var(–green-l)}
+.icon-purple{background:#ede9fe}
+.card-body{padding:20px}
+
+/* GRID */
+.cols2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.cols3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
+.cols4{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:12px}
+@media(max-width:680px){.cols2,.cols3,.cols4{grid-template-columns:1fr}}
+
+/* FORM */
+.field{margin-bottom:14px}
+.field:last-child{margin-bottom:0}
+.label{display:flex;align-items:center;gap:5px;font-size:12px;font-weight:600;color:var(–ink2);margin-bottom:5px}
+.label-unit{font-size:11px;font-weight:400;color:var(–ink3)}
+.label-req{color:var(–red);font-size:12px}
+.hint{font-size:11px;color:var(–ink3);margin-top:4px}
+.hint.warn{color:var(–amber)}
+.hint.ok{color:var(–green)}
+input[type=text],input[type=number],input[type=date],select,textarea{width:100%;padding:9px 12px;font-family:inherit;font-size:13px;color:var(–ink);background:var(–surf2);border:1.5px solid var(–border);border-radius:var(–r2);outline:none;transition:.15s;-moz-appearance:textfield}
+input::-webkit-outer-spin-button,input::-webkit-inner-spin-button{-webkit-appearance:none}
+input:focus,select:focus,textarea:focus{border-color:var(–blue);background:#fff;box-shadow:0 0 0 3px rgba(37,99,235,.1)}
+input[readonly]{background:var(–bg2);color:var(–ink3);cursor:default}
+select{cursor:pointer}
+.input-group{display:flex;gap:8px}
+.input-group input{flex:1}
+.input-group select{width:120px;flex-shrink:0}
+
+/* BUTTONS */
+.btn{display:inline-flex;align-items:center;gap:7px;font-family:inherit;font-size:13px;font-weight:600;padding:9px 18px;border-radius:var(–r2);border:none;cursor:pointer;transition:all .15s;white-space:nowrap}
+.btn-primary{background:var(–blue);color:#fff;box-shadow:0 1px 4px rgba(37,99,235,.3)}
+.btn-primary:hover{background:#1d4ed8;transform:translateY(-1px);box-shadow:0 2px 8px rgba(37,99,235,.4)}
+.btn-ghost{background:transparent;color:var(–ink2);border:1.5px solid var(–border2)}
+.btn-ghost:hover{background:var(–bg2);border-color:var(–blue);color:var(–blue)}
+.btn-green{background:var(–green);color:#fff}
+.btn-green:hover{background:#047857;transform:translateY(-1px)}
+.btn-danger{background:var(–red-l);color:var(–red);border:1.5px solid #fca5a5}
+.btn-danger:hover{background:#fee2e2}
+.btn-lg{padding:11px 24px;font-size:14px;border-radius:var(–r3)}
+.btn-sm{padding:6px 12px;font-size:12px;border-radius:var(–r)}
+.btn:disabled{opacity:.4;cursor:not-allowed;transform:none!important}
+.action-row{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-top:24px}
+
+/* CALLOUTS */
+.callout{display:flex;gap:12px;padding:13px 16px;border-radius:var(–r2);font-size:13px;line-height:1.5;border:1px solid;margin-bottom:14px}
+.callout-icon{font-size:16px;flex-shrink:0;line-height:1.3}
+.callout-title{font-weight:700;margin-bottom:2px;font-size:13px}
+.callout-blue{background:var(–blue-l);border-color:#bfdbfe;color:#1e40af}
+.callout-amber{background:var(–amber-l);border-color:#fde68a;color:#92400e}
+.callout-green{background:var(–green-l);border-color:#a7f3d0;color:#065f46}
+.callout-teal{background:var(–teal-l);border-color:#99f6e4;color:#134e4a}
+
+/* STATS */
+.stats-row{display:grid;gap:12px;margin-bottom:16px}
+.s4{grid-template-columns:repeat(4,1fr)}
+.s3{grid-template-columns:repeat(3,1fr)}
+@media(max-width:800px){.s4{grid-template-columns:1fr 1fr}}
+.stat-card{background:var(–surface);border:1.5px solid var(–border);border-radius:var(–r2);padding:14px 16px}
+.stat-card.hl{border-color:var(–blue);background:var(–blue-l)}
+.stat-card.good{border-color:var(–green);background:var(–green-l)}
+.stat-card.warn-c{border-color:var(–amber);background:var(–amber-l)}
+.stat-lbl{font-size:10px;font-weight:700;color:var(–ink3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px}
+.stat-val{font-size:22px;font-weight:700;color:var(–ink);font-family:‘DM Mono’,monospace;line-height:1.1}
+.stat-val .unit{font-size:12px;color:var(–ink3);font-weight:400;margin-left:3px}
+.stat-sub{font-size:11px;color:var(–ink3);margin-top:3px}
+
+/* TABLE */
+.tbl-wrap{overflow-x:auto}
+table.tbl{width:100%;border-collapse:collapse;font-size:13px}
+table.tbl th{background:var(–surf2);font-size:11px;font-weight:700;color:var(–ink3);letter-spacing:.05em;text-transform:uppercase;padding:10px 14px;border-bottom:2px solid var(–border);text-align:left}
+table.tbl td{padding:9px 14px;border-bottom:1px solid var(–border)}
+table.tbl tbody tr:last-child td{border-bottom:none}
+table.tbl tbody tr:hover{background:var(–surf2)}
+table.tbl .num{text-align:right;font-family:‘DM Mono’,monospace;font-size:12px}
+table.tbl .lbl{color:var(–ink2)}
+.tbl-foot td{background:var(–surf2);font-weight:700;border-top:2px solid var(–border2)!important}
+.tbl-final td{background:var(–blue-l);border-top:2px solid var(–blue)!important;color:var(–blue);font-weight:700}
+
+/* PILLS */
+.pill-group{display:flex;flex-wrap:wrap;gap:8px}
+.pill{padding:8px 16px;border-radius:10px;font-size:12px;font-weight:600;border:1.5px solid var(–border2);background:var(–surface);color:var(–ink2);cursor:pointer;transition:.15s;line-height:1.4}
+.pill:hover{border-color:var(–blue);color:var(–blue);background:var(–blue-l)}
+.pill.selected{border-color:var(–blue);color:var(–blue);background:var(–blue-l)}
+
+/* DROP ZONE */
+.drop-zone{border:2px dashed var(–border2);border-radius:var(–r3);padding:28px 24px;text-align:center;cursor:pointer;transition:.2s;background:var(–surf2);margin-bottom:14px}
+.drop-zone:hover,.drop-zone.over{border-color:var(–blue);background:var(–blue-l)}
+.drop-icon{font-size:32px;margin-bottom:8px}
+.drop-title{font-weight:600;font-size:15px;margin-bottom:3px}
+.drop-sub{font-size:12px;color:var(–ink3)}
+
+/* READINGS */
+.reading-row{display:grid;grid-template-columns:28px 1fr 1fr 1fr 26px;gap:7px;align-items:center;margin-bottom:6px}
+.ri-num{font-size:11px;font-weight:700;color:var(–ink4);text-align:right}
+.ri-val{font-family:‘DM Mono’,monospace;font-size:12px;color:var(–teal);font-weight:500;padding:8px 10px;background:var(–teal-l);border-radius:var(–r);border:1px solid #ccfbf1;text-align:right}
+.ri-val.empty{color:var(–ink4);background:var(–surf2);border-color:var(–border)}
+.ri-input{font-family:‘DM Mono’,monospace;font-size:13px;padding:8px 10px;background:#fff;border:1.5px solid var(–border);border-radius:var(–r2);outline:none;width:100%;transition:.15s}
+.ri-input:focus{border-color:var(–blue);box-shadow:0 0 0 3px rgba(37,99,235,.1)}
+.del-btn{width:24px;height:24px;border-radius:50%;border:none;background:none;color:var(–ink4);cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;transition:.15s;line-height:1;padding:0}
+.del-btn:hover{background:var(–red-l);color:var(–red)}
+.add-row-btn{display:flex;align-items:center;gap:6px;padding:8px;border:1.5px dashed var(–border2);border-radius:var(–r2);background:none;cursor:pointer;font-size:12px;font-weight:600;color:var(–ink3);width:100%;justify-content:center;transition:.15s;font-family:inherit;margin-top:4px}
+.add-row-btn:hover{border-color:var(–blue);color:var(–blue);background:var(–blue-l)}
+.plane-stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;padding:11px;background:var(–surf2);border-radius:var(–r2);margin-top:8px;border:1px solid var(–border)}
+.pstat-lbl{font-size:10px;font-weight:700;color:var(–ink3);text-transform:uppercase;letter-spacing:.05em}
+.pstat-val{font-family:‘DM Mono’,monospace;font-size:14px;font-weight:600;color:var(–ink)}
+
+/* RESULT */
+.result-hero{text-align:center;padding:28px 24px;background:linear-gradient(135deg,var(–blue-l) 0%,#f0f9ff 100%);border-radius:var(–r3);border:1.5px solid #bfdbfe;margin-bottom:16px}
+.result-formula{font-size:11px;color:var(–ink3);font-family:‘DM Mono’,monospace;margin-bottom:10px}
+.result-val{font-family:‘DM Mono’,monospace;font-weight:700;font-size:36px;color:var(–blue);line-height:1}
+.result-pm{color:var(–amber);font-size:28px;margin:0 8px}
+.result-u{color:var(–amber)}
+.result-unit{font-size:16px;color:var(–ink3);font-weight:400;margin-left:6px}
+.result-sub{font-size:12px;color:var(–ink3);margin-top:8px}
+.conform-ok{background:var(–green-l);border:1.5px solid #6ee7b7;color:#065f46;border-radius:var(–r2);padding:12px 16px;display:flex;gap:10px;align-items:flex-start;margin-top:14px}
+.conform-warn{background:var(–amber-l);border:1.5px solid #fde68a;color:#78350f;border-radius:var(–r2);padding:12px 16px;display:flex;gap:10px;align-items:flex-start;margin-top:14px}
+.conform-fail{background:var(–red-l);border:1.5px solid #fca5a5;color:#991b1b;border-radius:var(–r2);padding:12px 16px;display:flex;gap:10px;align-items:flex-start;margin-top:14px}
+.conform-icon{font-size:20px}
+.conform-title{font-weight:700;font-size:14px}
+.conform-body{font-size:12px;margin-top:2px}
+
+/* PBAR */
+.pbar{height:3px;background:#e5e7eb;border-radius:2px;margin-top:3px}
+.pbar-fill{height:100%;border-radius:2px;background:var(–blue)}
+.pbar-fill.b{background:var(–teal)}
+
+/* IMPORT */
+.import-code{background:var(–ink);color:#a5f3fc;font-family:‘DM Mono’,monospace;font-size:11px;padding:14px;border-radius:var(–r2);overflow:auto;white-space:pre;line-height:1.6;max-height:220px}
+.import-field-row{display:flex;align-items:center;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(–border);font-size:13px}
+.import-field-row:last-child{border-bottom:none}
+.import-field-key{color:var(–ink2);font-weight:500}
+.import-field-val{font-family:‘DM Mono’,monospace;font-size:12px;color:var(–teal);font-weight:600}
+
+/* TOOLTIP */
+.tip-w{position:relative;display:inline-block}
+.tip-i{cursor:help;color:var(–ink3);font-size:13px}
+.tip-b{display:none;position:absolute;bottom:calc(100% + 5px);left:50%;transform:translateX(-50%);background:#1e293b;color:#fff;font-size:11px;padding:5px 9px;border-radius:5px;white-space:nowrap;z-index:999;pointer-events:none;box-shadow:0 4px 12px rgba(0,0,0,.2)}
+.tip-w:hover .tip-b{display:block}
+
+/* CERT */
+.cert-shell{background:#fff;color:#111;border:1px solid #dde3ef;border-radius:var(–r3);box-shadow:var(–shadow-l);overflow:hidden;font-family:‘DM Sans’,sans-serif}
+.cert-top-stripe{height:5px;background:linear-gradient(90deg,#2563eb,#0d9488)}
+.cert-inner{padding:32px 40px}
+.cert-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:24px;padding-bottom:18px;border-bottom:2px solid #111}
+.cert-lab-name{font-weight:800;font-size:17px}
+.cert-lab-sub{font-size:10px;color:#666;letter-spacing:.06em;text-transform:uppercase;margin-top:2px}
+.cert-accred-badge{background:#111;color:#fff;font-size:10px;font-weight:800;padding:4px 12px;border-radius:3px;letter-spacing:.1em}
+.cert-accred-sub{font-size:9px;color:#888;margin-top:3px;text-align:right}
+.cert-title{text-align:center;font-size:20px;font-weight:800;letter-spacing:.04em;margin:2px 0}
+.cert-num{text-align:center;font-size:12px;color:#888;font-family:‘DM Mono’,monospace;margin-bottom:22px}
+.cert-sec-title{font-size:9px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:#fff;background:#111;padding:4px 10px;border-radius:2px;margin-bottom:10px;display:inline-block}
+.cert-sec{margin-bottom:18px}
+.cert-kv{display:flex;gap:8px;margin-bottom:3px;font-size:12px}
+.cert-k{color:#666;width:200px;flex-shrink:0}
+.cert-v{font-weight:600;color:#111}
+.cert-result-box{background:linear-gradient(135deg,#eff6ff,#ecfdf5);border:2px solid #2563eb;border-radius:8px;padding:18px;text-align:center;margin:14px 0}
+.cert-result-label{font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:#666;margin-bottom:5px;font-weight:700}
+.cert-result-value{font-size:24px;font-weight:800;font-family:‘DM Mono’,monospace;color:#111}
+.cert-result-note{font-size:10px;color:#555;margin-top:5px}
+.cert-bud-tbl{width:100%;border-collapse:collapse;font-size:11px}
+.cert-bud-tbl th{background:#f5f5f5;padding:5px 9px;text-align:left;border-bottom:1px solid #ddd;font-size:10px;letter-spacing:.05em;text-transform:uppercase;color:#555}
+.cert-bud-tbl td{padding:5px 9px;border-bottom:1px solid #eee}
+.cert-bud-tbl .nr{text-align:right;font-family:‘DM Mono’,monospace}
+.cert-bud-tbl .ta{color:#1e40af;font-weight:700}
+.cert-bud-tbl .tb{color:#065f46;font-weight:700}
+.cert-bud-tot td{background:#eff6ff;border-top:2px solid #2563eb!important;font-weight:700}
+.cert-footer{display:flex;justify-content:space-between;margin-top:28px;padding-top:18px;border-top:1px solid #ddd}
+.cert-sign{text-align:center}
+.cert-sign-line{width:130px;border-top:1px solid #999;margin:22px auto 5px}
+.cert-sign-name{font-weight:700;color:#111;font-size:12px}
+.cert-sign-role{color:#888;font-size:10px}
+.cert-foot-mid{text-align:center;color:#aaa;font-size:10px;line-height:1.7;align-self:center}
+
+/* MISC */
+.divider{border:none;border-top:1px solid var(–border);margin:16px 0}
+.text-mono{font-family:‘DM Mono’,monospace}
+.text-muted{color:var(–ink3)}
+.text-sm{font-size:12px}
+.text-xs{font-size:11px}
+.fw7{font-weight:700}
+.mt12{margin-top:12px}
+.mt16{margin-top:16px}
+.flex-c{display:flex;align-items:center;gap:8px}
+.flex-b{display:flex;justify-content:space-between;align-items:center}
+
+@media print{.topbar,.wizard-bar,.action-row,.btn,.no-print{display:none!important}body{background:#fff}.cert-shell{box-shadow:none;border:none}}
+</style>
+
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-inner">
+    <div class="brand">
+      <div class="brand-mark">
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M4 10h12M7 7l-3 3 3 3M13 7l3 3-3 3" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="10" cy="10" r="1.5" fill="#fff"/></svg>
+      </div>
+      <div>
+        <div class="brand-name">Thread<span>Cal</span> Pro</div>
+        <div class="brand-tag">Calibración de Roscas · ISO 17025</div>
+      </div>
+    </div>
+    <div class="topbar-badges">
+      <span class="chip chip-blue">EURAMET cg-10</span>
+      <span class="chip chip-teal">GUM · JCGM 100</span>
+      <span class="chip chip-purple">ENAC ISO 17025</span>
+    </div>
+  </div>
+</div>
+
+<div class="wizard-bar">
+  <div class="wizard-inner">
+    <div class="wstep active" id="ws0" onclick="goStep(0)"><div class="wstep-num">1</div><div><div class="wlabel">Proyecto</div><div class="wdesc">Lab, instrumento</div></div></div>
+    <div class="wstep-sep"></div>
+    <div class="wstep" id="ws1" onclick="goStep(1)"><div class="wstep-num">2</div><div><div class="wlabel">Rosca &amp; Hilo</div><div class="wdesc">Perfil, tolerancias</div></div></div>
+    <div class="wstep-sep"></div>
+    <div class="wstep" id="ws2" onclick="goStep(2)"><div class="wstep-num">3</div><div><div class="wlabel">Mediciones</div><div class="wdesc">Lecturas plano 0° y 90°</div></div></div>
+    <div class="wstep-sep"></div>
+    <div class="wstep" id="ws3" onclick="goStep(3)"><div class="wstep-num">4</div><div><div class="wlabel">Incertidumbre</div><div class="wdesc">Presupuesto GUM</div></div></div>
+    <div class="wstep-sep"></div>
+    <div class="wstep" id="ws4" onclick="goStep(4)"><div class="wstep-num">5</div><div><div class="wlabel">Certificado</div><div class="wdesc">Informe ISO 17025</div></div></div>
+  </div>
+</div>
+
+<div class="app">
+
+<!-- ═══════ STEP 0 — PROYECTO ═══════ -->
+
+<div class="tab-panel active" id="step0">
+
+  <div class="callout callout-teal">
+    <div class="callout-icon">⚡</div>
+    <div>
+      <div class="callout-title">Importa tu fichero del Mahr 828 para rellenar todo automáticamente</div>
+      Soporta ficheros .txt o .prn exportados desde el banco. Puedes arrastrarlo abajo o rellenar los campos manualmente.
+    </div>
+  </div>
+
+  <div class="drop-zone" id="drop-zone"
+       onclick="document.getElementById('file-import').click()"
+       ondragover="dzOver(event)" ondragleave="dzLeave(event)" ondrop="dzDrop(event)">
+    <input type="file" id="file-import" accept=".txt,.prn,.csv" style="display:none" onchange="importFile(this)">
+    <div class="drop-icon">📂</div>
+    <div class="drop-title">Arrastra el fichero Mahr 828 aquí</div>
+    <div class="drop-sub">Formatos: .txt · .prn · .csv — o haz clic para seleccionar</div>
+  </div>
+
+  <div id="import-preview" class="card" style="display:none;margin-bottom:14px">
+    <div class="card-head">
+      <div class="card-title"><div class="card-icon icon-teal">✅</div>Fichero importado correctamente</div>
+      <button class="btn btn-sm btn-danger" onclick="clearImport()">✕ Quitar</button>
+    </div>
+    <div class="card-body">
+      <div class="cols2">
+        <div>
+          <div class="text-xs text-muted fw7" style="text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px">Campos detectados</div>
+          <div id="import-fields"></div>
+        </div>
+        <div>
+          <div class="text-xs text-muted fw7" style="text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px">Contenido del fichero</div>
+          <div id="import-code" class="import-code"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="cols2">
+    <div class="card">
+      <div class="card-head"><div class="card-title"><div class="card-icon icon-blue">📋</div>Datos del proyecto</div></div>
+      <div class="card-body">
+        <div class="cols2">
+          <div class="field"><div class="label">Código proyecto <span class="label-req">*</span></div><input type="text" id="proj_code" value="CAL-2025-001"></div>
+          <div class="field"><div class="label">Fecha de medición</div><input type="date" id="meas_date"></div>
+        </div>
+        <div class="field"><div class="label">Laboratorio</div><input type="text" id="lab_name" value="Laboratorio de Metrología Dimensional"></div>
+        <div class="cols2">
+          <div class="field"><div class="label">Operador <span class="label-req">*</span></div><input type="text" id="operator" value="OP-001"></div>
+          <div class="field"><div class="label">Cliente</div><input type="text" id="client" placeholder="Nombre del cliente"></div>
+        </div>
+        <div class="field"><div class="label">Referencia del elemento</div><input type="text" id="part_ref" placeholder="Nº serie / referencia (opcional)"></div>
+      </div>
+    </div>
+
+```
+<div class="card">
+  <div class="card-head"><div class="card-title"><div class="card-icon icon-purple">🔬</div>Instrumento &amp; Condiciones</div></div>
+  <div class="card-body">
+    <div class="cols2">
+      <div class="field"><div class="label">Modelo banco</div><input type="text" id="inst_model" value="Mahr 828"></div>
+      <div class="field"><div class="label">Nº Serie</div><input type="text" id="inst_sn" placeholder="S/N"></div>
+    </div>
+    <div class="cols2">
+      <div class="field"><div class="label">Cert. calibración</div><input type="text" id="inst_cert" placeholder="ENAC-I-XXXX"></div>
+      <div class="field"><div class="label">Válido hasta</div><input type="date" id="inst_expiry"></div>
+    </div>
+    <div class="cols2">
+      <div class="field"><div class="label">U cal. banco (k=2) <span class="label-unit">mm</span></div><input type="number" id="u_cal" value="0.0006" step="0.0001" min="0"></div>
+      <div class="field"><div class="label">Resolución encoder <span class="label-unit">mm</span></div><input type="number" id="resolution" value="0.0001" step="0.00001" min="0"></div>
+    </div>
+    <div class="field">
+      <div class="label">Fuerza de palpado
+        <div class="tip-w"><span class="tip-i">ⓘ</span><div class="tip-b">Mahr 828 reporta "4 unidades". Verificar unidad con el certificado del banco. Típicamente: 4 cN = 0.04 N</div></div>
+      </div>
+      <div class="input-group">
+        <input type="number" id="meas_force" value="4" step="0.01" min="0">
+        <select id="force_unit"><option value="cN" selected>cN</option><option value="N">N</option><option value="daN">daN</option></select>
+      </div>
+      <div class="hint warn">⚠ El banco reporta "4 unidades" — confirmar unidad con hoja de especificaciones Mahr 828.</div>
+    </div>
+    <div class="cols2">
+      <div class="field">
+        <div class="label">Temperatura <span class="label-unit">°C</span></div>
+        <input type="number" id="temp_c" value="20.3" step="0.1" oninput="updateTempHint()">
+        <div class="hint" id="temp_hint"></div>
+      </div>
+      <div class="field"><div class="label">Humedad <span class="label-unit">%</span></div><input type="number" id="humidity" value="48" step="1" min="0" max="100"></div>
+    </div>
+  </div>
+</div>
+```
+
+  </div>
+
+  <div class="action-row">
+    <div></div>
+    <button class="btn btn-primary btn-lg" onclick="goStep(1)">Siguiente: Rosca &amp; Hilo →</button>
+  </div>
+</div>
+
+<!-- ═══════ STEP 1 — ROSCA ═══════ -->
+
+<div class="tab-panel" id="step1">
+
+  <div class="card" style="margin-bottom:16px">
+    <div class="card-head"><div class="card-title"><div class="card-icon icon-blue">🔩</div>Tipo de rosca — selecciona un perfil</div></div>
+    <div class="card-body">
+      <div class="pill-group" id="preset-pills">
+        <div class="pill selected" onclick="selectPreset(this,'M')">⚙ Métrica ISO<br><span style="font-size:10px;font-weight:400">α=60° · ISO 68-1</span></div>
+        <div class="pill" onclick="selectPreset(this,'UN')">🔧 UN / UNC / UNF<br><span style="font-size:10px;font-weight:400">α=60° · ASME B1.1</span></div>
+        <div class="pill" onclick="selectPreset(this,'G')">🔨 Whitworth BSW<br><span style="font-size:10px;font-weight:400">α=55° · BS 84</span></div>
+        <div class="pill" onclick="selectPreset(this,'Tr')">📐 Trapezoidal ISO<br><span style="font-size:10px;font-weight:400">α=30° · ISO 2903</span></div>
+        <div class="pill" onclick="selectPreset(this,'ACME')">🏗 ACME<br><span style="font-size:10px;font-weight:400">α=29° · ASME B1.5</span></div>
+        <div class="pill" onclick="selectPreset(this,'CUSTOM')">✏️ Personalizada</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="cols2">
+    <div class="card">
+      <div class="card-head"><div class="card-title"><div class="card-icon icon-blue">📏</div>Geometría</div></div>
+      <div class="card-body">
+        <div class="cols3">
+          <div class="field"><div class="label">Diám. nominal D <span class="label-unit">mm</span> <span class="label-req">*</span></div><input type="number" id="nominal_d" value="14" step="0.001" min="0" oninput="onThreadChange()"></div>
+          <div class="field"><div class="label">Paso p <span class="label-unit">mm</span> <span class="label-req">*</span></div><input type="number" id="pitch" value="1.5" step="0.001" min="0.001" oninput="onThreadChange()"></div>
+          <div class="field"><div class="label">Ángulo α <span class="label-unit">°</span></div><input type="number" id="flank_angle" value="60" step="0.1" min="1" max="89" oninput="onThreadChange()"></div>
+        </div>
+        <div class="cols2">
+          <div class="field"><div class="label">Dirección</div><select id="direction"><option value="external">Tornillo (externo)</option><option value="internal">Tuerca (interno)</option></select></div>
+          <div class="field"><div class="label">Clase tolerancia</div><input type="text" id="tol_class" value="6g" placeholder="6g / 6H / 2A…"></div>
+        </div>
+        <div class="cols2">
+          <div class="field"><div class="label">Límite mín. <span class="label-unit">mm</span></div><input type="number" id="tol_min" step="0.0001" placeholder="Opcional"></div>
+          <div class="field"><div class="label">Límite máx. <span class="label-unit">mm</span></div><input type="number" id="tol_max" step="0.0001" placeholder="Opcional"></div>
+        </div>
+        <div class="callout callout-blue" style="margin-bottom:0">
+          <div class="callout-icon">📐</div>
+          <div>Diámetro de paso teórico: <strong id="e_theoretical" class="text-mono">— mm</strong><div class="text-xs text-muted">D − 0.6495·p  (ISO métrica)</div></div>
+        </div>
+      </div>
+    </div>
+
+```
+<div class="card">
+  <div class="card-head"><div class="card-title"><div class="card-icon icon-teal">💎</div>Hilo &amp; Material</div></div>
+  <div class="card-body">
+    <div class="callout callout-teal" style="margin-bottom:12px">
+      <div class="callout-icon">✨</div>
+      <div>Hilo óptimo: <strong id="best_wire_val" class="text-mono">— mm</strong><div class="text-xs" id="best_wire_range"> </div></div>
+    </div>
+    <div class="cols2">
+      <div class="field"><div class="label">W calibrado <span class="label-unit">mm</span> <span class="label-req">*</span></div><input type="number" id="wire_cal" value="0.86598" step="0.00001" min="0" oninput="checkWireRange()"><div class="hint" id="wire_range_hint"></div></div>
+      <div class="field"><div class="label">u(W) k=1 <span class="label-unit">mm</span></div><input type="number" id="u_wire" value="0.00015" step="0.000001" min="0"></div>
+    </div>
+    <div class="cols2">
+      <div class="field"><div class="label">Cert. hilo</div><input type="text" id="wire_cert" placeholder="ENAC-C-XXXX"></div>
+      <div class="field"><div class="label">u(T) k=1 <span class="label-unit">°C</span></div><input type="number" id="u_temp" value="0.1" step="0.01" min="0"></div>
+    </div>
+    <div class="divider"></div>
+    <div class="field"><div class="label">Material</div>
+      <select id="material_sel" onchange="onMaterialChange()">
+        <option value="steel_c">Acero al carbono — α=11.5e-6, E=210 GPa</option>
+        <option value="steel_ss">Acero inoxidable — α=16.0e-6, E=193 GPa</option>
+        <option value="steel_t">Acero herramienta — α=10.5e-6, E=205 GPa</option>
+        <option value="aluminium">Aluminio — α=23.0e-6, E=70 GPa</option>
+        <option value="custom">Personalizado…</option>
+      </select>
+    </div>
+    <div class="cols3">
+      <div class="field"><div class="label">α_th <span class="label-unit">×10⁻⁶ K⁻¹</span></div><input type="number" id="alpha_th" value="11.5" step="0.1" min="0"></div>
+      <div class="field"><div class="label">E_mat <span class="label-unit">GPa</span></div><input type="number" id="e_mod" value="210" step="1" min="1"></div>
+      <div class="field"><div class="label">ν Poisson</div><input type="number" id="poisson" value="0.30" step="0.01" min="0" max="0.5"></div>
+    </div>
+    <div class="cols2">
+      <div class="field"><div class="label">u(F) k=1 <span class="label-unit">N</span></div><input type="number" id="u_force" value="0.002" step="0.001" min="0"></div>
+      <div class="field"><div class="label">u(α) <span class="label-unit">°</span></div><input type="number" id="u_angle" value="0.1" step="0.01" min="0"></div>
+    </div>
+  </div>
+</div>
+```
+
+  </div>
+
+  <div class="action-row">
+    <button class="btn btn-ghost" onclick="goStep(0)">← Volver</button>
+    <button class="btn btn-primary btn-lg" onclick="goStep(2)">Siguiente: Mediciones →</button>
+  </div>
+</div>
+
+<!-- ═══════ STEP 2 — MEDICIONES ═══════ -->
+
+<div class="tab-panel" id="step2">
+
+  <div class="callout callout-blue">
+    <div class="callout-icon">ℹ️</div>
+    <div>Introduce los valores <strong>M_raw</strong> (distancia medida por el banco en mm). El sistema calcula en tiempo real las correcciones y el diámetro de paso E según <strong>EURAMET cg-10</strong>.</div>
+  </div>
+
+  <div class="stats-row s4">
+    <div class="stat-card"><div class="stat-lbl">Correc. térmica ΔM</div><div class="stat-val" id="cs_thermal">—<span class="unit">mm</span></div><div class="stat-sub">M·α_th·(T−20)</div></div>
+    <div class="stat-card"><div class="stat-lbl">Correc. Hertz δ_H</div><div class="stat-val" id="cs_hertz">—<span class="unit">mm</span></div><div class="stat-sub">Deformación elástica</div></div>
+    <div class="stat-card"><div class="stat-lbl">−W·(1+1/sin α/2)</div><div class="stat-val" id="cs_wire">—<span class="unit">mm</span></div><div class="stat-sub">Término hilo</div></div>
+    <div class="stat-card"><div class="stat-lbl">p/(2·tan α/2)</div><div class="stat-val" id="cs_pitch">—<span class="unit">mm</span></div><div class="stat-sub">Término paso</div></div>
+  </div>
+
+  <div class="cols2">
+    <div class="card">
+      <div class="card-head">
+        <div class="card-title"><div class="card-icon icon-blue">📊</div>Lecturas — Plano 0° <span class="chip chip-blue" style="margin-left:4px">0°</span></div>
+        <button class="btn btn-sm btn-ghost" onclick="addReading(0)">+ Añadir</button>
+      </div>
+      <div class="card-body">
+        <div style="display:grid;grid-template-columns:28px 1fr 1fr 1fr 26px;gap:7px;margin-bottom:8px">
+          <span></span>
+          <span class="text-xs text-muted fw7" style="text-transform:uppercase;letter-spacing:.04em">M_raw [mm]</span>
+          <span class="text-xs text-muted fw7" style="text-transform:uppercase;letter-spacing:.04em">M_corr [mm]</span>
+          <span class="text-xs text-muted fw7" style="text-transform:uppercase;letter-spacing:.04em">E [mm]</span>
+          <span></span>
+        </div>
+        <div id="readings-0"></div>
+        <button class="add-row-btn" onclick="addReading(0)">＋ Añadir lectura</button>
+        <div id="stats-0" class="plane-stats" style="display:none">
+          <div><div class="pstat-lbl">Media Ē</div><div class="pstat-val" id="mean-0">—</div></div>
+          <div><div class="pstat-lbl">Desv.Est. s</div><div class="pstat-val" id="std-0">—</div></div>
+          <div><div class="pstat-lbl">n lecturas</div><div class="pstat-val" id="n-0">—</div></div>
+        </div>
+      </div>
+    </div>
+
+```
+<div class="card">
+  <div class="card-head">
+    <div class="card-title"><div class="card-icon icon-teal">📊</div>Lecturas — Plano 90° <span class="chip chip-teal" style="margin-left:4px">90°</span></div>
+    <button class="btn btn-sm btn-ghost" onclick="addReading(90)">+ Añadir</button>
+  </div>
+  <div class="card-body">
+    <div style="display:grid;grid-template-columns:28px 1fr 1fr 1fr 26px;gap:7px;margin-bottom:8px">
+      <span></span>
+      <span class="text-xs text-muted fw7" style="text-transform:uppercase;letter-spacing:.04em">M_raw [mm]</span>
+      <span class="text-xs text-muted fw7" style="text-transform:uppercase;letter-spacing:.04em">M_corr [mm]</span>
+      <span class="text-xs text-muted fw7" style="text-transform:uppercase;letter-spacing:.04em">E [mm]</span>
+      <span></span>
+    </div>
+    <div id="readings-90"></div>
+    <button class="add-row-btn" onclick="addReading(90)">＋ Añadir lectura</button>
+    <div id="stats-90" class="plane-stats" style="display:none">
+      <div><div class="pstat-lbl">Media Ē</div><div class="pstat-val" id="mean-90">—</div></div>
+      <div><div class="pstat-lbl">Desv.Est. s</div><div class="pstat-val" id="std-90">—</div></div>
+      <div><div class="pstat-lbl">n lecturas</div><div class="pstat-val" id="n-90">—</div></div>
+    </div>
+  </div>
+</div>
+```
+
+  </div>
+
+  <div class="action-row">
+    <button class="btn btn-ghost" onclick="goStep(1)">← Volver</button>
+    <button class="btn btn-primary btn-lg" onclick="calcGUM()">Calcular incertidumbre GUM →</button>
+  </div>
+</div>
+
+<!-- ═══════ STEP 3 — GUM ═══════ -->
+
+<div class="tab-panel" id="step3">
+  <div id="gum-output"><div class="callout callout-amber"><div class="callout-icon">⚠️</div><div>Introduce mediciones y pulsa "Calcular incertidumbre GUM".</div></div></div>
+</div>
+
+<!-- ═══════ STEP 4 — CERT ═══════ -->
+
+<div class="tab-panel" id="step4">
+  <div id="cert-output"><div class="callout callout-amber"><div class="callout-icon">⚠️</div><div>Completa el cálculo GUM para generar el certificado.</div></div></div>
+</div>
+
+</div><!-- /app -->
+
+<script>
+// ── STATE ─────────────────────────────────────────────────────
+let currentStep = 0;
+let readings = {0:[], 90:[]};
+let gumResult = null;
+let activePreset = 'M';
+
+const MATERIALS = {
+  steel_c:  {alpha:11.5, e:210, nu:0.30},
+  steel_ss: {alpha:16.0, e:193, nu:0.28},
+  steel_t:  {alpha:10.5, e:205, nu:0.29},
+  aluminium:{alpha:23.0, e:70,  nu:0.33}
+};
+const PRESETS = {
+  M:{flank:60,tol:'6g'}, UN:{flank:60,tol:'2A'}, G:{flank:55,tol:''},
+  Tr:{flank:30,tol:'7e'}, ACME:{flank:29,tol:''}, CUSTOM:{flank:60,tol:''}
+};
+const PRESET_NAMES = {M:'Métrica ISO',UN:'UN/UNC/UNF',G:'Whitworth BSW',Tr:'Trapezoidal ISO',ACME:'ACME',CUSTOM:'Personalizada'};
+
+// ── INIT ──────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('meas_date').value = new Date().toISOString().slice(0,10);
+  onThreadChange();
+  updateTempHint();
+  updateCorrStrip();
+  for(let i=0;i<3;i++) addReading(0);
+  for(let i=0;i<3;i++) addReading(90);
+});
+
+// ── WIZARD ────────────────────────────────────────────────────
+function goStep(n) {
+  document.querySelectorAll('.tab-panel').forEach((el,i) => el.classList.toggle('active', i===n));
+  document.querySelectorAll('.wstep').forEach((el,i) => {
+    el.classList.remove('active','done');
+    if(i===n) el.classList.add('active');
+    else if(i<n) el.classList.add('done');
+  });
+  currentStep = n;
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+
+// ── PRESET ────────────────────────────────────────────────────
+function selectPreset(el, key) {
+  document.querySelectorAll('.pill').forEach(p => p.classList.remove('selected'));
+  el.classList.add('selected');
+  activePreset = key;
+  const p = PRESETS[key];
+  V('flank_angle', p.flank);
+  if(p.tol) V('tol_class', p.tol);
+  onThreadChange();
+}
+function onMaterialChange() {
+  const m = MATERIALS[G('material_sel')];
+  if(!m) return;
+  V('alpha_th', m.alpha); V('e_mod', m.e); V('poisson', m.nu);
+}
+
+// ── THREAD PARAMS ──────────────────────────────────────────────
+function onThreadChange() {
+  const D=+G('nominal_d'), p=+G('pitch'), a=+G('flank_angle');
+  if(!D||!p||!a) return;
+  const aHalf = a/2*Math.PI/180;
+  const bw    = p/(2*Math.cos(aHalf));
+  E('best_wire_val').textContent = ` ${bw.toFixed(5)} mm`;
+  E('best_wire_range').textContent = `Rango válido: [${(0.56*p).toFixed(4)} – ${(0.90*p).toFixed(4)}] mm`;
+  E('e_theoretical').textContent  = ` ${(D-0.6495*p).toFixed(5)} mm`;
+  checkWireRange();
+  updateCorrStrip();
+}
+function checkWireRange() {
+  const p=+G('pitch'), W=+G('wire_cal');
+  if(!p||!W) return;
+  const h = E('wire_range_hint');
+  if(W<0.56*p||W>0.90*p) { h.className='hint warn'; h.textContent=`⚠ W fuera del rango [${(0.56*p).toFixed(4)}, ${(0.90*p).toFixed(4)}] mm`; }
+  else { h.className='hint ok'; h.textContent=`✓ W dentro del rango válido`; }
+}
+function updateTempHint() {
+  const dT = +G('temp_c') - 20;
+  const h  = E('temp_hint');
+  if(Math.abs(dT)>1){ h.className='hint warn'; h.textContent=`⚠ ΔT = ${dT>0?'+':''}${dT.toFixed(2)} °C — corrección térmica significativa`; }
+  else if(Math.abs(dT)<0.1){ h.className='hint ok'; h.textContent=`✓ Muy próxima a 20 °C — corrección térmica despreciable`; }
+  else { h.className='hint'; h.textContent=`ΔT = ${dT>0?'+':''}${dT.toFixed(2)} °C respecto a 20 °C de referencia`; }
+}
+
+// ── GEOMETRY ENGINE ────────────────────────────────────────────
+function getForceN() {
+  const v=+G('meas_force'), u=G('force_unit');
+  return u==='cN'?v/100:u==='daN'?v*10:v;
+}
+function getGeo() {
+  return {
+    W:+G('wire_cal'), alpha:+G('flank_angle'), p:+G('pitch'), T:+G('temp_c'),
+    F:getForceN(), alpha_th:+G('alpha_th')*1e-6, E_mod:+G('e_mod')*1e9, nu:+G('poisson')
+  };
+}
+function calcE(M, g) {
+  const aH  = g.alpha/2*Math.PI/180;
+  const dT  = -M*g.alpha_th*(g.T-20);
+  const Mth = M+dT;
+  const Es  = g.E_mod/(2*(1-g.nu**2));
+  const R   = g.W/2/1000;
+  const dH  = 2*Math.pow(3*(g.F||0.001)/(4*Es),2/3)*Math.pow(1/R,1/3)*1000;
+  const Mc  = Mth-dH;
+  const wt  = g.W*(1+1/Math.sin(aH));
+  const pt  = g.p/(2*Math.tan(aH));
+  return {E:Mc-wt+pt, dT, dH, Mc, wt, pt};
+}
+function updateCorrStrip() {
+  const g = getGeo();
+  if(!g.W||!g.alpha||!g.p) return;
+  const Ms = (+G('nominal_d')||14)+3*g.W;
+  const r  = calcE(Ms, g);
+  E('cs_thermal').innerHTML = fmtE(r.dT)+'<span class="unit">mm</span>';
+  E('cs_hertz').innerHTML   = fmtE(r.dH)+'<span class="unit">mm</span>';
+  E('cs_wire').innerHTML    = fmtE(-r.wt)+'<span class="unit">mm</span>';
+  E('cs_pitch').innerHTML   = fmtE(r.pt)+'<span class="unit">mm</span>';
+}
+
+// ── READINGS ───────────────────────────────────────────────────
+function addReading(plane) {
+  const n = readings[plane].length;
+  readings[plane].push(null);
+  const row = document.createElement('div');
+  row.className = 'reading-row'; row.id = `row-${plane}-${n}`;
+  row.innerHTML = `
+    <div class="ri-num">${n+1}</div>
+    <input class="ri-input" type="number" step="0.00001" placeholder="M_raw…"
+      id="m-${plane}-${n}" oninput="updateReading(${plane},${n})">
+    <div class="ri-val empty" id="mc-${plane}-${n}">—</div>
+    <div class="ri-val empty" id="ev-${plane}-${n}">—</div>
+    <button class="del-btn" onclick="removeReading(${plane},${n})" title="Eliminar">×</button>`;
+  E(`readings-${plane}`).appendChild(row);
+}
+function removeReading(plane, n) {
+  readings[plane][n] = null;
+  const row = E(`row-${plane}-${n}`);
+  if(row){ row.style.transition='.2s'; row.style.opacity='0'; row.style.maxHeight='0'; row.style.overflow='hidden'; setTimeout(()=>row.remove(),200); }
+  updatePlaneStats(plane);
+}
+function updateReading(plane, n) {
+  const raw = parseFloat(E(`m-${plane}-${n}`).value);
+  const mc  = E(`mc-${plane}-${n}`), ev = E(`ev-${plane}-${n}`);
+  if(isNaN(raw)) { readings[plane][n]=null; mc.className='ri-val empty'; mc.textContent='—'; ev.className='ri-val empty'; ev.textContent='—'; updatePlaneStats(plane); return; }
+  const g=getGeo(), r=calcE(raw,g);
+  readings[plane][n]=r.E;
+  mc.className='ri-val'; mc.textContent=r.Mc.toFixed(6);
+  ev.className='ri-val'; ev.textContent=r.E.toFixed(6);
+  updatePlaneStats(plane); updateCorrStrip();
+}
+function updatePlaneStats(plane) {
+  const vals = readings[plane].filter(v=>v!==null);
+  const el   = E(`stats-${plane}`);
+  if(vals.length<2){el.style.display='none';return;}
+  el.style.display='grid';
+  const mean=vals.reduce((a,b)=>a+b,0)/vals.length;
+  const s=Math.sqrt(vals.reduce((a,b)=>a+(b-mean)**2,0)/(vals.length-1));
+  E(`mean-${plane}`).textContent=mean.toFixed(6)+' mm';
+  E(`std-${plane}`).textContent=s.toExponential(3)+' mm';
+  E(`n-${plane}`).textContent=vals.length;
+}
+
+// ── GUM ENGINE ──────────────────────────────────────────────────
+function calcGUM() {
+  const all0=readings[0].filter(v=>v!==null), all90=readings[90].filter(v=>v!==null);
+  const allE=[...all0,...all90];
+  if(allE.length<2){alert('Introduce al menos 2 lecturas válidas.');return;}
+  const g=getGeo(), n=allE.length;
+  const mean=allE.reduce((a,b)=>a+b,0)/n;
+  const s=Math.sqrt(allE.reduce((a,b)=>a+(b-mean)**2,0)/(n-1));
+  const uA1=s/Math.sqrt(n), dA1=n-1;
+  let uA2=0, dA2=Infinity;
+  if(all0.length>0&&all90.length>0){const m0=all0.reduce((a,b)=>a+b,0)/all0.length,m90=all90.reduce((a,b)=>a+b,0)/all90.length;uA2=Math.abs(m0-m90)/Math.sqrt(2);dA2=1;}
+  const uB1=(+G('u_cal'))/2;
+  const uB2=(+G('resolution'))/(2*Math.sqrt(3));
+  const aH=g.alpha/2*Math.PI/180;
+  const cW=-(1+1/Math.sin(aH));
+  const uB3=Math.abs(cW)*(+G('u_wire'));
+  const Es=g.E_mod/(2*(1-g.nu**2)), Rm=g.W/2/1000, F=g.F||0.04;
+  const dHdF=(2/3)*Math.pow(3/(4*Es),2/3)*Math.pow(F,-1/3)*Math.pow(1/Rm,1/3)*1000;
+  const uB4=(+G('u_force'))*dHdF;
+  const Lc=(+G('nominal_d')||14)+3*g.W;
+  const uB5=(+G('u_temp'))*Math.abs(Lc*g.alpha_th);
+  const uaR=(+G('u_angle'))*Math.PI/180/Math.sqrt(3);
+  const uB6=uaR*Math.abs(g.p/(2*Math.sin(aH)**2)*0.5);
+
+  const comps=[
+    {name:'Repetibilidad medición',   sym:'u_A1',type:'A',dist:'Normal (t)',   u:uA1,ci:1,dof:dA1},
+    {name:'Variación entre planos',   sym:'u_A2',type:'A',dist:'Normal (t)',   u:uA2,ci:1,dof:dA2},
+    {name:'Calibración banco',        sym:'u_B1',type:'B',dist:'Normal',       u:uB1,ci:1,dof:Infinity},
+    {name:'Resolución encoder',       sym:'u_B2',type:'B',dist:'Rectangular',  u:uB2,ci:1,dof:Infinity},
+    {name:'Diámetro hilo W',          sym:'u_B3',type:'B',dist:'Normal',       u:uB3,ci:Math.abs(cW),dof:Infinity},
+    {name:'Fuerza palpado → Hertz',   sym:'u_B4',type:'B',dist:'Normal',       u:uB4,ci:1,dof:Infinity},
+    {name:'Temperatura (ΔT vs 20°C)', sym:'u_B5',type:'B',dist:'Normal',       u:uB5,ci:1,dof:Infinity},
+    {name:'Ángulo flanco (modelo)',   sym:'u_B6',type:'B',dist:'Rectangular',  u:uB6,ci:1,dof:Infinity},
+  ];
+  const ucSq=comps.reduce((s,c)=>s+c.u**2,0);
+  const uc=Math.sqrt(ucSq);
+  comps.forEach(c=>c.contrib=c.u**2/ucSq*100);
+  const denom=comps.filter(c=>c.dof<Infinity).reduce((s,c)=>s+c.u**4/c.dof,0);
+  const nuEff=denom>0?ucSq**2/denom:Infinity;
+  const kT=[[1,13.97],[2,4.53],[3,3.31],[4,2.87],[5,2.65],[6,2.52],[7,2.43],[8,2.37],[9,2.32],[10,2.28],[15,2.17],[20,2.09],[25,2.06],[30,2.04],[50,2.01],[100,2.00]];
+  let k=2.0; for(const [nu,kv] of kT){if(nuEff>=nu)k=kv;}
+  const Uexp=k*uc;
+  gumResult={mean,s,n,uA1,uA2,comps,uc,nuEff,k,Uexp,g,allE,all0,all90};
+  renderGUM(); renderCert(); goStep(3);
+}
+
+// ── RENDER GUM ─────────────────────────────────────────────────
+function renderGUM() {
+  const r=gumResult, maxC=Math.max(...r.comps.map(c=>c.contrib));
+  let rows='';
+  for(const c of r.comps){
+    const isA=c.type==='A';
+    rows+=`<tr>
+      <td class="lbl">${c.name}</td>
+      <td><span style="font-size:11px;font-weight:700;padding:2px 7px;border-radius:10px;background:${isA?'var(--blue-m)':'var(--teal-l)'};color:${isA?'var(--blue)':'var(--teal)'}">${c.type}</span></td>
+      <td style="font-size:11px;color:var(--ink3)">${c.dist}</td>
+      <td class="num">${f6(c.u)}</td>
+      <td class="num" style="color:var(--ink3)">${c.ci===1?'1.000':c.ci.toFixed(3)}</td>
+      <td class="num" style="font-weight:600">${f6(c.u)}</td>
+      <td class="num">${c.contrib.toFixed(1)}%<div class="pbar"><div class="pbar-fill${isA?'':' b'}" style="width:${c.contrib/maxC*100}%"></div></div></td>
+    </tr>`;
+  }
+  // scatter
+  const allE=r.allE, eMin=Math.min(...allE)-r.Uexp*1.5, eMax=Math.max(...allE)+r.Uexp*1.5, eR=(eMax-eMin)||1;
+  const W2=540, H2=68;
+  const tx=v=>(v-eMin)/eR*(W2-48)+24;
+  const dots=r.all0.map(v=>`<circle cx="${tx(v).toFixed(1)}" cy="36" r="5" fill="#2563eb" opacity=".8"/>`).join('')
+             +r.all90.map(v=>`<circle cx="${tx(v).toFixed(1)}" cy="36" r="5" fill="#0d9488" opacity=".8"/>`).join('');
+  const mx=tx(r.mean).toFixed(1), ulx=tx(r.mean-r.Uexp).toFixed(1), uhx=tx(r.mean+r.Uexp).toFixed(1);
+  const svg=`<svg viewBox="0 0 ${W2} ${H2}" xmlns="http://www.w3.org/2000/svg" style="width:100%">
+    <rect x="${ulx}" y="26" width="${uhx-ulx}" height="20" rx="3" fill="rgba(217,119,6,.12)" stroke="#d97706" stroke-width="1.5"/>
+    ${dots}
+    <line x1="${mx}" y1="18" x2="${mx}" y2="48" stroke="#374151" stroke-width="1.5" stroke-dasharray="4,3"/>
+    <text x="${mx}" y="13" fill="#374151" font-size="10" text-anchor="middle" font-family="DM Mono,monospace" font-weight="600">Ē</text>
+    <text x="${ulx}" y="13" fill="#d97706" font-size="9" text-anchor="middle" font-family="DM Mono,monospace">Ē−U</text>
+    <text x="${uhx}" y="13" fill="#d97706" font-size="9" text-anchor="middle" font-family="DM Mono,monospace">Ē+U</text>
+    <text x="24" y="${H2-2}" fill="#9ca3af" font-size="8" font-family="DM Mono,monospace">${eMin.toFixed(4)}</text>
+    <text x="${W2-24}" y="${H2-2}" fill="#9ca3af" font-size="8" text-anchor="end" font-family="DM Mono,monospace">${eMax.toFixed(4)}</text>
+  </svg>`;
+  // conformidad
+  let confH='';
+  const tMin=parseFloat(G('tol_min')), tMax=parseFloat(G('tol_max'));
+  if(!isNaN(tMin)&&!isNaN(tMax)){
+    const lo=r.mean-r.Uexp, hi=r.mean+r.Uexp;
+    const full=lo>=tMin&&hi<=tMax, inT=r.mean>=tMin&&r.mean<=tMax;
+    const cls=full?'conform-ok':inT?'conform-warn':'conform-fail';
+    const ico=full?'✅':inT?'⚠️':'❌';
+    const tit=full?'CONFORME':inT?'INDETERMINADO':'NO CONFORME';
+    const bod=full?`E=[${lo.toFixed(5)}, ${hi.toFixed(5)}] mm dentro de [${tMin}, ${tMax}] mm.`:
+      inT?`Valor nominal dentro, pero intervalo solapa frontera de tolerancia (JCGM 106).`:
+      `E=${r.mean.toFixed(5)} mm fuera de tolerancia [${tMin}, ${tMax}] mm.`;
+    confH=`<div class="${cls}"><div class="conform-icon">${ico}</div><div><div class="conform-title">${tit}</div><div class="conform-body">${bod}</div></div></div>`;
+  }
+
+  E('gum-output').innerHTML=`
+    <div class="stats-row s4">
+      <div class="stat-card hl"><div class="stat-lbl">Diám. paso Ē</div><div class="stat-val">${r.mean.toFixed(5)}<span class="unit">mm</span></div><div class="stat-sub">n = ${r.n} lecturas</div></div>
+      <div class="stat-card warn-c"><div class="stat-lbl">Incert. combinada uc</div><div class="stat-val">${fmtE(r.uc)}<span class="unit">mm</span></div><div class="stat-sub">Propagación GUM</div></div>
+      <div class="stat-card"><div class="stat-lbl">Factor cobertura k</div><div class="stat-val">${r.k.toFixed(3)}</div><div class="stat-sub">νeff = ${r.nuEff<1e9?r.nuEff.toFixed(1):'∞'}  ·  p ≈ 95.45%</div></div>
+      <div class="stat-card good"><div class="stat-lbl">Incert. expandida U</div><div class="stat-val">${fmtE(r.Uexp)}<span class="unit">mm</span></div><div class="stat-sub">U = k · uc</div></div>
+    </div>
+    <div class="result-hero">
+      <div class="result-formula">E = M − W·(1+1/sinα/2) + p/(2·tanα/2)   ·   EURAMET cg-10   ·   Correc.: térmica + Hertz</div>
+      <div class="result-val">${r.mean.toFixed(5)} <span class="result-pm">±</span> <span class="result-u">${fmtE(r.Uexp)}</span><span class="result-unit">mm</span></div>
+      <div class="result-sub">k = ${r.k.toFixed(3)}, p ≈ 95.45%, νeff = ${r.nuEff<1e9?r.nuEff.toFixed(1):'∞'} — ${r.nuEff>=30?'Distribución normal':'t-Student'}</div>
+      <div style="margin-top:14px">${svg}</div>
+      <div style="font-size:11px;color:var(--ink3);margin-top:4px">● Plano 0° (azul)  ● Plano 90° (verde-azul)  ■ Intervalo U (naranja)</div>
+      ${confH}
+    </div>
+    <div class="card" style="margin-bottom:16px">
+      <div class="card-head"><div class="card-title"><div class="card-icon icon-purple">📊</div>Presupuesto de incertidumbre — JCGM 100:2008 (GUM)</div></div>
+      <div class="tbl-wrap"><table class="tbl"><thead><tr><th>Fuente</th><th>Tipo</th><th>Distribución</th><th class="num">u(xi) [mm]</th><th class="num">ci</th><th class="num">|ci·u(xi)|</th><th class="num">Contrib.</th></tr></thead>
+      <tbody>${rows}</tbody>
+      <tfoot>
+        <tr class="tbl-foot"><td colspan="5">uc = √Σ[ci·u(xi)]²</td><td class="num">${f6(r.uc)}</td><td class="num">100%</td></tr>
+        <tr class="tbl-final"><td colspan="5">U = k·uc  (k=${r.k.toFixed(3)}, p≈95.45%, νeff=${r.nuEff<1e9?r.nuEff.toFixed(1):'∞'})</td><td class="num">${f6(r.Uexp)}</td><td></td></tr>
+      </tfoot></table></div>
+    </div>
+    <div class="cols2" style="margin-bottom:16px">
+      <div class="card"><div class="card-head"><div class="card-title"><div class="card-icon icon-blue">📈</div>Estadísticos Tipo A</div></div>
+        <div class="tbl-wrap"><table class="tbl"><thead><tr><th>Parámetro</th><th class="num">Valor</th><th class="num">νi</th></tr></thead><tbody>
+          <tr><td class="lbl">n lecturas</td><td class="num">${r.n}</td><td class="num">—</td></tr>
+          <tr><td class="lbl">Media Ē</td><td class="num">${r.mean.toFixed(7)} mm</td><td class="num">—</td></tr>
+          <tr><td class="lbl">Desv. estándar s</td><td class="num">${r.s.toExponential(3)} mm</td><td class="num">${r.n-1}</td></tr>
+          <tr><td class="lbl">u_A1 = s/√n</td><td class="num">${f6(r.uA1)}</td><td class="num">${r.n-1}</td></tr>
+          <tr><td class="lbl">u_A2 (planos)</td><td class="num">${f6(r.uA2)}</td><td class="num">${r.all0.length>0&&r.all90.length>0?1:'—'}</td></tr>
+        </tbody></table></div>
+      </div>
+      <div class="card"><div class="card-head"><div class="card-title"><div class="card-icon icon-teal">🎯</div>Lecturas</div></div>
+        <div class="tbl-wrap"><table class="tbl"><thead><tr><th>Plano</th><th>Rep.</th><th class="num">E [mm]</th><th class="num">Δ vs. Ē</th></tr></thead><tbody>
+          ${r.all0.map((v,i)=>`<tr><td><span class="chip chip-blue">0°</span></td><td>${i+1}</td><td class="num">${v.toFixed(6)}</td><td class="num" style="color:${Math.abs(v-r.mean)>r.uA1*3?'var(--red)':'var(--ink3)'}">${(v-r.mean).toExponential(2)}</td></tr>`).join('')}
+          ${r.all90.map((v,i)=>`<tr><td><span class="chip chip-teal">90°</span></td><td>${i+1}</td><td class="num">${v.toFixed(6)}</td><td class="num" style="color:${Math.abs(v-r.mean)>r.uA1*3?'var(--red)':'var(--ink3)'}">${(v-r.mean).toExponential(2)}</td></tr>`).join('')}
+        </tbody></table></div>
+      </div>
+    </div>
+    <div class="action-row">
+      <button class="btn btn-ghost" onclick="goStep(2)">← Mediciones</button>
+      <button class="btn btn-green btn-lg" onclick="goStep(4)">📄 Generar certificado →</button>
+    </div>`;
+}
+
+// ── RENDER CERT ────────────────────────────────────────────────
+function renderCert() {
+  const r=gumResult;
+  const certNum=`CAL-${new Date().getFullYear()}-${String(Math.floor(Math.random()*9000)+1000)}`;
+  const today=new Date().toLocaleDateString('es-ES',{year:'numeric',month:'long',day:'numeric'});
+  const sw=`v1.0.0-${Math.random().toString(36).slice(2,8)}`;
+  const lab=G('lab_name')||'Laboratorio de Metrología Dimensional';
+  const budRows=r.comps.map(c=>`<tr><td>${c.name}</td><td class="${c.type==='A'?'ta':'tb'}">${c.type}</td><td class="nr">${f6(c.u)}</td><td class="nr">${c.ci===1?'1.000':c.ci.toFixed(3)}</td><td class="nr" style="font-weight:600">${f6(c.u)}</td><td class="nr">${c.contrib.toFixed(1)}%</td></tr>`).join('');
+  E('cert-output').innerHTML=`
+    <div class="flex-b" style="margin-bottom:14px" class="no-print">
+      <div style="font-size:13px;color:var(--ink3)">Certificado listo · Usa <b>Ctrl+P</b> → "Guardar como PDF"</div>
+      <div class="flex-c">
+        <button class="btn btn-ghost" onclick="goStep(3)">← Incertidumbre</button>
+        <button class="btn btn-primary" onclick="window.print()">🖨 Imprimir / PDF</button>
+      </div>
+    </div>
+    <div class="cert-shell">
+      <div class="cert-top-stripe"></div>
+      <div class="cert-inner">
+        <div class="cert-header">
+          <div><div class="cert-lab-name">${lab}</div><div class="cert-lab-sub">Laboratorio Acreditado · ISO/IEC 17025:2017</div></div>
+          <div><div class="cert-accred-badge">ENAC</div><div class="cert-accred-sub">EURAMET cg-10 · JCGM 100</div><div class="cert-accred-sub">ThreadCal Pro ${sw}</div></div>
+        </div>
+        <div class="cert-title">CERTIFICADO DE CALIBRACIÓN</div>
+        <div class="cert-num">Nº ${certNum}</div>
+        <div class="cert-sec">
+          <div class="cert-sec-title">§1 Identificación</div>
+          ${kv('Código proyecto',G('proj_code'))} ${kv('Cliente',G('client'))} ${kv('Referencia elemento',G('part_ref'))} ${kv('Fecha medición',G('meas_date'))} ${kv('Fecha emisión',today)} ${kv('Operador',G('operator'))}
+        </div>
+        <div class="cert-sec">
+          <div class="cert-sec-title">§2 Elemento calibrado</div>
+          ${kv('Tipo de rosca',PRESET_NAMES[activePreset]+' — '+(G('direction')==='external'?'Tornillo (externo)':'Tuerca (interno)'))}
+          ${kv('Designación','∅'+G('nominal_d')+' × '+G('pitch')+' mm,  α = '+G('flank_angle')+'°')}
+          ${kv('Clase tolerancia',G('tol_class'))}
+          ${kv('Coef. dilatación α_th',G('alpha_th')+' × 10⁻⁶ K⁻¹')}
+        </div>
+        <div class="cert-sec">
+          <div class="cert-sec-title">§3 Instrumento y condiciones</div>
+          ${kv('Banco',G('inst_model')+' · S/N: '+G('inst_sn'))}
+          ${kv('Cert. calibración banco',G('inst_cert')+' · válido hasta: '+G('inst_expiry'))}
+          ${kv('U banco (k=2)',G('u_cal')+' mm')}
+          ${kv('Hilo W calibrado',G('wire_cal')+' mm · Cert.: '+G('wire_cert'))}
+          ${kv('Fuerza de palpado',r.g.F.toFixed(4)+' N ('+G('meas_force')+' '+G('force_unit')+')')}
+          ${kv('Temperatura',G('temp_c')+' °C (ref. 20.0 °C — ISO 1:2016)')}
+          ${kv('Humedad relativa',G('humidity')+' %')}
+        </div>
+        <div class="cert-sec">
+          <div class="cert-sec-title">§4 Resultado</div>
+          <div class="cert-result-box">
+            <div class="cert-result-label">Diámetro de paso E (mensurando)</div>
+            <div class="cert-result-value">E = (${r.mean.toFixed(5)} ± ${fmtE(r.Uexp)}) mm</div>
+            <div class="cert-result-note">Incertidumbre expandida U = k·uc, k = ${r.k.toFixed(3)}, p ≈ 95.45% (${r.nuEff>=30?'distribución normal':'t-Student, νeff = '+r.nuEff.toFixed(1)})</div>
+          </div>
+          <p style="font-size:11px;color:#555">n=${r.n}  ·  Ē=${r.mean.toFixed(7)} mm  ·  s=${r.s.toExponential(3)} mm  ·  uc=${f6(r.uc)} mm</p>
+        </div>
+        <div class="cert-sec">
+          <div class="cert-sec-title">§5 Presupuesto GUM — JCGM 100:2008</div>
+          <table class="cert-bud-tbl"><thead><tr><th>Fuente</th><th>T.</th><th class="nr">u(xi) [mm]</th><th class="nr">ci</th><th class="nr">|ci·u(xi)|</th><th class="nr">%</th></tr></thead>
+          <tbody>${budRows}</tbody>
+          <tfoot>
+            <tr class="cert-bud-tot"><td colspan="4">uc combinada</td><td class="nr">${f6(r.uc)}</td><td class="nr">100%</td></tr>
+            <tr class="cert-bud-tot" style="background:#eff6ff"><td colspan="4">U = ${r.k.toFixed(3)} × uc  (k=${r.k.toFixed(3)}, p≈95.45%)</td><td class="nr" style="color:#2563eb">${f6(r.Uexp)}</td><td></td></tr>
+          </tfoot></table>
+          <p style="font-size:10px;color:#888;margin-top:6px">EURAMET cg-10. Correcciones: térmica (ISO 1) + Hertz. Software: ThreadCal Pro ${sw}.</p>
+        </div>
+        <div class="cert-sec">
+          <div class="cert-sec-title">§6 Trazabilidad</div>
+          <p style="font-size:12px;color:#444;line-height:1.6">Mediciones trazables a patrones nacionales CEM a través de cadena documentada: BIPM → CEM → Laboratorio acreditado ENAC → Instrumento. Los certificados de calibración están disponibles en el expediente del proyecto.</p>
+        </div>
+        <div class="cert-footer">
+          <div class="cert-sign"><div class="cert-sign-line"></div><div class="cert-sign-name">${G('operator')||'Operador'}</div><div class="cert-sign-role">Técnico de medición</div></div>
+          <div class="cert-foot-mid">Cert. nº ${certNum}<br>${today}<br><span style="font-family:'DM Mono',monospace;font-size:9px">${sw}</span><br>Válido sólo íntegramente.</div>
+          <div class="cert-sign"><div class="cert-sign-line"></div><div class="cert-sign-name">Responsable Técnico</div><div class="cert-sign-role">Revisión y aprobación</div></div>
+        </div>
+      </div>
+    </div>`;
+}
+
+// ── IMPORT ──────────────────────────────────────────────────────
+function importFile(input) {
+  const f=input.files[0]; if(!f) return;
+  const r=new FileReader(); r.onload=e=>parseTxt(e.target.result); r.readAsText(f,'utf-8');
+}
+function dzOver(e)  { e.preventDefault(); E('drop-zone').classList.add('over'); }
+function dzLeave(e) { E('drop-zone').classList.remove('over'); }
+function dzDrop(e)  { e.preventDefault(); dzLeave(e); const f=e.dataTransfer.files[0]; if(!f)return; const r=new FileReader(); r.onload=ev=>parseTxt(ev.target.result); r.readAsText(f,'utf-8'); }
+
+function parseTxt(content) {
+  const lines=content.split(/\r?\n/);
+  const find=(pats) => { for(const ln of lines) for(const p of pats){ const m=ln.match(p); if(m) return m[1]?.trim(); } return null; };
+  const parsed={
+    instrument: find([/instrumento\s*[:\-]\s*(.+)/i,/instrument\s*[:\-]\s*(.+)/i,/device\s*[:\-]\s*(.+)/i,/banco\s*[:\-]\s*(.+)/i]),
+    serial:     find([/s\/n\s*[:\-]\s*(.+)/i,/serie\s*[:\-]\s*(.+)/i,/serial\s*[:\-]\s*(.+)/i]),
+    date:       find([/fecha\s*[:\-]\s*([\d.\/-]+)/i,/date\s*[:\-]\s*([\d.\/-]+)/i]),
+    operator:   find([/operador\s*[:\-]\s*(.+)/i,/operator\s*[:\-]\s*(.+)/i]),
+    client:     find([/cliente\s*[:\-]\s*(.+)/i,/client\s*[:\-]\s*(.+)/i]),
+    partRef:    find([/pieza\s*[:\-]\s*(.+)/i,/part\s*[:\-]\s*(.+)/i,/referencia\s*[:\-]\s*(.+)/i]),
+    nomD:       find([/di[aá]m(?:etro)?\s*nominal\s*[:\-]\s*([\d.]+)/i,/nominal\s*dia(?:meter)?\s*[:\-]\s*([\d.]+)/i]),
+    pitch:      find([/paso\s*[:\-]\s*([\d.]+)/i,/pitch\s*[:\-]\s*([\d.]+)/i]),
+    flank:      find([/[aá]ngulo\s*(?:de\s*)?flanco\s*[:\-]\s*([\d.]+)/i,/flank\s*[:\-]\s*([\d.]+)/i]),
+    wire:       find([/hilo\s*w?\s*[:\-]\s*([\d.]+)/i,/wire\s*w?\s*[:\-]\s*([\d.]+)/i,/di[aá]m.*hilo\s*[:\-]\s*([\d.]+)/i]),
+    force:      find([/fuerza\s*[:\-]\s*([\d.]+)/i,/force\s*[:\-]\s*([\d.]+)/i]),
+    temp:       find([/temperatura\s*[:\-]\s*([\d.]+)/i,/temp(?:erature)?\s*[:\-]\s*([\d.]+)/i]),
+  };
+  // readings by plane
+  const byPlane={};
+  let curPlane=null;
+  for(const ln of lines){
+    const pm=ln.match(/(?:plano|plane)\s*([\d.]+)[°\s]/i);
+    if(pm){ curPlane=parseFloat(pm[1]); if(!byPlane[curPlane]) byPlane[curPlane]=[]; continue; }
+    const rm=ln.match(/(?:lectura|reading)\s*\d*\s*[:\-]?\s*([\d.,]+)/i);
+    if(rm&&curPlane!==null){ byPlane[curPlane].push(parseFloat(rm[1].replace(',','.'))); continue; }
+    const nm=ln.replace(',','.').match(/^\s*((?:1[0-9]|2[0-9])\.[\d]{4,})\s*$/);
+    if(nm&&curPlane!==null){ const v=parseFloat(nm[1]); if(v>5&&v<200) byPlane[curPlane].push(v); }
+  }
+  // Apply
+  if(parsed.instrument) V('inst_model', parsed.instrument.includes('828')?'Mahr 828':parsed.instrument);
+  if(parsed.serial)   V('inst_sn',    parsed.serial);
+  if(parsed.operator) V('operator',   parsed.operator);
+  if(parsed.client)   V('client',     parsed.client);
+  if(parsed.partRef)  V('part_ref',   parsed.partRef);
+  if(parsed.nomD)     V('nominal_d',  parsed.nomD);
+  if(parsed.pitch)    V('pitch',      parsed.pitch);
+  if(parsed.flank)    V('flank_angle',parsed.flank);
+  if(parsed.wire)     V('wire_cal',   parsed.wire);
+  if(parsed.force)    V('meas_force', parsed.force);
+  if(parsed.temp)     V('temp_c',     parsed.temp);
+  if(parsed.date){
+    let dt=parsed.date;
+    if(dt.match(/^\d{2}\.\d{2}\.\d{4}$/)){ const [d2,m,y]=dt.split('.'); dt=`${y}-${m}-${d2}`; }
+    V('meas_date', dt);
+  }
+  // inject readings
+  const keys=Object.keys(byPlane).map(Number).sort((a,b)=>a-b);
+  if(keys.length>0){ clearReadings(0); for(const v of byPlane[keys[0]]) injectReading(0,v); }
+  if(keys.length>1){ clearReadings(90); for(const v of byPlane[keys[1]]) injectReading(90,v); }
+  onThreadChange(); updateTempHint(); checkWireRange(); updateCorrStrip();
+  // show preview
+  E('import-preview').style.display='block';
+  E('drop-zone').style.display='none';
+  const flds=[
+    ['Instrumento',parsed.instrument], ['Nº Serie',parsed.serial], ['Operador',parsed.operator],
+    ['Cliente',parsed.client], ['Diám. nominal',parsed.nomD?parsed.nomD+' mm':null],
+    ['Paso',parsed.pitch?parsed.pitch+' mm':null], ['Ángulo flanco',parsed.flank?parsed.flank+'°':null],
+    ['Hilo W',parsed.wire?parsed.wire+' mm':null], ['Fuerza',parsed.force?parsed.force+' (verificar unidad)':null],
+    ['Temperatura',parsed.temp?parsed.temp+' °C':null],
+    ['Planos detectados',Object.keys(byPlane).length>0?Object.entries(byPlane).map(([k,v])=>`${k}°: ${v.length} lect.`).join(', '):null],
+  ].filter(([,v])=>v);
+  E('import-fields').innerHTML=flds.map(([k,v])=>`<div class="import-field-row"><span class="import-field-key">${k}</span><span class="import-field-val">${v}</span></div>`).join('');
+  E('import-code').textContent=content.slice(0,1000)+(content.length>1000?'\n…':'');
+}
+function clearReadings(plane){ readings[plane]=[]; E(`readings-${plane}`).innerHTML=''; E(`stats-${plane}`).style.display='none'; }
+function injectReading(plane,value){ addReading(plane); const n=readings[plane].length-1; const inp=E(`m-${plane}-${n}`); if(inp){ inp.value=value.toFixed(5); updateReading(plane,n); } }
+function clearImport(){ E('import-preview').style.display='none'; E('drop-zone').style.display='block'; document.getElementById('file-import').value=''; }
+
+// ── HELPERS ─────────────────────────────────────────────────────
+const G = id => document.getElementById(id)?.value ?? '';
+const E = id => document.getElementById(id);
+const V = (id,val) => { const el=document.getElementById(id); if(el) el.value=val; };
+const kv = (k,v) => `<div class="cert-kv"><div class="cert-k">${k}:</div><div class="cert-v">${v||'—'}</div></div>`;
+function f6(v){ if(!v&&v!==0) return '—'; return Math.abs(v)<0.001?v.toExponential(3):v.toFixed(6); }
+function fmtE(v){ if(!v&&v!==0) return '—'; return Math.abs(v)<0.001?v.toExponential(3):v.toFixed(5); }
+</script>
+
+</body>
+</html>
