@@ -4,1028 +4,1720 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ThreadCal Pro — Calibración ISO 17025</title>
-<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
-<style>
-:root{--white:#ffffff;--bg:#f4f6fa;--bg2:#eef1f7;--surface:#ffffff;--surf2:#f8f9fc;--border:#e2e7f0;--border2:#cbd3e3;--ink:#111827;--ink2:#374151;--ink3:#6b7280;--ink4:#9ca3af;--blue:#2563eb;--blue-l:#eff4ff;--blue-m:#dbeafe;--green:#059669;--green-l:#ecfdf5;--amber:#d97706;--amber-l:#fffbeb;--red:#dc2626;--red-l:#fef2f2;--teal:#0d9488;--teal-l:#f0fdfa;--purple:#7c3aed;--r:4px;--r2:8px;--r3:12px;--shadow-s:0 1px 3px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.04);--shadow:0 4px 16px rgba(0,0,0,.07),0 1px 4px rgba(0,0,0,.04);--shadow-l:0 8px 32px rgba(0,0,0,.10),0 2px 8px rgba(0,0,0,.05)}
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(--ink);font-size:14px;line-height:1.55;min-height:100vh}
-
-/* TOPBAR */
-.topbar{background:var(–white);border-bottom:1px solid var(–border);position:sticky;top:0;z-index:200;box-shadow:var(–shadow-s)}
-.topbar-inner{max-width:1100px;margin:0 auto;padding:0 24px;height:60px;display:flex;align-items:center;justify-content:space-between}
-.brand{display:flex;align-items:center;gap:12px}
-.brand-mark{width:36px;height:36px;background:linear-gradient(135deg,var(–blue) 0%,#1d4ed8 100%);border-radius:9px;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(37,99,235,.35)}
-.brand-name{font-weight:700;font-size:17px;letter-spacing:-.3px}
-.brand-name span{color:var(–blue)}
-.brand-tag{font-size:10px;color:var(–ink3);font-weight:500;letter-spacing:.04em;text-transform:uppercase;margin-top:-1px}
-.topbar-badges{display:flex;gap:8px;align-items:center}
-.chip{font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;letter-spacing:.02em}
-.chip-blue{background:var(–blue-m);color:var(–blue)}
-.chip-teal{background:var(–teal-l);color:var(–teal)}
-.chip-purple{background:#ede9fe;color:var(–purple)}
-
-/* WIZARD */
-.wizard-bar{background:var(–white);border-bottom:1px solid var(–border)}
-.wizard-inner{max-width:1100px;margin:0 auto;display:flex;align-items:stretch;padding:0 24px}
-.wstep{flex:1;display:flex;align-items:center;gap:10px;padding:12px 10px;cursor:pointer;border-bottom:2px solid transparent;transition:all .2s}
-.wstep:hover .wlabel{color:var(–ink2)}
-.wstep.active{border-bottom-color:var(–blue)}
-.wstep.done{border-bottom-color:var(–green)}
-.wstep-num{width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;background:var(–bg2);color:var(–ink3);transition:all .2s}
-.wstep.active .wstep-num{background:var(–blue);color:#fff}
-.wstep.done .wstep-num{background:var(–green);color:#fff}
-.wlabel{font-size:12px;font-weight:500;color:var(–ink3);transition:.2s}
-.wstep.active .wlabel{color:var(–blue);font-weight:600}
-.wstep.done .wlabel{color:var(–green)}
-.wdesc{font-size:10px;color:var(–ink4)}
-@media(max-width:700px){.wdesc{display:none}}
-.wstep-sep{width:1px;background:var(–border);align-self:stretch;margin:8px 0}
-
-/* LAYOUT */
-.app{max-width:1100px;margin:0 auto;padding:24px 24px 60px}
-.tab-panel{display:none;animation:fadeUp .22s ease both}
-.tab-panel.active{display:block}
-@keyframes fadeUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
-
-/* CARDS */
-.card{background:var(–surface);border:1px solid var(–border);border-radius:var(–r3);box-shadow:var(–shadow-s);overflow:hidden}
-.gap{height:16px}
-.card-head{padding:14px 20px;border-bottom:1px solid var(–border);display:flex;align-items:center;justify-content:space-between}
-.card-title{font-weight:600;font-size:14px;display:flex;align-items:center;gap:8px}
-.card-icon{width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
-.icon-blue{background:var(–blue-m)}
-.icon-teal{background:var(–teal-l)}
-.icon-amber{background:var(–amber-l)}
-.icon-green{background:var(–green-l)}
-.icon-purple{background:#ede9fe}
-.card-body{padding:20px}
-
-/* GRID */
-.cols2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
-.cols3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
-.cols4{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:12px}
-@media(max-width:680px){.cols2,.cols3,.cols4{grid-template-columns:1fr}}
-
-/* FORM */
-.field{margin-bottom:14px}
-.field:last-child{margin-bottom:0}
-.label{display:flex;align-items:center;gap:5px;font-size:12px;font-weight:600;color:var(–ink2);margin-bottom:5px}
-.label-unit{font-size:11px;font-weight:400;color:var(–ink3)}
-.label-req{color:var(–red);font-size:12px}
-.hint{font-size:11px;color:var(–ink3);margin-top:4px}
-.hint.warn{color:var(–amber)}
-.hint.ok{color:var(–green)}
-input[type=text],input[type=number],input[type=date],select,textarea{width:100%;padding:9px 12px;font-family:inherit;font-size:13px;color:var(–ink);background:var(–surf2);border:1.5px solid var(–border);border-radius:var(–r2);outline:none;transition:.15s;-moz-appearance:textfield}
-input::-webkit-outer-spin-button,input::-webkit-inner-spin-button{-webkit-appearance:none}
-input:focus,select:focus,textarea:focus{border-color:var(–blue);background:#fff;box-shadow:0 0 0 3px rgba(37,99,235,.1)}
-input[readonly]{background:var(–bg2);color:var(–ink3);cursor:default}
-select{cursor:pointer}
-.input-group{display:flex;gap:8px}
-.input-group input{flex:1}
-.input-group select{width:120px;flex-shrink:0}
-
-/* BUTTONS */
-.btn{display:inline-flex;align-items:center;gap:7px;font-family:inherit;font-size:13px;font-weight:600;padding:9px 18px;border-radius:var(–r2);border:none;cursor:pointer;transition:all .15s;white-space:nowrap}
-.btn-primary{background:var(–blue);color:#fff;box-shadow:0 1px 4px rgba(37,99,235,.3)}
-.btn-primary:hover{background:#1d4ed8;transform:translateY(-1px);box-shadow:0 2px 8px rgba(37,99,235,.4)}
-.btn-ghost{background:transparent;color:var(–ink2);border:1.5px solid var(–border2)}
-.btn-ghost:hover{background:var(–bg2);border-color:var(–blue);color:var(–blue)}
-.btn-green{background:var(–green);color:#fff}
-.btn-green:hover{background:#047857;transform:translateY(-1px)}
-.btn-danger{background:var(–red-l);color:var(–red);border:1.5px solid #fca5a5}
-.btn-danger:hover{background:#fee2e2}
-.btn-lg{padding:11px 24px;font-size:14px;border-radius:var(–r3)}
-.btn-sm{padding:6px 12px;font-size:12px;border-radius:var(–r)}
-.btn:disabled{opacity:.4;cursor:not-allowed;transform:none!important}
-.action-row{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-top:24px}
-
-/* CALLOUTS */
-.callout{display:flex;gap:12px;padding:13px 16px;border-radius:var(–r2);font-size:13px;line-height:1.5;border:1px solid;margin-bottom:14px}
-.callout-icon{font-size:16px;flex-shrink:0;line-height:1.3}
-.callout-title{font-weight:700;margin-bottom:2px;font-size:13px}
-.callout-blue{background:var(–blue-l);border-color:#bfdbfe;color:#1e40af}
-.callout-amber{background:var(–amber-l);border-color:#fde68a;color:#92400e}
-.callout-green{background:var(–green-l);border-color:#a7f3d0;color:#065f46}
-.callout-teal{background:var(–teal-l);border-color:#99f6e4;color:#134e4a}
-
-/* STATS */
-.stats-row{display:grid;gap:12px;margin-bottom:16px}
-.s4{grid-template-columns:repeat(4,1fr)}
-.s3{grid-template-columns:repeat(3,1fr)}
-@media(max-width:800px){.s4{grid-template-columns:1fr 1fr}}
-.stat-card{background:var(–surface);border:1.5px solid var(–border);border-radius:var(–r2);padding:14px 16px}
-.stat-card.hl{border-color:var(–blue);background:var(–blue-l)}
-.stat-card.good{border-color:var(–green);background:var(–green-l)}
-.stat-card.warn-c{border-color:var(–amber);background:var(–amber-l)}
-.stat-lbl{font-size:10px;font-weight:700;color:var(–ink3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px}
-.stat-val{font-size:22px;font-weight:700;color:var(–ink);font-family:‘DM Mono’,monospace;line-height:1.1}
-.stat-val .unit{font-size:12px;color:var(–ink3);font-weight:400;margin-left:3px}
-.stat-sub{font-size:11px;color:var(–ink3);margin-top:3px}
-
-/* TABLE */
-.tbl-wrap{overflow-x:auto}
-table.tbl{width:100%;border-collapse:collapse;font-size:13px}
-table.tbl th{background:var(–surf2);font-size:11px;font-weight:700;color:var(–ink3);letter-spacing:.05em;text-transform:uppercase;padding:10px 14px;border-bottom:2px solid var(–border);text-align:left}
-table.tbl td{padding:9px 14px;border-bottom:1px solid var(–border)}
-table.tbl tbody tr:last-child td{border-bottom:none}
-table.tbl tbody tr:hover{background:var(–surf2)}
-table.tbl .num{text-align:right;font-family:‘DM Mono’,monospace;font-size:12px}
-table.tbl .lbl{color:var(–ink2)}
-.tbl-foot td{background:var(–surf2);font-weight:700;border-top:2px solid var(–border2)!important}
-.tbl-final td{background:var(–blue-l);border-top:2px solid var(–blue)!important;color:var(–blue);font-weight:700}
-
-/* PILLS */
-.pill-group{display:flex;flex-wrap:wrap;gap:8px}
-.pill{padding:8px 16px;border-radius:10px;font-size:12px;font-weight:600;border:1.5px solid var(–border2);background:var(–surface);color:var(–ink2);cursor:pointer;transition:.15s;line-height:1.4}
-.pill:hover{border-color:var(–blue);color:var(–blue);background:var(–blue-l)}
-.pill.selected{border-color:var(–blue);color:var(–blue);background:var(–blue-l)}
-
-/* DROP ZONE */
-.drop-zone{border:2px dashed var(–border2);border-radius:var(–r3);padding:28px 24px;text-align:center;cursor:pointer;transition:.2s;background:var(–surf2);margin-bottom:14px}
-.drop-zone:hover,.drop-zone.over{border-color:var(–blue);background:var(–blue-l)}
-.drop-icon{font-size:32px;margin-bottom:8px}
-.drop-title{font-weight:600;font-size:15px;margin-bottom:3px}
-.drop-sub{font-size:12px;color:var(–ink3)}
-
-/* READINGS */
-.reading-row{display:grid;grid-template-columns:28px 1fr 1fr 1fr 26px;gap:7px;align-items:center;margin-bottom:6px}
-.ri-num{font-size:11px;font-weight:700;color:var(–ink4);text-align:right}
-.ri-val{font-family:‘DM Mono’,monospace;font-size:12px;color:var(–teal);font-weight:500;padding:8px 10px;background:var(–teal-l);border-radius:var(–r);border:1px solid #ccfbf1;text-align:right}
-.ri-val.empty{color:var(–ink4);background:var(–surf2);border-color:var(–border)}
-.ri-input{font-family:‘DM Mono’,monospace;font-size:13px;padding:8px 10px;background:#fff;border:1.5px solid var(–border);border-radius:var(–r2);outline:none;width:100%;transition:.15s}
-.ri-input:focus{border-color:var(–blue);box-shadow:0 0 0 3px rgba(37,99,235,.1)}
-.del-btn{width:24px;height:24px;border-radius:50%;border:none;background:none;color:var(–ink4);cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;transition:.15s;line-height:1;padding:0}
-.del-btn:hover{background:var(–red-l);color:var(–red)}
-.add-row-btn{display:flex;align-items:center;gap:6px;padding:8px;border:1.5px dashed var(–border2);border-radius:var(–r2);background:none;cursor:pointer;font-size:12px;font-weight:600;color:var(–ink3);width:100%;justify-content:center;transition:.15s;font-family:inherit;margin-top:4px}
-.add-row-btn:hover{border-color:var(–blue);color:var(–blue);background:var(–blue-l)}
-.plane-stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;padding:11px;background:var(–surf2);border-radius:var(–r2);margin-top:8px;border:1px solid var(–border)}
-.pstat-lbl{font-size:10px;font-weight:700;color:var(–ink3);text-transform:uppercase;letter-spacing:.05em}
-.pstat-val{font-family:‘DM Mono’,monospace;font-size:14px;font-weight:600;color:var(–ink)}
-
-/* RESULT */
-.result-hero{text-align:center;padding:28px 24px;background:linear-gradient(135deg,var(–blue-l) 0%,#f0f9ff 100%);border-radius:var(–r3);border:1.5px solid #bfdbfe;margin-bottom:16px}
-.result-formula{font-size:11px;color:var(–ink3);font-family:‘DM Mono’,monospace;margin-bottom:10px}
-.result-val{font-family:‘DM Mono’,monospace;font-weight:700;font-size:36px;color:var(–blue);line-height:1}
-.result-pm{color:var(–amber);font-size:28px;margin:0 8px}
-.result-u{color:var(–amber)}
-.result-unit{font-size:16px;color:var(–ink3);font-weight:400;margin-left:6px}
-.result-sub{font-size:12px;color:var(–ink3);margin-top:8px}
-.conform-ok{background:var(–green-l);border:1.5px solid #6ee7b7;color:#065f46;border-radius:var(–r2);padding:12px 16px;display:flex;gap:10px;align-items:flex-start;margin-top:14px}
-.conform-warn{background:var(–amber-l);border:1.5px solid #fde68a;color:#78350f;border-radius:var(–r2);padding:12px 16px;display:flex;gap:10px;align-items:flex-start;margin-top:14px}
-.conform-fail{background:var(–red-l);border:1.5px solid #fca5a5;color:#991b1b;border-radius:var(–r2);padding:12px 16px;display:flex;gap:10px;align-items:flex-start;margin-top:14px}
-.conform-icon{font-size:20px}
-.conform-title{font-weight:700;font-size:14px}
-.conform-body{font-size:12px;margin-top:2px}
-
-/* PBAR */
-.pbar{height:3px;background:#e5e7eb;border-radius:2px;margin-top:3px}
-.pbar-fill{height:100%;border-radius:2px;background:var(–blue)}
-.pbar-fill.b{background:var(–teal)}
-
-/* IMPORT */
-.import-code{background:var(–ink);color:#a5f3fc;font-family:‘DM Mono’,monospace;font-size:11px;padding:14px;border-radius:var(–r2);overflow:auto;white-space:pre;line-height:1.6;max-height:220px}
-.import-field-row{display:flex;align-items:center;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(–border);font-size:13px}
-.import-field-row:last-child{border-bottom:none}
-.import-field-key{color:var(–ink2);font-weight:500}
-.import-field-val{font-family:‘DM Mono’,monospace;font-size:12px;color:var(–teal);font-weight:600}
-
-/* TOOLTIP */
-.tip-w{position:relative;display:inline-block}
-.tip-i{cursor:help;color:var(–ink3);font-size:13px}
-.tip-b{display:none;position:absolute;bottom:calc(100% + 5px);left:50%;transform:translateX(-50%);background:#1e293b;color:#fff;font-size:11px;padding:5px 9px;border-radius:5px;white-space:nowrap;z-index:999;pointer-events:none;box-shadow:0 4px 12px rgba(0,0,0,.2)}
-.tip-w:hover .tip-b{display:block}
-
-/* CERT */
-.cert-shell{background:#fff;color:#111;border:1px solid #dde3ef;border-radius:var(–r3);box-shadow:var(–shadow-l);overflow:hidden;font-family:‘DM Sans’,sans-serif}
-.cert-top-stripe{height:5px;background:linear-gradient(90deg,#2563eb,#0d9488)}
-.cert-inner{padding:32px 40px}
-.cert-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:24px;padding-bottom:18px;border-bottom:2px solid #111}
-.cert-lab-name{font-weight:800;font-size:17px}
-.cert-lab-sub{font-size:10px;color:#666;letter-spacing:.06em;text-transform:uppercase;margin-top:2px}
-.cert-accred-badge{background:#111;color:#fff;font-size:10px;font-weight:800;padding:4px 12px;border-radius:3px;letter-spacing:.1em}
-.cert-accred-sub{font-size:9px;color:#888;margin-top:3px;text-align:right}
-.cert-title{text-align:center;font-size:20px;font-weight:800;letter-spacing:.04em;margin:2px 0}
-.cert-num{text-align:center;font-size:12px;color:#888;font-family:‘DM Mono’,monospace;margin-bottom:22px}
-.cert-sec-title{font-size:9px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:#fff;background:#111;padding:4px 10px;border-radius:2px;margin-bottom:10px;display:inline-block}
-.cert-sec{margin-bottom:18px}
-.cert-kv{display:flex;gap:8px;margin-bottom:3px;font-size:12px}
-.cert-k{color:#666;width:200px;flex-shrink:0}
-.cert-v{font-weight:600;color:#111}
-.cert-result-box{background:linear-gradient(135deg,#eff6ff,#ecfdf5);border:2px solid #2563eb;border-radius:8px;padding:18px;text-align:center;margin:14px 0}
-.cert-result-label{font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:#666;margin-bottom:5px;font-weight:700}
-.cert-result-value{font-size:24px;font-weight:800;font-family:‘DM Mono’,monospace;color:#111}
-.cert-result-note{font-size:10px;color:#555;margin-top:5px}
-.cert-bud-tbl{width:100%;border-collapse:collapse;font-size:11px}
-.cert-bud-tbl th{background:#f5f5f5;padding:5px 9px;text-align:left;border-bottom:1px solid #ddd;font-size:10px;letter-spacing:.05em;text-transform:uppercase;color:#555}
-.cert-bud-tbl td{padding:5px 9px;border-bottom:1px solid #eee}
-.cert-bud-tbl .nr{text-align:right;font-family:‘DM Mono’,monospace}
-.cert-bud-tbl .ta{color:#1e40af;font-weight:700}
-.cert-bud-tbl .tb{color:#065f46;font-weight:700}
-.cert-bud-tot td{background:#eff6ff;border-top:2px solid #2563eb!important;font-weight:700}
-.cert-footer{display:flex;justify-content:space-between;margin-top:28px;padding-top:18px;border-top:1px solid #ddd}
-.cert-sign{text-align:center}
-.cert-sign-line{width:130px;border-top:1px solid #999;margin:22px auto 5px}
-.cert-sign-name{font-weight:700;color:#111;font-size:12px}
-.cert-sign-role{color:#888;font-size:10px}
-.cert-foot-mid{text-align:center;color:#aaa;font-size:10px;line-height:1.7;align-self:center}
-
-/* MISC */
-.divider{border:none;border-top:1px solid var(–border);margin:16px 0}
-.text-mono{font-family:‘DM Mono’,monospace}
-.text-muted{color:var(–ink3)}
-.text-sm{font-size:12px}
-.text-xs{font-size:11px}
-.fw7{font-weight:700}
-.mt12{margin-top:12px}
-.mt16{margin-top:16px}
-.flex-c{display:flex;align-items:center;gap:8px}
-.flex-b{display:flex;justify-content:space-between;align-items:center}
-
-@media print{.topbar,.wizard-bar,.action-row,.btn,.no-print{display:none!important}body{background:#fff}.cert-shell{box-shadow:none;border:none}}
-</style>
-
-</head>
-<body>
-
-<div class="topbar">
-  <div class="topbar-inner">
-    <div class="brand">
-      <div class="brand-mark">
-        <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M4 10h12M7 7l-3 3 3 3M13 7l3 3-3 3" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="10" cy="10" r="1.5" fill="#fff"/></svg>
-      </div>
-      <div>
-        <div class="brand-name">Thread<span>Cal</span> Pro</div>
-        <div class="brand-tag">Calibración de Roscas · ISO 17025</div>
-      </div>
-    </div>
-    <div class="topbar-badges">
-      <span class="chip chip-blue">EURAMET cg-10</span>
-      <span class="chip chip-teal">GUM · JCGM 100</span>
-      <span class="chip chip-purple">ENAC ISO 17025</span>
-    </div>
-  </div>
-</div>
-
-<div class="wizard-bar">
-  <div class="wizard-inner">
-    <div class="wstep active" id="ws0" onclick="goStep(0)"><div class="wstep-num">1</div><div><div class="wlabel">Proyecto</div><div class="wdesc">Lab, instrumento</div></div></div>
-    <div class="wstep-sep"></div>
-    <div class="wstep" id="ws1" onclick="goStep(1)"><div class="wstep-num">2</div><div><div class="wlabel">Rosca &amp; Hilo</div><div class="wdesc">Perfil, tolerancias</div></div></div>
-    <div class="wstep-sep"></div>
-    <div class="wstep" id="ws2" onclick="goStep(2)"><div class="wstep-num">3</div><div><div class="wlabel">Mediciones</div><div class="wdesc">Lecturas plano 0° y 90°</div></div></div>
-    <div class="wstep-sep"></div>
-    <div class="wstep" id="ws3" onclick="goStep(3)"><div class="wstep-num">4</div><div><div class="wlabel">Incertidumbre</div><div class="wdesc">Presupuesto GUM</div></div></div>
-    <div class="wstep-sep"></div>
-    <div class="wstep" id="ws4" onclick="goStep(4)"><div class="wstep-num">5</div><div><div class="wlabel">Certificado</div><div class="wdesc">Informe ISO 17025</div></div></div>
-  </div>
-</div>
-
-<div class="app">
-
-<!-- ═══════ STEP 0 — PROYECTO ═══════ -->
-
-<div class="tab-panel active" id="step0">
-
-  <div class="callout callout-teal">
-    <div class="callout-icon">⚡</div>
-    <div>
-      <div class="callout-title">Importa tu fichero</div>
-      Soporta ficheros .txt o .prn exportados desde el banco. Puedes arrastrarlo abajo o rellenar los campos manualmente.
-    </div>
-  </div>
-
-  <div class="drop-zone" id="drop-zone"
-       onclick="document.getElementById('file-import').click()"
-       ondragover="dzOver(event)" ondragleave="dzLeave(event)" ondrop="dzDrop(event)">
-    <input type="file" id="file-import" accept=".txt,.prn,.csv" style="display:none" onchange="importFile(this)">
-    <div class="drop-icon">📂</div>
-    <div class="drop-title">Arrastra el fichero aquí</div>
-    <div class="drop-sub">Formatos: .txt · .prn · .csv — o haz clic para seleccionar</div>
-  </div>
-
-  <div id="import-preview" class="card" style="display:none;margin-bottom:14px">
-    <div class="card-head">
-      <div class="card-title"><div class="card-icon icon-teal">✅</div>Fichero importado correctamente</div>
-      <button class="btn btn-sm btn-danger" onclick="clearImport()">✕ Quitar</button>
-    </div>
-    <div class="card-body">
-      <div class="cols2">
-        <div>
-          <div class="text-xs text-muted fw7" style="text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px">Campos detectados</div>
-          <div id="import-fields"></div>
-        </div>
-        <div>
-          <div class="text-xs text-muted fw7" style="text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px">Contenido del fichero</div>
-          <div id="import-code" class="import-code"></div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <div class="cols2">
-    <div class="card">
-      <div class="card-head"><div class="card-title"><div class="card-icon icon-blue">📋</div>Datos del proyecto</div></div>
-      <div class="card-body">
-        <div class="cols2">
-          <div class="field"><div class="label">Número de Informe <span class="label-req">*</span></div><input type="text" id="proj_code" value="CAL-2025-001"></div>
-          <div class="field"><div class="label">Fecha de medición</div><input type="date" id="meas_date"></div>
-        </div>
-        <div class="field"><div class="label">Laboratorio</div><input type="text" id="lab_name" value="Laboratorio de Metrología Dimensional"></div>
-        <div class="cols2">
-          <div class="field"><div class="label">Operador <span class="label-req">*</span></div><input type="text" id="operator" value="OP-001"></div>
-          <div class="field"><div class="label">Cliente</div><input type="text" id="client" placeholder="Nombre del cliente"></div>
-        </div>
-        <div class="field"><div class="label">Referencia del elemento</div><input type="text" id="part_ref" placeholder="Nº serie / referencia (opcional)"></div>
-      </div>
-    </div>
-
-```
-<div class="card">
-  <div class="card-head"><div class="card-title"><div class="card-icon icon-purple">🔬</div>Instrumento &amp; Condiciones</div></div>
-  <div class="card-body">
-    <div class="cols2">
-      <div class="field"><div class="label">Modelo banco</div><input type="text" id="inst_model" value="Mahr 828"></div>
-      <div class="field"><div class="label">Nº Serie</div><input type="text" id="inst_sn" placeholder="S/N"></div>
-    </div>
-    <div class="cols2">
-      <div class="field"><div class="label">Cert. calibración</div><input type="text" id="inst_cert" placeholder="ENAC-I-XXXX"></div>
-      <div class="field"><div class="label">Válido hasta</div><input type="date" id="inst_expiry"></div>
-    </div>
-    <div class="cols2">
-      <div class="field"><div class="label">U cal. banco (k=2) <span class="label-unit">mm</span></div><input type="number" id="u_cal" value="0.0006" step="0.0001" min="0"></div>
-      <div class="field"><div class="label">Resolución encoder <span class="label-unit">mm</span></div><input type="number" id="resolution" value="0.0001" step="0.00001" min="0"></div>
-    </div>
-    <div class="field">
-      <div class="label">Fuerza de palpado
-        <div class="tip-w"><span class="tip-i">ⓘ</span><div class="tip-b">Verificar unidad con el certificado del banco</div></div>
-      </div>
-      <div class="input-group">
-        <input type="number" id="meas_force" value="4" step="0.01" min="0">
-        <select id="force_unit"><option value="cN" selected>cN</option><option value="N">N</option><option value="daN">daN</option></select>
-      </div>
-      <div class="hint warn">confirmar unidad con hoja de especificaciones</div>
-    </div>
-    <div class="cols2">
-      <div class="field">
-        <div class="label">Temperatura <span class="label-unit">°C</span></div>
-        <input type="number" id="temp_c" value="20.3" step="0.1" oninput="updateTempHint()">
-        <div class="hint" id="temp_hint"></div>
-      </div>
-      <div class="field"><div class="label">Humedad <span class="label-unit">%</span></div><input type="number" id="humidity" value="48" step="1" min="0" max="100"></div>
-    </div>
-  </div>
-</div>
-```
-
-  </div>
-
-  <div class="action-row">
-    <div></div>
-    <button class="btn btn-primary btn-lg" onclick="goStep(1)">Siguiente: Rosca &amp; Hilo →</button>
-  </div>
-</div>
-
-<!-- ═══════ STEP 1 — ROSCA ═══════ -->
-
-<div class="tab-panel" id="step1">
-
-  <div class="card" style="margin-bottom:16px">
-    <div class="card-head"><div class="card-title"><div class="card-icon icon-blue">🔩</div>Tipo de rosca — selecciona un perfil</div></div>
-    <div class="card-body">
-      <div class="pill-group" id="preset-pills">
-        <div class="pill selected" onclick="selectPreset(this,'M')">⚙ Métrica ISO<br><span style="font-size:10px;font-weight:400">α=60° · ISO 68-1</span></div>
-        <div class="pill" onclick="selectPreset(this,'UN')">🔧 UN / UNC / UNF<br><span style="font-size:10px;font-weight:400">α=60° · ASME B1.1</span></div>
-        <div class="pill" onclick="selectPreset(this,'G')">🔨 Whitworth BSW<br><span style="font-size:10px;font-weight:400">α=55° · BS 84</span></div>
-        <div class="pill" onclick="selectPreset(this,'Tr')">📐 Trapezoidal ISO<br><span style="font-size:10px;font-weight:400">α=30° · ISO 2903</span></div>
-        <div class="pill" onclick="selectPreset(this,'ACME')">🏗 ACME<br><span style="font-size:10px;font-weight:400">α=29° · ASME B1.5</span></div>
-        <div class="pill" onclick="selectPreset(this,'CUSTOM')">✏️ Personalizada</div>
-      </div>
-    </div>
-  </div>
-
-  <div class="cols2">
-    <div class="card">
-      <div class="card-head"><div class="card-title"><div class="card-icon icon-blue">📏</div>Geometría</div></div>
-      <div class="card-body">
-        <div class="cols3">
-          <div class="field"><div class="label">Diám. nominal D <span class="label-unit">mm</span> <span class="label-req">*</span></div><input type="number" id="nominal_d" value="14" step="0.001" min="0" oninput="onThreadChange()"></div>
-          <div class="field"><div class="label">Paso p <span class="label-unit">mm</span> <span class="label-req">*</span></div><input type="number" id="pitch" value="1.5" step="0.001" min="0.001" oninput="onThreadChange()"></div>
-          <div class="field"><div class="label">Ángulo α <span class="label-unit">°</span></div><input type="number" id="flank_angle" value="60" step="0.1" min="1" max="89" oninput="onThreadChange()"></div>
-        </div>
-        <div class="cols2">
-          <div class="field"><div class="label">Dirección</div><select id="direction"><option value="external">Tornillo (externo)</option><option value="internal">Tuerca (interno)</option></select></div>
-          <div class="field"><div class="label">Clase tolerancia</div><input type="text" id="tol_class" value="6g" placeholder="6g / 6H / 2A…"></div>
-        </div>
-        <div class="cols2">
-          <div class="field"><div class="label">Límite mín. <span class="label-unit">mm</span></div><input type="number" id="tol_min" step="0.0001" placeholder="Opcional"></div>
-          <div class="field"><div class="label">Límite máx. <span class="label-unit">mm</span></div><input type="number" id="tol_max" step="0.0001" placeholder="Opcional"></div>
-        </div>
-        <div class="callout callout-blue" style="margin-bottom:0">
-          <div class="callout-icon">📐</div>
-          <div>Diámetro de paso teórico: <strong id="e_theoretical" class="text-mono">— mm</strong><div class="text-xs text-muted">D − 0.6495·p  (ISO métrica)</div></div>
-        </div>
-      </div>
-    </div>
-
-```
-<div class="card">
-  <div class="card-head"><div class="card-title"><div class="card-icon icon-teal">💎</div>Hilo &amp; Material</div></div>
-  <div class="card-body">
-    <div class="callout callout-teal" style="margin-bottom:12px">
-      <div class="callout-icon">✨</div>
-      <div>Hilo óptimo: <strong id="best_wire_val" class="text-mono">— mm</strong><div class="text-xs" id="best_wire_range"> </div></div>
-    </div>
-    <div class="cols2">
-      <div class="field"><div class="label">W calibrado <span class="label-unit">mm</span> <span class="label-req">*</span></div><input type="number" id="wire_cal" value="0.86598" step="0.00001" min="0" oninput="checkWireRange()"><div class="hint" id="wire_range_hint"></div></div>
-      <div class="field"><div class="label">u(W) k=1 <span class="label-unit">mm</span></div><input type="number" id="u_wire" value="0.00015" step="0.000001" min="0"></div>
-    </div>
-    <div class="cols2">
-      <div class="field"><div class="label">Cert. hilo</div><input type="text" id="wire_cert" placeholder="ENAC-C-XXXX"></div>
-      <div class="field"><div class="label">u(T) k=1 <span class="label-unit">°C</span></div><input type="number" id="u_temp" value="0.1" step="0.01" min="0"></div>
-    </div>
-    <div class="divider"></div>
-    <div class="field"><div class="label">Material</div>
-      <select id="material_sel" onchange="onMaterialChange()">
-        <option value="steel_c">Acero al carbono — α=11.5e-6, E=210 GPa</option>
-        <option value="steel_ss">Acero inoxidable — α=16.0e-6, E=193 GPa</option>
-        <option value="steel_t">Acero herramienta — α=10.5e-6, E=205 GPa</option>
-        <option value="aluminium">Aluminio — α=23.0e-6, E=70 GPa</option>
-        <option value="custom">Personalizado…</option>
-      </select>
-    </div>
-    <div class="cols3">
-      <div class="field"><div class="label">α_th <span class="label-unit">×10⁻⁶ K⁻¹</span></div><input type="number" id="alpha_th" value="11.5" step="0.1" min="0"></div>
-      <div class="field"><div class="label">E_mat <span class="label-unit">GPa</span></div><input type="number" id="e_mod" value="210" step="1" min="1"></div>
-      <div class="field"><div class="label">ν Poisson</div><input type="number" id="poisson" value="0.30" step="0.01" min="0" max="0.5"></div>
-    </div>
-    <div class="cols2">
-      <div class="field"><div class="label">u(F) k=1 <span class="label-unit">N</span></div><input type="number" id="u_force" value="0.002" step="0.001" min="0"></div>
-      <div class="field"><div class="label">u(α) <span class="label-unit">°</span></div><input type="number" id="u_angle" value="0.1" step="0.01" min="0"></div>
-    </div>
-  </div>
-</div>
-```
-
-  </div>
-
-  <div class="action-row">
-    <button class="btn btn-ghost" onclick="goStep(0)">← Volver</button>
-    <button class="btn btn-primary btn-lg" onclick="goStep(2)">Siguiente: Mediciones →</button>
-  </div>
-</div>
-
-<!-- ═══════ STEP 2 — MEDICIONES ═══════ -->
-
-<div class="tab-panel" id="step2">
-
-  <div class="callout callout-blue">
-    <div class="callout-icon">ℹ️</div>
-    <div>Introduce los valores <strong>M_raw</strong> (distancia medida por el banco en mm). El sistema calcula en tiempo real las correcciones y el diámetro de paso E según <strong>EURAMET cg-10</strong>.</div>
-  </div>
-
-  <div class="stats-row s4">
-    <div class="stat-card"><div class="stat-lbl">Correc. térmica ΔM</div><div class="stat-val" id="cs_thermal">—<span class="unit">mm</span></div><div class="stat-sub">M·α_th·(T−20)</div></div>
-    <div class="stat-card"><div class="stat-lbl">Correc. Hertz δ_H</div><div class="stat-val" id="cs_hertz">—<span class="unit">mm</span></div><div class="stat-sub">Deformación elástica</div></div>
-    <div class="stat-card"><div class="stat-lbl">−W·(1+1/sin α/2)</div><div class="stat-val" id="cs_wire">—<span class="unit">mm</span></div><div class="stat-sub">Término hilo</div></div>
-    <div class="stat-card"><div class="stat-lbl">p/(2·tan α/2)</div><div class="stat-val" id="cs_pitch">—<span class="unit">mm</span></div><div class="stat-sub">Término paso</div></div>
-  </div>
-
-  <div class="cols2">
-    <div class="card">
-      <div class="card-head">
-        <div class="card-title"><div class="card-icon icon-blue">📊</div>Lecturas — Plano 0° <span class="chip chip-blue" style="margin-left:4px">0°</span></div>
-        <button class="btn btn-sm btn-ghost" onclick="addReading(0)">+ Añadir</button>
-      </div>
-      <div class="card-body">
-        <div style="display:grid;grid-template-columns:28px 1fr 1fr 1fr 26px;gap:7px;margin-bottom:8px">
-          <span></span>
-          <span class="text-xs text-muted fw7" style="text-transform:uppercase;letter-spacing:.04em">M_raw [mm]</span>
-          <span class="text-xs text-muted fw7" style="text-transform:uppercase;letter-spacing:.04em">M_corr [mm]</span>
-          <span class="text-xs text-muted fw7" style="text-transform:uppercase;letter-spacing:.04em">E [mm]</span>
-          <span></span>
-        </div>
-        <div id="readings-0"></div>
-        <button class="add-row-btn" onclick="addReading(0)">＋ Añadir lectura</button>
-        <div id="stats-0" class="plane-stats" style="display:none">
-          <div><div class="pstat-lbl">Media Ē</div><div class="pstat-val" id="mean-0">—</div></div>
-          <div><div class="pstat-lbl">Desv.Est. s</div><div class="pstat-val" id="std-0">—</div></div>
-          <div><div class="pstat-lbl">n lecturas</div><div class="pstat-val" id="n-0">—</div></div>
-        </div>
-      </div>
-    </div>
-
-```
-<div class="card">
-  <div class="card-head">
-    <div class="card-title"><div class="card-icon icon-teal">📊</div>Lecturas — Plano 90° <span class="chip chip-teal" style="margin-left:4px">90°</span></div>
-    <button class="btn btn-sm btn-ghost" onclick="addReading(90)">+ Añadir</button>
-  </div>
-  <div class="card-body">
-    <div style="display:grid;grid-template-columns:28px 1fr 1fr 1fr 26px;gap:7px;margin-bottom:8px">
-      <span></span>
-      <span class="text-xs text-muted fw7" style="text-transform:uppercase;letter-spacing:.04em">M_raw [mm]</span>
-      <span class="text-xs text-muted fw7" style="text-transform:uppercase;letter-spacing:.04em">M_corr [mm]</span>
-      <span class="text-xs text-muted fw7" style="text-transform:uppercase;letter-spacing:.04em">E [mm]</span>
-      <span></span>
-    </div>
-    <div id="readings-90"></div>
-    <button class="add-row-btn" onclick="addReading(90)">＋ Añadir lectura</button>
-    <div id="stats-90" class="plane-stats" style="display:none">
-      <div><div class="pstat-lbl">Media Ē</div><div class="pstat-val" id="mean-90">—</div></div>
-      <div><div class="pstat-lbl">Desv.Est. s</div><div class="pstat-val" id="std-90">—</div></div>
-      <div><div class="pstat-lbl">n lecturas</div><div class="pstat-val" id="n-90">—</div></div>
-    </div>
-  </div>
-</div>
-```
-
-  </div>
-
-  <div class="action-row">
-    <button class="btn btn-ghost" onclick="goStep(1)">← Volver</button>
-    <button class="btn btn-primary btn-lg" onclick="calcGUM()">Calcular incertidumbre GUM →</button>
-  </div>
-</div>
-
-<!-- ═══════ STEP 3 — GUM ═══════ -->
-
-<div class="tab-panel" id="step3">
-  <div id="gum-output"><div class="callout callout-amber"><div class="callout-icon">⚠️</div><div>Introduce mediciones y pulsa "Calcular incertidumbre GUM".</div></div></div>
-</div>
-
-<!-- ═══════ STEP 4 — CERT ═══════ -->
-
-<div class="tab-panel" id="step4">
-  <div id="cert-output"><div class="callout callout-amber"><div class="callout-icon">⚠️</div><div>Completa el cálculo GUM para generar el certificado.</div></div></div>
-</div>
-
-</div><!-- /app -->
-
+<title>ThreadCal Pro v4 — ISO 17025</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
 <script>
-// ── STATE ─────────────────────────────────────────────────────
-let currentStep = 0;
-let readings = {0:[], 90:[]};
-let gumResult = null;
-let activePreset = 'M';
+tailwind.config = {
+  theme: { extend: { fontFamily: { sans: ["DM Sans","system-ui","sans-serif"], mono: ["DM Mono","monospace"] } } }
+}
+</script>
+<style>
+* { -webkit-font-smoothing: antialiased; }
+::-webkit-scrollbar { width:5px; height:5px; }
+::-webkit-scrollbar-track { background:#f1f5f9; }
+::-webkit-scrollbar-thumb { background:#cbd5e1; border-radius:3px; }
+@media print {
+  aside, .no-print { display:none !important; }
+  body { background:white !important; }
+  main { padding:0 !important; }
+}
+</style>
+</head>
+<body class="bg-slate-50">
+<div id="root"></div>
+<script type="text/babel" data-presets="react">
+const { useState, useEffect, useRef, useCallback } = React;
+
+// ═══════════════════════════════════════════════════════════
+// STORAGE
+// ═══════════════════════════════════════════════════════════
+const DB = {
+get: (k) => { try { const v = localStorage.getItem(“tc4_”+k); return v ? JSON.parse(v) : null; } catch { return null; } },
+set: (k, v) => { try { localStorage.setItem(“tc4_”+k, JSON.stringify(v)); } catch {} },
+del: (k) => { try { localStorage.removeItem(“tc4_”+k); } catch {} },
+};
+const uid = () => Math.random().toString(36).slice(2, 9) + Date.now().toString(36).slice(-4);
+const today = () => new Date().toISOString().slice(0, 10);
+const fmtDate = (d) => d ? new Date(d + ‘T12:00:00’).toLocaleDateString(‘es-ES’, { day: ‘2-digit’, month: ‘2-digit’, year: ‘numeric’ }) : ‘—’;
+const fmt = (v, dec = 5) => (v == null || isNaN(v)) ? ‘—’ : Math.abs(v) < 0.001 && v !== 0 ? v.toExponential(3) : (+v).toFixed(dec);
+
+// ═══════════════════════════════════════════════════════════
+// THREAD DATABASE — full ISO/ASME coverage
+// ═══════════════════════════════════════════════════════════
+const THREAD_STANDARDS = [
+{ id: ‘M’, label: ‘Métrica ISO’, norm: ‘ISO 68-1 / ISO 724 / ISO 965’, alpha: 60, tolExt: ‘6g’, tolInt: ‘6H’ },
+{ id: ‘UNC’, label: ‘UNC’, norm: ‘ASME B1.1’, alpha: 60, tolExt: ‘2A’, tolInt: ‘2B’ },
+{ id: ‘UNF’, label: ‘UNF’, norm: ‘ASME B1.1’, alpha: 60, tolExt: ‘2A’, tolInt: ‘2B’ },
+{ id: ‘BSW’, label: ‘Whitworth BSW’, norm: ‘BS 84’, alpha: 55, tolExt: ‘medium’, tolInt: ‘medium’ },
+{ id: ‘BSF’, label: ‘Whitworth BSF’, norm: ‘BS 84’, alpha: 55, tolExt: ‘medium’, tolInt: ‘medium’ },
+{ id: ‘Tr’, label: ‘Trapezoidal ISO’, norm: ‘ISO 2903’, alpha: 30, tolExt: ‘7e’, tolInt: ‘7H’ },
+{ id: ‘ACME’, label: ‘ACME’, norm: ‘ASME B1.5’, alpha: 29, tolExt: ‘2G’, tolInt: ‘2G’ },
+{ id: ‘NPT’, label: ‘Pipe NPT’, norm: ‘ASME B1.20.1’, alpha: 60, tolExt: ‘L1’, tolInt: ‘L1’ },
+{ id: ‘BSPP’, label: ‘BSP Cilíndrica’, norm: ‘ISO 228-1’, alpha: 55, tolExt: ‘A’, tolInt: ‘B’ },
+{ id: ‘CUSTOM’, label: ‘Personalizada’, norm: ‘—’, alpha: 60, tolExt: ‘—’, tolInt: ‘—’ },
+];
+
+const RAW_THREADS = [
+// ── MÉTRICA ISO ──────────────────────────────────────────
+{ s:‘M’, n:‘M1’,       d:1,    p:0.25, d2:0.8376, d1:0.7294 },
+{ s:‘M’, n:‘M1.2’,     d:1.2,  p:0.25, d2:1.0376, d1:0.9294 },
+{ s:‘M’, n:‘M1.6’,     d:1.6,  p:0.35, d2:1.3726, d1:1.2210 },
+{ s:‘M’, n:‘M2’,       d:2,    p:0.4,  d2:1.7402, d1:1.5670 },
+{ s:‘M’, n:‘M2.5’,     d:2.5,  p:0.45, d2:2.2077, d1:2.0133 },
+{ s:‘M’, n:‘M3’,       d:3,    p:0.5,  d2:2.6752, d1:2.4596 },
+{ s:‘M’, n:‘M4’,       d:4,    p:0.7,  d2:3.5452, d1:3.2423 },
+{ s:‘M’, n:‘M5’,       d:5,    p:0.8,  d2:4.4801, d1:4.1335 },
+{ s:‘M’, n:‘M6’,       d:6,    p:1.0,  d2:5.3500, d1:4.9170 },
+{ s:‘M’, n:‘M8’,       d:8,    p:1.25, d2:7.1880, d1:6.6470 },
+{ s:‘M’, n:‘M8×1’,     d:8,    p:1.0,  d2:7.3500, d1:6.9170, f:1 },
+{ s:‘M’, n:‘M10’,      d:10,   p:1.5,  d2:9.0260, d1:8.3760 },
+{ s:‘M’, n:‘M10×1.25’, d:10,   p:1.25, d2:9.1880, d1:8.6470, f:1 },
+{ s:‘M’, n:‘M10×1’,    d:10,   p:1.0,  d2:9.3500, d1:8.9170, f:1 },
+{ s:‘M’, n:‘M12’,      d:12,   p:1.75, d2:10.863, d1:10.106 },
+{ s:‘M’, n:‘M12×1.5’,  d:12,   p:1.5,  d2:11.026, d1:10.376, f:1 },
+{ s:‘M’, n:‘M12×1.25’, d:12,   p:1.25, d2:11.188, d1:10.647, f:1 },
+{ s:‘M’, n:‘M14’,      d:14,   p:2.0,  d2:12.701, d1:11.835 },
+{ s:‘M’, n:‘M14×1.5’,  d:14,   p:1.5,  d2:13.026, d1:12.376, f:1 },
+{ s:‘M’, n:‘M16’,      d:16,   p:2.0,  d2:14.701, d1:13.835 },
+{ s:‘M’, n:‘M16×1.5’,  d:16,   p:1.5,  d2:15.026, d1:14.376, f:1 },
+{ s:‘M’, n:‘M18’,      d:18,   p:2.5,  d2:16.376, d1:15.294 },
+{ s:‘M’, n:‘M18×1.5’,  d:18,   p:1.5,  d2:17.026, d1:16.376, f:1 },
+{ s:‘M’, n:‘M20’,      d:20,   p:2.5,  d2:18.376, d1:17.294 },
+{ s:‘M’, n:‘M20×1.5’,  d:20,   p:1.5,  d2:19.026, d1:18.376, f:1 },
+{ s:‘M’, n:‘M22’,      d:22,   p:2.5,  d2:20.376, d1:19.294 },
+{ s:‘M’, n:‘M24’,      d:24,   p:3.0,  d2:22.051, d1:20.752 },
+{ s:‘M’, n:‘M24×2’,    d:24,   p:2.0,  d2:22.701, d1:21.835, f:1 },
+{ s:‘M’, n:‘M27’,      d:27,   p:3.0,  d2:25.051, d1:23.752 },
+{ s:‘M’, n:‘M30’,      d:30,   p:3.5,  d2:27.727, d1:26.211 },
+{ s:‘M’, n:‘M30×2’,    d:30,   p:2.0,  d2:28.701, d1:27.835, f:1 },
+{ s:‘M’, n:‘M33’,      d:33,   p:3.5,  d2:30.727, d1:29.211 },
+{ s:‘M’, n:‘M36’,      d:36,   p:4.0,  d2:33.402, d1:31.670 },
+{ s:‘M’, n:‘M39’,      d:39,   p:4.0,  d2:36.402, d1:34.670 },
+{ s:‘M’, n:‘M42’,      d:42,   p:4.5,  d2:39.077, d1:37.129 },
+{ s:‘M’, n:‘M45’,      d:45,   p:4.5,  d2:42.077, d1:40.129 },
+{ s:‘M’, n:‘M48’,      d:48,   p:5.0,  d2:44.752, d1:42.587 },
+{ s:‘M’, n:‘M52’,      d:52,   p:5.0,  d2:48.752, d1:46.587 },
+{ s:‘M’, n:‘M56’,      d:56,   p:5.5,  d2:52.428, d1:50.046 },
+{ s:‘M’, n:‘M60’,      d:60,   p:5.5,  d2:56.428, d1:54.046 },
+{ s:‘M’, n:‘M64’,      d:64,   p:6.0,  d2:60.103, d1:57.505 },
+{ s:‘M’, n:‘M68’,      d:68,   p:6.0,  d2:64.103, d1:61.505 },
+{ s:‘M’, n:‘M72’,      d:72,   p:6.0,  d2:68.103, d1:65.505 },
+{ s:‘M’, n:‘M80’,      d:80,   p:6.0,  d2:76.103, d1:73.505 },
+{ s:‘M’, n:‘M90’,      d:90,   p:6.0,  d2:86.103, d1:83.505 },
+{ s:‘M’, n:‘M100’,     d:100,  p:6.0,  d2:96.103, d1:93.505 },
+// ── UNC ─────────────────────────────────────────────────
+{ s:‘UNC’, n:’#4-40 UNC’,   d:2.845,  p:0.635,  d2:2.433,  d1:2.094 },
+{ s:‘UNC’, n:’#6-32 UNC’,   d:3.505,  p:0.7938, d2:2.990,  d1:2.567 },
+{ s:‘UNC’, n:’#8-32 UNC’,   d:4.166,  p:0.7938, d2:3.650,  d1:3.227 },
+{ s:‘UNC’, n:’#10-24 UNC’,  d:4.826,  p:1.058,  d2:4.138,  d1:3.571 },
+{ s:‘UNC’, n:‘1/4-20 UNC’,  d:6.350,  p:1.270,  d2:5.486,  d1:4.780 },
+{ s:‘UNC’, n:‘5/16-18 UNC’, d:7.938,  p:1.411,  d2:6.931,  d1:6.096 },
+{ s:‘UNC’, n:‘3/8-16 UNC’,  d:9.525,  p:1.5875, d2:8.376,  d1:7.353 },
+{ s:‘UNC’, n:‘7/16-14 UNC’, d:11.113, p:1.814,  d2:9.803,  d1:8.611 },
+{ s:‘UNC’, n:‘1/2-13 UNC’,  d:12.700, p:1.954,  d2:11.228, d1:9.858 },
+{ s:‘UNC’, n:‘9/16-12 UNC’, d:14.288, p:2.117,  d2:12.649, d1:11.090 },
+{ s:‘UNC’, n:‘5/8-11 UNC’,  d:15.875, p:2.309,  d2:14.036, d1:12.256 },
+{ s:‘UNC’, n:‘3/4-10 UNC’,  d:19.050, p:2.540,  d2:16.990, d1:14.891 },
+{ s:‘UNC’, n:‘7/8-9 UNC’,   d:22.225, p:2.822,  d2:19.862, d1:17.474 },
+{ s:‘UNC’, n:‘1”-8 UNC’,    d:25.400, p:3.175,  d2:22.860, d1:20.043 },
+{ s:‘UNC’, n:‘1 1/4-7 UNC’, d:31.750, p:3.629,  d2:28.854, d1:25.692 },
+{ s:‘UNC’, n:‘1 1/2-6 UNC’, d:38.100, p:4.233,  d2:34.590, d1:30.783 },
+// ── UNF ─────────────────────────────────────────────────
+{ s:‘UNF’, n:’#6-40 UNF’,   d:3.505,  p:0.635,  d2:3.094,  d1:2.754 },
+{ s:‘UNF’, n:’#8-36 UNF’,   d:4.166,  p:0.7056, d2:3.708,  d1:3.327 },
+{ s:‘UNF’, n:’#10-32 UNF’,  d:4.826,  p:0.7938, d2:4.311,  d1:3.886 },
+{ s:‘UNF’, n:‘1/4-28 UNF’,  d:6.350,  p:0.9071, d2:5.690,  d1:5.158 },
+{ s:‘UNF’, n:‘5/16-24 UNF’, d:7.938,  p:1.058,  d2:7.250,  d1:6.629 },
+{ s:‘UNF’, n:‘3/8-24 UNF’,  d:9.525,  p:1.058,  d2:8.838,  d1:8.217 },
+{ s:‘UNF’, n:‘7/16-20 UNF’, d:11.113, p:1.270,  d2:10.249, d1:9.543 },
+{ s:‘UNF’, n:‘1/2-20 UNF’,  d:12.700, p:1.270,  d2:11.836, d1:11.130 },
+{ s:‘UNF’, n:‘5/8-18 UNF’,  d:15.875, p:1.411,  d2:14.868, d1:14.033 },
+{ s:‘UNF’, n:‘3/4-16 UNF’,  d:19.050, p:1.5875, d2:17.900, d1:16.877 },
+{ s:‘UNF’, n:‘7/8-14 UNF’,  d:22.225, p:1.814,  d2:20.910, d1:19.713 },
+{ s:‘UNF’, n:‘1”-12 UNF’,   d:25.400, p:2.117,  d2:23.761, d1:22.202 },
+// ── BSW ─────────────────────────────────────────────────
+{ s:‘BSW’, n:‘1/8” BSW’,    d:3.175,  p:0.635,  d2:2.764,  d1:2.424 },
+{ s:‘BSW’, n:‘3/16” BSW’,   d:4.763,  p:1.058,  d2:4.075,  d1:3.454 },
+{ s:‘BSW’, n:‘1/4” BSW’,    d:6.350,  p:1.270,  d2:5.486,  d1:4.780 },
+{ s:‘BSW’, n:‘5/16” BSW’,   d:7.938,  p:1.411,  d2:6.931,  d1:6.096 },
+{ s:‘BSW’, n:‘3/8” BSW’,    d:9.525,  p:1.588,  d2:8.376,  d1:7.353 },
+{ s:‘BSW’, n:‘1/2” BSW’,    d:12.700, p:2.117,  d2:11.345, d1:10.103 },
+{ s:‘BSW’, n:‘5/8” BSW’,    d:15.875, p:2.309,  d2:14.328, d1:12.975 },
+{ s:‘BSW’, n:‘3/4” BSW’,    d:19.050, p:2.540,  d2:17.424, d1:15.912 },
+{ s:‘BSW’, n:‘1” BSW’,      d:25.400, p:3.175,  d2:23.367, d1:21.464 },
+{ s:‘BSW’, n:‘1 1/4” BSW’,  d:31.750, p:3.629,  d2:29.428, d1:27.234 },
+{ s:‘BSW’, n:‘1 1/2” BSW’,  d:38.100, p:4.233,  d2:35.592, d1:33.166 },
+// ── Trapezoidal ──────────────────────────────────────────
+{ s:‘Tr’, n:‘Tr10×2’,   d:10,  p:2,  d2:9.0,   d1:7.5 },
+{ s:‘Tr’, n:‘Tr12×3’,   d:12,  p:3,  d2:10.5,  d1:8.5 },
+{ s:‘Tr’, n:‘Tr16×4’,   d:16,  p:4,  d2:14.0,  d1:11.5 },
+{ s:‘Tr’, n:‘Tr20×4’,   d:20,  p:4,  d2:18.0,  d1:15.5 },
+{ s:‘Tr’, n:‘Tr22×5’,   d:22,  p:5,  d2:19.5,  d1:16.5 },
+{ s:‘Tr’, n:‘Tr24×5’,   d:24,  p:5,  d2:21.5,  d1:18.5 },
+{ s:‘Tr’, n:‘Tr28×5’,   d:28,  p:5,  d2:25.5,  d1:22.5 },
+{ s:‘Tr’, n:‘Tr30×6’,   d:30,  p:6,  d2:27.0,  d1:23.5 },
+{ s:‘Tr’, n:‘Tr36×6’,   d:36,  p:6,  d2:33.0,  d1:29.5 },
+{ s:‘Tr’, n:‘Tr40×7’,   d:40,  p:7,  d2:36.5,  d1:32.5 },
+{ s:‘Tr’, n:‘Tr48×8’,   d:48,  p:8,  d2:44.0,  d1:39.5 },
+{ s:‘Tr’, n:‘Tr60×9’,   d:60,  p:9,  d2:55.5,  d1:50.5 },
+{ s:‘Tr’, n:‘Tr80×10’,  d:80,  p:10, d2:75.0,  d1:69.0 },
+// ── ACME ─────────────────────────────────────────────────
+{ s:‘ACME’, n:‘1/2-10 ACME’,  d:12.700, p:2.540, d2:11.430, d1:10.160 },
+{ s:‘ACME’, n:‘5/8-8 ACME’,   d:15.875, p:3.175, d2:14.288, d1:12.700 },
+{ s:‘ACME’, n:‘3/4-6 ACME’,   d:19.050, p:4.233, d2:16.933, d1:14.817 },
+{ s:‘ACME’, n:‘1”-5 ACME’,    d:25.400, p:5.080, d2:22.860, d1:20.320 },
+{ s:‘ACME’, n:‘1 1/4-5 ACME’, d:31.750, p:5.080, d2:29.210, d1:26.670 },
+{ s:‘ACME’, n:‘1 1/2-4 ACME’, d:38.100, p:6.350, d2:34.925, d1:31.750 },
+// ── BSP ──────────────────────────────────────────────────
+{ s:‘BSPP’, n:‘G 1/8” BSP’,  d:9.728,  p:0.907, d2:9.147,  d1:8.566 },
+{ s:‘BSPP’, n:‘G 1/4” BSP’,  d:13.157, p:1.337, d2:12.301, d1:11.445 },
+{ s:‘BSPP’, n:‘G 3/8” BSP’,  d:16.662, p:1.337, d2:15.806, d1:14.950 },
+{ s:‘BSPP’, n:‘G 1/2” BSP’,  d:20.955, p:1.814, d2:19.793, d1:18.631 },
+{ s:‘BSPP’, n:‘G 3/4” BSP’,  d:26.441, p:1.814, d2:25.279, d1:24.117 },
+{ s:‘BSPP’, n:‘G 1” BSP’,    d:33.249, p:2.309, d2:31.770, d1:30.291 },
+{ s:‘BSPP’, n:‘G 1 1/2” BSP’,d:47.803, p:2.309, d2:46.324, d1:44.845 },
+{ s:‘BSPP’, n:‘G 2” BSP’,    d:59.614, p:2.309, d2:58.135, d1:56.656 },
+// ── NPT ──────────────────────────────────────────────────
+{ s:‘NPT’, n:‘1/8” NPT’,  d:10.287, p:0.941, d2:9.489,  d1:8.128 },
+{ s:‘NPT’, n:‘1/4” NPT’,  d:13.716, p:1.411, d2:12.487, d1:10.879 },
+{ s:‘NPT’, n:‘3/8” NPT’,  d:17.145, p:1.411, d2:15.916, d1:14.308 },
+{ s:‘NPT’, n:‘1/2” NPT’,  d:21.336, p:1.814, d2:19.772, d1:17.980 },
+{ s:‘NPT’, n:‘3/4” NPT’,  d:26.670, p:1.814, d2:25.106, d1:23.314 },
+{ s:‘NPT’, n:‘1” NPT’,    d:33.401, p:2.209, d2:31.461, d1:29.187 },
+{ s:‘NPT’, n:‘1 1/2” NPT’,d:48.260, p:2.209, d2:46.320, d1:44.046 },
+{ s:‘NPT’, n:‘2” NPT’,    d:60.325, p:2.209, d2:58.385, d1:56.111 },
+];
+
+const THREADS = RAW_THREADS.map(t => ({
+id: `${t.s}_${t.n}`.replace(/[\s”/.]/g, ‘_’),
+std: t.s, name: t.n, d: t.d, p: t.p, d2: t.d2, d1: t.d1, fine: !!t.f,
+alpha: THREAD_STANDARDS.find(s => s.id === t.s)?.alpha || 60,
+tolExt: THREAD_STANDARDS.find(s => s.id === t.s)?.tolExt || ‘—’,
+tolInt: THREAD_STANDARDS.find(s => s.id === t.s)?.tolInt || ‘—’,
+norm: THREAD_STANDARDS.find(s => s.id === t.s)?.norm || ‘—’,
+}));
+
+const WIRES = [
+{ id:‘w01’, code:‘W-0.144’, diam:0.14434, uW:0.0002, pMin:0.20, pMax:0.30 },
+{ id:‘w02’, code:‘W-0.202’, diam:0.20207, uW:0.0002, pMin:0.30, pMax:0.45 },
+{ id:‘w03’, code:‘W-0.260’, diam:0.25981, uW:0.0002, pMin:0.40, pMax:0.55 },
+{ id:‘w04’, code:‘W-0.289’, diam:0.28868, uW:0.0002, pMin:0.45, pMax:0.60 },
+{ id:‘w05’, code:‘W-0.360’, diam:0.36084, uW:0.0002, pMin:0.55, pMax:0.75 },
+{ id:‘w06’, code:‘W-0.433’, diam:0.43301, uW:0.0002, pMin:0.70, pMax:0.90 },
+{ id:‘w07’, code:‘W-0.577’, diam:0.57735, uW:0.0002, pMin:0.90, pMax:1.10 },
+{ id:‘w08’, code:‘W-0.722’, diam:0.72169, uW:0.0002, pMin:1.10, pMax:1.40 },
+{ id:‘w09’, code:‘W-0.866’, diam:0.86603, uW:0.00015,pMin:1.30, pMax:1.80 },
+{ id:‘w10’, code:‘W-1.010’, diam:1.01036, uW:0.0002, pMin:1.60, pMax:2.10 },
+{ id:‘w11’, code:‘W-1.155’, diam:1.15470, uW:0.0002, pMin:1.80, pMax:2.30 },
+{ id:‘w12’, code:‘W-1.299’, diam:1.29904, uW:0.0002, pMin:2.10, pMax:2.70 },
+{ id:‘w13’, code:‘W-1.443’, diam:1.44338, uW:0.0002, pMin:2.30, pMax:3.10 },
+{ id:‘w14’, code:‘W-1.732’, diam:1.73205, uW:0.0003, pMin:2.90, pMax:3.80 },
+{ id:‘w15’, code:‘W-2.021’, diam:2.02073, uW:0.0003, pMin:3.30, pMax:4.20 },
+{ id:‘w16’, code:‘W-2.309’, diam:2.30940, uW:0.0003, pMin:3.80, pMax:4.80 },
+{ id:‘w17’, code:‘W-2.887’, diam:2.88675, uW:0.0004, pMin:4.80, pMax:6.00 },
+{ id:‘w18’, code:‘W-3.464’, diam:3.46410, uW:0.0004, pMin:5.80, pMax:7.00 },
+];
 
 const MATERIALS = {
-  steel_c:  {alpha:11.5, e:210, nu:0.30},
-  steel_ss: {alpha:16.0, e:193, nu:0.28},
-  steel_t:  {alpha:10.5, e:205, nu:0.29},
-  aluminium:{alpha:23.0, e:70,  nu:0.33}
+‘Acero al carbono’:  { alpha: 11.5, e: 210, nu: 0.30 },
+‘Acero inoxidable’:  { alpha: 16.0, e: 193, nu: 0.28 },
+‘Acero herramienta’: { alpha: 10.5, e: 205, nu: 0.29 },
+‘Titanio Ti-6Al-4V’: { alpha: 8.6,  e: 114, nu: 0.34 },
+‘Aluminio 6061’:     { alpha: 23.6, e: 69,  nu: 0.33 },
+‘Latón’:             { alpha: 20.5, e: 100, nu: 0.34 },
+‘Hierro fundido’:    { alpha: 11.7, e: 150, nu: 0.26 },
 };
-const PRESETS = {
-  M:{flank:60,tol:'6g'}, UN:{flank:60,tol:'2A'}, G:{flank:55,tol:''},
-  Tr:{flank:30,tol:'7e'}, ACME:{flank:29,tol:''}, CUSTOM:{flank:60,tol:''}
+
+const MACHINE_SEED = [
+{ id:‘mach01’, brand:‘Mahr’, model:‘Mahr 828 PC’, sn:’’, uCal:0.0006, resolution:0.0001, force:4, forceUnit:‘cN’, cert:’’, certExpiry:’’ },
+{ id:‘mach02’, brand:‘Mahr’, model:‘MaraMeter 844 N’, sn:’’, uCal:0.001, resolution:0.0001, force:4, forceUnit:‘cN’, cert:’’, certExpiry:’’ },
+{ id:‘mach03’, brand:‘Tesa’, model:‘TESA-IMICRO’, sn:’’, uCal:0.0008, resolution:0.0001, force:3, forceUnit:‘N’, cert:’’, certExpiry:’’ },
+{ id:‘mach04’, brand:‘Mitutoyo’, model:‘526-101’, sn:’’, uCal:0.001, resolution:0.0001, force:5, forceUnit:‘N’, cert:’’, certExpiry:’’ },
+];
+
+// ═══════════════════════════════════════════════════════════
+// GEOMETRY ENGINE
+// ═══════════════════════════════════════════════════════════
+function calcE(M_raw, geo) {
+const { W, alpha, p, T, F, alpha_th, E_mod, nu } = geo;
+const aH = (alpha / 2) * Math.PI / 180;
+const dT = -M_raw * alpha_th * (T - 20);
+const M_th = M_raw + dT;
+const E_star = E_mod / (2 * (1 - nu * nu));
+const R = (W / 2) / 1000;
+const Fuse = Math.max(F || 0.001, 0.0001);
+const dH = 2 * Math.pow(3 * Fuse / (4 * E_star), 2 / 3) * Math.pow(1 / R, 1 / 3) * 1000;
+const M_c = M_th - dH;
+const wt = W * (1 + 1 / Math.sin(aH));
+const pt = p / (2 * Math.tan(aH));
+return { E: M_c - wt + pt, dT, dH, M_th, M_c };
+}
+
+function bestWire(p, alpha) {
+return p / (2 * Math.cos((alpha / 2) * Math.PI / 180));
+}
+
+function calcGUM(r0, r90, geo, ucal, res, uWire, uForce, uTemp, uAngle, nomD) {
+const all = […r0, …r90];
+if (all.length < 2) return null;
+const n = all.length;
+const mean = all.reduce((a, b) => a + b, 0) / n;
+const s = Math.sqrt(all.reduce((a, b) => a + (b - mean) ** 2, 0) / (n - 1));
+const uA1 = s / Math.sqrt(n), dA1 = n - 1;
+let uA2 = 0, dA2 = Infinity;
+if (r0.length > 0 && r90.length > 0) {
+const m0 = r0.reduce((a, b) => a + b, 0) / r0.length;
+const m90 = r90.reduce((a, b) => a + b, 0) / r90.length;
+uA2 = Math.abs(m0 - m90) / Math.sqrt(2); dA2 = 1;
+}
+const { W, alpha, p, E_mod, nu, alpha_th } = geo;
+const aH = (alpha / 2) * Math.PI / 180;
+const cW = -(1 + 1 / Math.sin(aH));
+const uB1 = ucal / 2, uB2 = res / (2 * Math.sqrt(3));
+const uB3 = Math.abs(cW) * uWire;
+const Es = E_mod / (2 * (1 - nu ** 2)), Rm = W / 2 / 1000, F = Math.max(geo.F || 0.04, 0.001);
+const dHdF = (2 / 3) * Math.pow(3 / (4 * Es), 2 / 3) * Math.pow(F, -1 / 3) * Math.pow(1 / Rm, 1 / 3) * 1000;
+const uB4 = uForce * dHdF;
+const Lc = (nomD || 14) + 3 * W;
+const uB5 = uTemp * Math.abs(Lc * alpha_th);
+const uaR = (uAngle * Math.PI / 180) / Math.sqrt(3);
+const uB6 = uaR * Math.abs(p / (2 * Math.sin(aH) ** 2) * 0.5);
+const comps = [
+{ name: ‘Repetibilidad’, sym: ‘u_A1’, type: ‘A’, u: uA1, dof: dA1 },
+{ name: ‘Variación planos’, sym: ‘u_A2’, type: ‘A’, u: uA2, dof: dA2 },
+{ name: ‘Calibración banco’, sym: ‘u_B1’, type: ‘B’, u: uB1, dof: Infinity },
+{ name: ‘Resolución encoder’, sym: ‘u_B2’, type: ‘B’, u: uB2, dof: Infinity },
+{ name: ‘Diámetro hilo W’, sym: ‘u_B3’, type: ‘B’, u: uB3, dof: Infinity },
+{ name: ‘Fuerza → Hertz’, sym: ‘u_B4’, type: ‘B’, u: uB4, dof: Infinity },
+{ name: ‘Temperatura’, sym: ‘u_B5’, type: ‘B’, u: uB5, dof: Infinity },
+{ name: ‘Ángulo flanco’, sym: ‘u_B6’, type: ‘B’, u: uB6, dof: Infinity },
+];
+const ucSq = comps.reduce((s, c) => s + c.u ** 2, 0);
+const uc = Math.sqrt(ucSq);
+comps.forEach(c => c.pct = c.u ** 2 / ucSq * 100);
+const denom = comps.filter(c => c.dof < Infinity).reduce((s, c) => s + c.u ** 4 / c.dof, 0);
+const nuEff = denom > 0 ? ucSq ** 2 / denom : Infinity;
+const kT = [[1,13.97],[2,4.53],[3,3.31],[4,2.87],[5,2.65],[6,2.52],[8,2.37],[10,2.28],[15,2.17],[20,2.09],[30,2.04],[50,2.01],[100,2.00]];
+let k = 2.0; for (const [nu2, kv] of kT) if (nuEff >= nu2) k = kv;
+return { mean, s, n, comps, uc, nuEff, k, U: k * uc, r0, r90, all };
+}
+
+// ═══════════════════════════════════════════════════════════
+// UI PRIMITIVES
+// ═══════════════════════════════════════════════════════════
+const C = {
+primary: ‘bg-blue-600 hover:bg-blue-700 text-white shadow-sm’,
+ghost:   ‘bg-white hover:bg-slate-50 text-slate-700 border border-slate-200’,
+danger:  ‘bg-red-50 hover:bg-red-100 text-red-600 border border-red-200’,
+success: ‘bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm’,
+teal:    ‘bg-teal-600 hover:bg-teal-700 text-white shadow-sm’,
+amber:   ‘bg-amber-500 hover:bg-amber-600 text-white shadow-sm’,
 };
-const PRESET_NAMES = {M:'Métrica ISO',UN:'UN/UNC/UNF',G:'Whitworth BSW',Tr:'Trapezoidal ISO',ACME:'ACME',CUSTOM:'Personalizada'};
 
-// ── INIT ──────────────────────────────────────────────────────
-document.addEventListener('DOMContentLoaded', () => {
-  document.getElementById('meas_date').value = new Date().toISOString().slice(0,10);
-  onThreadChange();
-  updateTempHint();
-  updateCorrStrip();
-  for(let i=0;i<3;i++) addReading(0);
-  for(let i=0;i<3;i++) addReading(90);
-});
+const Btn = ({ children, variant=‘primary’, size=‘md’, onClick, disabled, className=’’, icon }) => {
+const s = { sm:‘text-xs px-3 py-1.5 gap-1.5’, md:‘text-sm px-4 py-2 gap-2’, lg:‘text-sm px-5 py-2.5 gap-2’ }[size];
+return (
+<button onClick={onClick} disabled={disabled}
+className={`inline-flex items-center font-semibold rounded-lg transition-all ${C[variant]} ${s} ${disabled ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer'} ${className}`}>
+{icon && <span className="flex-shrink-0">{icon}</span>}{children}
+</button>
+);
+};
 
-// ── WIZARD ────────────────────────────────────────────────────
-function goStep(n) {
-  document.querySelectorAll('.tab-panel').forEach((el,i) => el.classList.toggle('active', i===n));
-  document.querySelectorAll('.wstep').forEach((el,i) => {
-    el.classList.remove('active','done');
-    if(i===n) el.classList.add('active');
-    else if(i<n) el.classList.add('done');
-  });
-  currentStep = n;
-  window.scrollTo({top:0, behavior:'smooth'});
-}
+const Inp = (props) => (
+<input {…props} className={`w-full text-sm px-3 py-2 rounded-lg border border-slate-200 bg-slate-50 focus:bg-white focus:border-blue-400 focus:ring-2 focus:ring-blue-100 outline-none transition-all font-mono placeholder:font-sans placeholder:text-slate-300 ${props.readOnly ? 'text-slate-400 cursor-default' : ''} ${props.className || ''}`} />
+);
 
-// ── PRESET ────────────────────────────────────────────────────
-function selectPreset(el, key) {
-  document.querySelectorAll('.pill').forEach(p => p.classList.remove('selected'));
-  el.classList.add('selected');
-  activePreset = key;
-  const p = PRESETS[key];
-  V('flank_angle', p.flank);
-  if(p.tol) V('tol_class', p.tol);
-  onThreadChange();
-}
-function onMaterialChange() {
-  const m = MATERIALS[G('material_sel')];
-  if(!m) return;
-  V('alpha_th', m.alpha); V('e_mod', m.e); V('poisson', m.nu);
-}
+const Sel = ({ children, …props }) => (
+<select {…props} className={`w-full text-sm px-3 py-2 rounded-lg border border-slate-200 bg-slate-50 focus:bg-white focus:border-blue-400 focus:ring-2 focus:ring-blue-100 outline-none transition-all cursor-pointer ${props.className || ''}`}>
+{children}
+</select>
+);
 
-// ── THREAD PARAMS ──────────────────────────────────────────────
-function onThreadChange() {
-  const D=+G('nominal_d'), p=+G('pitch'), a=+G('flank_angle');
-  if(!D||!p||!a) return;
-  const aHalf = a/2*Math.PI/180;
-  const bw    = p/(2*Math.cos(aHalf));
-  E('best_wire_val').textContent = ` ${bw.toFixed(5)} mm`;
-  E('best_wire_range').textContent = `Rango válido: [${(0.56*p).toFixed(4)} – ${(0.90*p).toFixed(4)}] mm`;
-  E('e_theoretical').textContent  = ` ${(D-0.6495*p).toFixed(5)} mm`;
-  checkWireRange();
-  updateCorrStrip();
-}
-function checkWireRange() {
-  const p=+G('pitch'), W=+G('wire_cal');
-  if(!p||!W) return;
-  const h = E('wire_range_hint');
-  if(W<0.56*p||W>0.90*p) { h.className='hint warn'; h.textContent=`⚠ W fuera del rango [${(0.56*p).toFixed(4)}, ${(0.90*p).toFixed(4)}] mm`; }
-  else { h.className='hint ok'; h.textContent=`✓ W dentro del rango válido`; }
-}
-function updateTempHint() {
-  const dT = +G('temp_c') - 20;
-  const h  = E('temp_hint');
-  if(Math.abs(dT)>1){ h.className='hint warn'; h.textContent=`⚠ ΔT = ${dT>0?'+':''}${dT.toFixed(2)} °C — corrección térmica significativa`; }
-  else if(Math.abs(dT)<0.1){ h.className='hint ok'; h.textContent=`✓ Muy próxima a 20 °C — corrección térmica despreciable`; }
-  else { h.className='hint'; h.textContent=`ΔT = ${dT>0?'+':''}${dT.toFixed(2)} °C respecto a 20 °C de referencia`; }
-}
+const Fld = ({ label, unit, children, hint }) => (
 
-// ── GEOMETRY ENGINE ────────────────────────────────────────────
-function getForceN() {
-  const v=+G('meas_force'), u=G('force_unit');
-  return u==='cN'?v/100:u==='daN'?v*10:v;
-}
-function getGeo() {
-  return {
-    W:+G('wire_cal'), alpha:+G('flank_angle'), p:+G('pitch'), T:+G('temp_c'),
-    F:getForceN(), alpha_th:+G('alpha_th')*1e-6, E_mod:+G('e_mod')*1e9, nu:+G('poisson')
-  };
-}
-function calcE(M, g) {
-  const aH  = g.alpha/2*Math.PI/180;
-  const dT  = -M*g.alpha_th*(g.T-20);
-  const Mth = M+dT;
-  const Es  = g.E_mod/(2*(1-g.nu**2));
-  const R   = g.W/2/1000;
-  const dH  = 2*Math.pow(3*(g.F||0.001)/(4*Es),2/3)*Math.pow(1/R,1/3)*1000;
-  const Mc  = Mth-dH;
-  const wt  = g.W*(1+1/Math.sin(aH));
-  const pt  = g.p/(2*Math.tan(aH));
-  return {E:Mc-wt+pt, dT, dH, Mc, wt, pt};
-}
-function updateCorrStrip() {
-  const g = getGeo();
-  if(!g.W||!g.alpha||!g.p) return;
-  const Ms = (+G('nominal_d')||14)+3*g.W;
-  const r  = calcE(Ms, g);
-  E('cs_thermal').innerHTML = fmtE(r.dT)+'<span class="unit">mm</span>';
-  E('cs_hertz').innerHTML   = fmtE(r.dH)+'<span class="unit">mm</span>';
-  E('cs_wire').innerHTML    = fmtE(-r.wt)+'<span class="unit">mm</span>';
-  E('cs_pitch').innerHTML   = fmtE(r.pt)+'<span class="unit">mm</span>';
-}
+  <div className="space-y-1.5">
+    <label className="block text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+      {label}{unit && <span className="ml-1 font-normal normal-case tracking-normal text-slate-300">[{unit}]</span>}
+    </label>
+    {children}
+    {hint && <p className="text-[11px] text-slate-400">{hint}</p>}
+  </div>
+);
 
-// ── READINGS ───────────────────────────────────────────────────
-function addReading(plane) {
-  const n = readings[plane].length;
-  readings[plane].push(null);
-  const row = document.createElement('div');
-  row.className = 'reading-row'; row.id = `row-${plane}-${n}`;
-  row.innerHTML = `
-    <div class="ri-num">${n+1}</div>
-    <input class="ri-input" type="number" step="0.00001" placeholder="M_raw…"
-      id="m-${plane}-${n}" oninput="updateReading(${plane},${n})">
-    <div class="ri-val empty" id="mc-${plane}-${n}">—</div>
-    <div class="ri-val empty" id="ev-${plane}-${n}">—</div>
-    <button class="del-btn" onclick="removeReading(${plane},${n})" title="Eliminar">×</button>`;
-  E(`readings-${plane}`).appendChild(row);
-}
-function removeReading(plane, n) {
-  readings[plane][n] = null;
-  const row = E(`row-${plane}-${n}`);
-  if(row){ row.style.transition='.2s'; row.style.opacity='0'; row.style.maxHeight='0'; row.style.overflow='hidden'; setTimeout(()=>row.remove(),200); }
-  updatePlaneStats(plane);
-}
-function updateReading(plane, n) {
-  const raw = parseFloat(E(`m-${plane}-${n}`).value);
-  const mc  = E(`mc-${plane}-${n}`), ev = E(`ev-${plane}-${n}`);
-  if(isNaN(raw)) { readings[plane][n]=null; mc.className='ri-val empty'; mc.textContent='—'; ev.className='ri-val empty'; ev.textContent='—'; updatePlaneStats(plane); return; }
-  const g=getGeo(), r=calcE(raw,g);
-  readings[plane][n]=r.E;
-  mc.className='ri-val'; mc.textContent=r.Mc.toFixed(6);
-  ev.className='ri-val'; ev.textContent=r.E.toFixed(6);
-  updatePlaneStats(plane); updateCorrStrip();
-}
-function updatePlaneStats(plane) {
-  const vals = readings[plane].filter(v=>v!==null);
-  const el   = E(`stats-${plane}`);
-  if(vals.length<2){el.style.display='none';return;}
-  el.style.display='grid';
-  const mean=vals.reduce((a,b)=>a+b,0)/vals.length;
-  const s=Math.sqrt(vals.reduce((a,b)=>a+(b-mean)**2,0)/(vals.length-1));
-  E(`mean-${plane}`).textContent=mean.toFixed(6)+' mm';
-  E(`std-${plane}`).textContent=s.toExponential(3)+' mm';
-  E(`n-${plane}`).textContent=vals.length;
+const Card = ({ children, className = ‘’ }) => (
+
+  <div className={`bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden ${className}`}>{children}</div>
+);
+
+const Hdg = ({ icon, title, sub, right, color = ‘blue’ }) => {
+const col = { blue:‘bg-blue-600’, teal:‘bg-teal-600’, amber:‘bg-amber-500’, green:‘bg-emerald-600’, purple:‘bg-purple-600’, slate:‘bg-slate-600’, red:‘bg-red-500’ }[color];
+return (
+<div className="flex items-center justify-between px-5 py-4 border-b border-slate-100">
+<div className="flex items-center gap-3">
+<div className={`w-7 h-7 rounded-lg flex items-center justify-center text-white flex-shrink-0 ${col}`}>
+<span className="text-xs">{icon}</span>
+</div>
+<div>
+<div className="font-bold text-slate-800 text-sm leading-tight">{title}</div>
+{sub && <div className="text-[11px] text-slate-400 leading-tight mt-0.5">{sub}</div>}
+</div>
+</div>
+{right && <div className="flex items-center gap-2">{right}</div>}
+</div>
+);
+};
+
+const Modal = ({ open, onClose, title, children, wide }) => {
+if (!open) return null;
+return (
+<div className=“fixed inset-0 z-50 flex items-center justify-center p-4” style={{ background: ‘rgba(15,23,42,0.5)’, backdropFilter: ‘blur(4px)’ }}>
+<div className={`bg-white rounded-2xl shadow-2xl w-full max-h-[90vh] overflow-y-auto ${wide ? 'max-w-3xl' : 'max-w-lg'}`}>
+<div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 sticky top-0 bg-white z-10">
+<h2 className="font-bold text-slate-800 text-base">{title}</h2>
+<button onClick={onClose} className="w-7 h-7 flex items-center justify-center rounded-full text-slate-400 hover:bg-slate-100 transition-colors text-lg leading-none">×</button>
+</div>
+<div className="p-6">{children}</div>
+</div>
+</div>
+);
+};
+
+const Confirm = ({ open, msg, onOk, onCancel }) => (
+<Modal open={open} onClose={onCancel} title="Confirmar">
+<p className="text-slate-600 mb-5 text-sm">{msg}</p>
+<div className="flex justify-end gap-2">
+<Btn variant="ghost" onClick={onCancel}>Cancelar</Btn>
+<Btn variant="danger" onClick={onOk}>Eliminar</Btn>
+</div>
+</Modal>
+);
+
+const Badge = ({ children, color = ‘blue’ }) => {
+const c = { blue:‘bg-blue-100 text-blue-700’, teal:‘bg-teal-100 text-teal-700’, amber:‘bg-amber-100 text-amber-700’, green:‘bg-emerald-100 text-emerald-700’, red:‘bg-red-100 text-red-700’, purple:‘bg-purple-100 text-purple-700’, slate:‘bg-slate-100 text-slate-600’ }[color];
+return <span className={`inline-flex text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wide ${c}`}>{children}</span>;
+};
+
+// ═══════════════════════════════════════════════════════════
+// TABLE COMPONENT
+// ═══════════════════════════════════════════════════════════
+function Tbl({ cols, rows, onEdit, onDel, onView, empty = ‘Sin registros’ }) {
+return (
+<div className="overflow-x-auto">
+<table className="w-full text-sm min-w-full">
+<thead>
+<tr className="border-b border-slate-100">
+{cols.map(c => <th key={c.k} className="text-left text-[10px] font-bold text-slate-400 uppercase tracking-wider px-4 py-3">{c.l}</th>)}
+<th className="px-4 py-3 text-right text-[10px] font-bold text-slate-400 uppercase tracking-wider">Acciones</th>
+</tr>
+</thead>
+<tbody>
+{rows.length === 0 && (
+<tr><td colSpan={cols.length + 1} className=“text-center text-slate-300 py-10 text-sm”>{empty}</td></tr>
+)}
+{rows.map((row, i) => (
+<tr key={i} className="border-b border-slate-50 hover:bg-slate-50/80 transition-colors">
+{cols.map(c => (
+<td key={c.k} className={`px-4 py-3 ${c.mono ? 'font-mono text-xs' : ''} ${c.bold ? 'font-semibold text-slate-800' : 'text-slate-500'} ${c.max ? 'max-w-[180px] truncate' : ''}`}>
+{row._raw?.[c.k] ?? row[c.k] ?? ‘—’}
+</td>
+))}
+<td className="px-4 py-3">
+<div className="flex items-center justify-end gap-1">
+{onView && <button onClick={() => onView(row)} className=“w-7 h-7 rounded-lg flex items-center justify-center text-slate-300 hover:bg-blue-50 hover:text-blue-600 transition-colors text-sm”>👁</button>}
+{onEdit && <button onClick={() => onEdit(row)} className=“w-7 h-7 rounded-lg flex items-center justify-center text-slate-300 hover:bg-blue-50 hover:text-blue-600 transition-colors text-sm”>✏️</button>}
+{onDel && <button onClick={() => onDel(row)} className=“w-7 h-7 rounded-lg flex items-center justify-center text-slate-300 hover:bg-red-50 hover:text-red-500 transition-colors text-sm”>🗑</button>}
+</div>
+</td>
+</tr>
+))}
+</tbody>
+</table>
+</div>
+);
 }
 
-// ── GUM ENGINE ──────────────────────────────────────────────────
-function calcGUM() {
-  const all0=readings[0].filter(v=>v!==null), all90=readings[90].filter(v=>v!==null);
-  const allE=[...all0,...all90];
-  if(allE.length<2){alert('Introduce al menos 2 lecturas válidas.');return;}
-  const g=getGeo(), n=allE.length;
-  const mean=allE.reduce((a,b)=>a+b,0)/n;
-  const s=Math.sqrt(allE.reduce((a,b)=>a+(b-mean)**2,0)/(n-1));
-  const uA1=s/Math.sqrt(n), dA1=n-1;
-  let uA2=0, dA2=Infinity;
-  if(all0.length>0&&all90.length>0){const m0=all0.reduce((a,b)=>a+b,0)/all0.length,m90=all90.reduce((a,b)=>a+b,0)/all90.length;uA2=Math.abs(m0-m90)/Math.sqrt(2);dA2=1;}
-  const uB1=(+G('u_cal'))/2;
-  const uB2=(+G('resolution'))/(2*Math.sqrt(3));
-  const aH=g.alpha/2*Math.PI/180;
-  const cW=-(1+1/Math.sin(aH));
-  const uB3=Math.abs(cW)*(+G('u_wire'));
-  const Es=g.E_mod/(2*(1-g.nu**2)), Rm=g.W/2/1000, F=g.F||0.04;
-  const dHdF=(2/3)*Math.pow(3/(4*Es),2/3)*Math.pow(F,-1/3)*Math.pow(1/Rm,1/3)*1000;
-  const uB4=(+G('u_force'))*dHdF;
-  const Lc=(+G('nominal_d')||14)+3*g.W;
-  const uB5=(+G('u_temp'))*Math.abs(Lc*g.alpha_th);
-  const uaR=(+G('u_angle'))*Math.PI/180/Math.sqrt(3);
-  const uB6=uaR*Math.abs(g.p/(2*Math.sin(aH)**2)*0.5);
+// ═══════════════════════════════════════════════════════════
+// CLIENTS → EQUIPOS → CALIBRACIONES
+// ═══════════════════════════════════════════════════════════
+function ClientsSection() {
+const [clients, setClients] = useState(() => DB.get(‘clients’) || []);
+const [view, setView] = useState(‘list’); // list | equipment | calibration | newcal | viewcal
+const [activeClient, setActiveClient] = useState(null);
+const [activeEquip, setActiveEquip] = useState(null);
+const [activeCal, setActiveCal] = useState(null);
+const [cModal, setCModal] = useState(false);
+const [eModal, setEModal] = useState(false);
+const [editingC, setEditingC] = useState(null);
+const [editingE, setEditingE] = useState(null);
+const [delConfirm, setDelConfirm] = useState(null);
+const blankC = { id: uid(), code: ‘’, name: ‘’, address: ‘’, contact: ‘’, email: ‘’, phone: ‘’, equipments: [] };
+const blankE = { id: uid(), ref: ‘’, desc: ‘’, serial: ‘’, material: ‘Acero al carbono’, notes: ‘’ };
+const [cForm, setCForm] = useState(blankC);
+const [eForm, setEForm] = useState(blankE);
 
-  const comps=[
-    {name:'Repetibilidad medición',   sym:'u_A1',type:'A',dist:'Normal (t)',   u:uA1,ci:1,dof:dA1},
-    {name:'Variación entre planos',   sym:'u_A2',type:'A',dist:'Normal (t)',   u:uA2,ci:1,dof:dA2},
-    {name:'Calibración banco',        sym:'u_B1',type:'B',dist:'Normal',       u:uB1,ci:1,dof:Infinity},
-    {name:'Resolución encoder',       sym:'u_B2',type:'B',dist:'Rectangular',  u:uB2,ci:1,dof:Infinity},
-    {name:'Diámetro hilo W',          sym:'u_B3',type:'B',dist:'Normal',       u:uB3,ci:Math.abs(cW),dof:Infinity},
-    {name:'Fuerza palpado → Hertz',   sym:'u_B4',type:'B',dist:'Normal',       u:uB4,ci:1,dof:Infinity},
-    {name:'Temperatura (ΔT vs 20°C)', sym:'u_B5',type:'B',dist:'Normal',       u:uB5,ci:1,dof:Infinity},
-    {name:'Ángulo flanco (modelo)',   sym:'u_B6',type:'B',dist:'Rectangular',  u:uB6,ci:1,dof:Infinity},
-  ];
-  const ucSq=comps.reduce((s,c)=>s+c.u**2,0);
-  const uc=Math.sqrt(ucSq);
-  comps.forEach(c=>c.contrib=c.u**2/ucSq*100);
-  const denom=comps.filter(c=>c.dof<Infinity).reduce((s,c)=>s+c.u**4/c.dof,0);
-  const nuEff=denom>0?ucSq**2/denom:Infinity;
-  const kT=[[1,13.97],[2,4.53],[3,3.31],[4,2.87],[5,2.65],[6,2.52],[7,2.43],[8,2.37],[9,2.32],[10,2.28],[15,2.17],[20,2.09],[25,2.06],[30,2.04],[50,2.01],[100,2.00]];
-  let k=2.0; for(const [nu,kv] of kT){if(nuEff>=nu)k=kv;}
-  const Uexp=k*uc;
-  gumResult={mean,s,n,uA1,uA2,comps,uc,nuEff,k,Uexp,g,allE,all0,all90};
-  renderGUM(); renderCert(); goStep(3);
+const saveClients = (c) => { DB.set(‘clients’, c); setClients(c); };
+const FC = (k, v) => setCForm(f => ({ …f, [k]: v }));
+const FE = (k, v) => setEForm(f => ({ …f, [k]: v }));
+
+const submitC = () => {
+const upd = editingC ? clients.map(c => c.id === editingC ? { …cForm, equipments: c.equipments } : c) : […clients, { …cForm, equipments: [] }];
+saveClients(upd); setCModal(false);
+if (activeClient?.id === editingC) setActiveClient(upd.find(c => c.id === editingC));
+};
+const submitE = () => {
+const cl = clients.find(c => c.id === activeClient.id);
+const eqs = editingE ? cl.equipments.map(e => e.id === editingE ? eForm : e) : […(cl.equipments || []), eForm];
+const upd = clients.map(c => c.id === cl.id ? { …cl, equipments: eqs } : c);
+saveClients(upd);
+setActiveClient({ …cl, equipments: eqs });
+setEModal(false);
+};
+const delClient = (c) => setDelConfirm({ type: ‘client’, item: c });
+const delEquip = (e) => setDelConfirm({ type: ‘equip’, item: e });
+const confirmDel = () => {
+if (delConfirm.type === ‘client’) {
+saveClients(clients.filter(c => c.id !== delConfirm.item.id));
+if (activeClient?.id === delConfirm.item.id) { setView(‘list’); setActiveClient(null); }
+} else {
+const cl = clients.find(c => c.id === activeClient.id);
+const eqs = cl.equipments.filter(e => e.id !== delConfirm.item.id);
+const upd = clients.map(c => c.id === cl.id ? { …cl, equipments: eqs } : c);
+saveClients(upd); setActiveClient({ …cl, equipments: eqs });
+}
+setDelConfirm(null);
+};
+
+const getCals = (equipId) => (DB.get(‘calibrations’) || []).filter(c => c.equipId === equipId);
+
+if (view === ‘newcal’) {
+return <NewCalibration equip={activeEquip} client={activeClient}
+onSaved={(cal) => { setActiveCal(cal); setView(‘viewcal’); }}
+onCancel={() => setView(‘calibration’)} existing={null} />;
+}
+if (view === ‘viewcal’ && activeCal) {
+return <CalView cal={activeCal} onBack={() => setView(‘calibration’)}
+onRecal={() => { setView(‘newcal’); }}
+onEdit={() => setView(‘newcal’)} />;
+}
+if (view === ‘calibration’ && activeEquip) {
+const cals = getCals(activeEquip.id);
+return (
+<div className="space-y-4">
+{/* breadcrumb */}
+<div className="flex items-center gap-2 text-sm">
+<button onClick={() => setView(‘list’)} className=“text-blue-600 hover:underline font-medium”>{activeClient.name}</button>
+<span className="text-slate-300">/</span>
+<button onClick={() => setView(‘equipment’)} className=“text-blue-600 hover:underline font-medium”>{activeEquip.ref}</button>
+<span className="text-slate-300">/</span>
+<span className="text-slate-600 font-semibold">Calibraciones</span>
+</div>
+<Card>
+<Hdg icon=“📋” title={`Equipo: ${activeEquip.ref}`} sub={`${activeEquip.desc} · ${activeEquip.serial || 'sin S/N'} · ${activeEquip.material}`} color=“teal”
+right={<Btn onClick={() => setView(‘newcal’)} icon=“➕” size=“sm”>Nueva calibración</Btn>} />
+{cals.length === 0 ? (
+<div className="flex flex-col items-center justify-center py-14 gap-3">
+<div className="text-5xl">📏</div>
+<div className="text-slate-400 font-medium">Sin calibraciones para este equipo</div>
+<Btn onClick={() => setView(‘newcal’)} icon=“➕”>Primera calibración</Btn>
+</div>
+) : (
+<Tbl cols={[
+{ k: ‘certNum’, l: ‘Certificado’, bold: true, mono: true },
+{ k: ‘date’, l: ‘Fecha’ },
+{ k: ‘threadName’, l: ‘Rosca’ },
+{ k: ‘result’, l: ‘E ± U [mm]’, mono: true },
+{ k: ‘techName’, l: ‘Técnico’ },
+{ k: ‘statusB’, l: ‘Estado’ },
+]} rows={cals.map(c => ({
+…c,
+date: fmtDate(c.date),
+result: c.gum ? `${c.gum.mean.toFixed(5)} ± ${fmt(c.gum.U)}` : ‘—’,
+statusB: <Badge color={c.status === ‘ISSUED’ ? ‘green’ : ‘amber’}>{c.status}</Badge>,
+_raw: c,
+}))}
+onView={row => { setActiveCal(row._raw); setView(‘viewcal’); }}
+onEdit={row => { setActiveCal(row._raw); setView(‘newcal’); }}
+onDel={row => {
+const cals = (DB.get(‘calibrations’) || []).filter(c => c.certNum !== row._raw.certNum);
+DB.set(‘calibrations’, cals);
+setActiveEquip({ …activeEquip }); // force re-render trick
+}}
+/>
+)}
+</Card>
+<Confirm open={!!delConfirm} msg=”¿Eliminar este registro?” onOk={confirmDel} onCancel={() => setDelConfirm(null)} />
+</div>
+);
+}
+if (view === ‘equipment’ && activeClient) {
+return (
+<div className="space-y-4">
+<div className="flex items-center gap-2 text-sm">
+<button onClick={() => setView(‘list’)} className=“text-blue-600 hover:underline font-medium”>{activeClient.name}</button>
+<span className="text-slate-300">/</span>
+<span className="text-slate-600 font-semibold">Equipos</span>
+</div>
+<Card>
+<Hdg icon=“🏭” title={activeClient.name} sub={`${activeClient.code} · ${activeClient.address || 'Sin dirección'}`} color=“blue”
+right={
+<div className="flex gap-2">
+<Btn size=“sm” variant=“ghost” onClick={() => { setEditingC(activeClient.id); setCForm({ …activeClient }); setCModal(true); }} icon=“✏️”>Editar cliente</Btn>
+<Btn size=“sm” onClick={() => { setEditingE(null); setEForm({ …blankE, id: uid() }); setEModal(true); }} icon=“➕”>Añadir equipo</Btn>
+</div>
+} />
+{(activeClient.equipments || []).length === 0 ? (
+<div className="flex flex-col items-center py-12 gap-3">
+<div className="text-4xl">🔩</div>
+<div className="text-slate-400">Sin equipos registrados</div>
+<Btn onClick={() => { setEditingE(null); setEForm({ …blankE, id: uid() }); setEModal(true); }} icon=“➕”>Añadir primer equipo</Btn>
+</div>
+) : (
+<Tbl cols={[
+{ k: ‘ref’, l: ‘Referencia’, bold: true },
+{ k: ‘desc’, l: ‘Descripción’, max: true },
+{ k: ‘serial’, l: ‘Nº Serie’ },
+{ k: ‘material’, l: ‘Material’ },
+{ k: ‘ncals’, l: ‘Calibraciones’, mono: true },
+]} rows={(activeClient.equipments || []).map(e => ({
+…e,
+ncals: getCals(e.id).length || ‘0’,
+_raw: e,
+}))}
+onView={row => { setActiveEquip(row._raw); setView(‘calibration’); }}
+onEdit={row => { setEditingE(row._raw.id); setEForm({ …row._raw }); setEModal(true); }}
+onDel={row => delEquip(row._raw)}
+/>
+)}
+</Card>
+{/* Equipment modal */}
+<Modal open={eModal} onClose={() => setEModal(false)} title={editingE ? ‘Editar equipo’ : ‘Nuevo equipo’}>
+<div className="grid grid-cols-2 gap-4">
+<Fld label="Referencia" required><Inp value={eForm.ref} onChange={e => FE(‘ref’, e.target.value)} placeholder=“EQ-001” /></Fld>
+<Fld label="Nº de serie"><Inp value={eForm.serial} onChange={e => FE(‘serial’, e.target.value)} /></Fld>
+<div className="col-span-2"><Fld label="Descripción"><Inp value={eForm.desc} onChange={e => FE(‘desc’, e.target.value)} placeholder=“Tornillo M14×1.5 lote 2025-A” /></Fld></div>
+<div className="col-span-2"><Fld label="Material">
+<Sel value={eForm.material} onChange={e => FE(‘material’, e.target.value)}>
+{Object.keys(MATERIALS).map(m => <option key={m}>{m}</option>)}
+</Sel>
+</Fld></div>
+<div className="col-span-2"><Fld label="Notas"><textarea className=“w-full text-sm px-3 py-2 rounded-lg border border-slate-200 bg-slate-50 focus:bg-white focus:border-blue-400 outline-none resize-none h-16” value={eForm.notes} onChange={e => FE(‘notes’, e.target.value)} /></Fld></div>
+</div>
+<div className="flex justify-end gap-2 mt-5 pt-4 border-t border-slate-100">
+<Btn variant=“ghost” onClick={() => setEModal(false)}>Cancelar</Btn>
+<Btn onClick={submitE} icon="💾">{editingE ? ‘Guardar cambios’ : ‘Crear equipo’}</Btn>
+</div>
+</Modal>
+<Confirm open={!!delConfirm} msg={`¿Eliminar "${delConfirm?.item?.ref || delConfirm?.item?.name}"?`} onOk={confirmDel} onCancel={() => setDelConfirm(null)} />
+</div>
+);
 }
 
-// ── RENDER GUM ─────────────────────────────────────────────────
-function renderGUM() {
-  const r=gumResult, maxC=Math.max(...r.comps.map(c=>c.contrib));
-  let rows='';
-  for(const c of r.comps){
-    const isA=c.type==='A';
-    rows+=`<tr>
-      <td class="lbl">${c.name}</td>
-      <td><span style="font-size:11px;font-weight:700;padding:2px 7px;border-radius:10px;background:${isA?'var(--blue-m)':'var(--teal-l)'};color:${isA?'var(--blue)':'var(--teal)'}">${c.type}</span></td>
-      <td style="font-size:11px;color:var(--ink3)">${c.dist}</td>
-      <td class="num">${f6(c.u)}</td>
-      <td class="num" style="color:var(--ink3)">${c.ci===1?'1.000':c.ci.toFixed(3)}</td>
-      <td class="num" style="font-weight:600">${f6(c.u)}</td>
-      <td class="num">${c.contrib.toFixed(1)}%<div class="pbar"><div class="pbar-fill${isA?'':' b'}" style="width:${c.contrib/maxC*100}%"></div></div></td>
-    </tr>`;
-  }
-  // scatter
-  const allE=r.allE, eMin=Math.min(...allE)-r.Uexp*1.5, eMax=Math.max(...allE)+r.Uexp*1.5, eR=(eMax-eMin)||1;
-  const W2=540, H2=68;
-  const tx=v=>(v-eMin)/eR*(W2-48)+24;
-  const dots=r.all0.map(v=>`<circle cx="${tx(v).toFixed(1)}" cy="36" r="5" fill="#2563eb" opacity=".8"/>`).join('')
-             +r.all90.map(v=>`<circle cx="${tx(v).toFixed(1)}" cy="36" r="5" fill="#0d9488" opacity=".8"/>`).join('');
-  const mx=tx(r.mean).toFixed(1), ulx=tx(r.mean-r.Uexp).toFixed(1), uhx=tx(r.mean+r.Uexp).toFixed(1);
-  const svg=`<svg viewBox="0 0 ${W2} ${H2}" xmlns="http://www.w3.org/2000/svg" style="width:100%">
-    <rect x="${ulx}" y="26" width="${uhx-ulx}" height="20" rx="3" fill="rgba(217,119,6,.12)" stroke="#d97706" stroke-width="1.5"/>
-    ${dots}
-    <line x1="${mx}" y1="18" x2="${mx}" y2="48" stroke="#374151" stroke-width="1.5" stroke-dasharray="4,3"/>
-    <text x="${mx}" y="13" fill="#374151" font-size="10" text-anchor="middle" font-family="DM Mono,monospace" font-weight="600">Ē</text>
-    <text x="${ulx}" y="13" fill="#d97706" font-size="9" text-anchor="middle" font-family="DM Mono,monospace">Ē−U</text>
-    <text x="${uhx}" y="13" fill="#d97706" font-size="9" text-anchor="middle" font-family="DM Mono,monospace">Ē+U</text>
-    <text x="24" y="${H2-2}" fill="#9ca3af" font-size="8" font-family="DM Mono,monospace">${eMin.toFixed(4)}</text>
-    <text x="${W2-24}" y="${H2-2}" fill="#9ca3af" font-size="8" text-anchor="end" font-family="DM Mono,monospace">${eMax.toFixed(4)}</text>
-  </svg>`;
-  // conformidad
-  let confH='';
-  const tMin=parseFloat(G('tol_min')), tMax=parseFloat(G('tol_max'));
-  if(!isNaN(tMin)&&!isNaN(tMax)){
-    const lo=r.mean-r.Uexp, hi=r.mean+r.Uexp;
-    const full=lo>=tMin&&hi<=tMax, inT=r.mean>=tMin&&r.mean<=tMax;
-    const cls=full?'conform-ok':inT?'conform-warn':'conform-fail';
-    const ico=full?'✅':inT?'⚠️':'❌';
-    const tit=full?'CONFORME':inT?'INDETERMINADO':'NO CONFORME';
-    const bod=full?`E=[${lo.toFixed(5)}, ${hi.toFixed(5)}] mm dentro de [${tMin}, ${tMax}] mm.`:
-      inT?`Valor nominal dentro, pero intervalo solapa frontera de tolerancia (JCGM 106).`:
-      `E=${r.mean.toFixed(5)} mm fuera de tolerancia [${tMin}, ${tMax}] mm.`;
-    confH=`<div class="${cls}"><div class="conform-icon">${ico}</div><div><div class="conform-title">${tit}</div><div class="conform-body">${bod}</div></div></div>`;
-  }
-
-  E('gum-output').innerHTML=`
-    <div class="stats-row s4">
-      <div class="stat-card hl"><div class="stat-lbl">Diám. paso Ē</div><div class="stat-val">${r.mean.toFixed(5)}<span class="unit">mm</span></div><div class="stat-sub">n = ${r.n} lecturas</div></div>
-      <div class="stat-card warn-c"><div class="stat-lbl">Incert. combinada uc</div><div class="stat-val">${fmtE(r.uc)}<span class="unit">mm</span></div><div class="stat-sub">Propagación GUM</div></div>
-      <div class="stat-card"><div class="stat-lbl">Factor cobertura k</div><div class="stat-val">${r.k.toFixed(3)}</div><div class="stat-sub">νeff = ${r.nuEff<1e9?r.nuEff.toFixed(1):'∞'}  ·  p ≈ 95.45%</div></div>
-      <div class="stat-card good"><div class="stat-lbl">Incert. expandida U</div><div class="stat-val">${fmtE(r.Uexp)}<span class="unit">mm</span></div><div class="stat-sub">U = k · uc</div></div>
-    </div>
-    <div class="result-hero">
-      <div class="result-formula">E = M − W·(1+1/sinα/2) + p/(2·tanα/2)   ·   EURAMET cg-10   ·   Correc.: térmica + Hertz</div>
-      <div class="result-val">${r.mean.toFixed(5)} <span class="result-pm">±</span> <span class="result-u">${fmtE(r.Uexp)}</span><span class="result-unit">mm</span></div>
-      <div class="result-sub">k = ${r.k.toFixed(3)}, p ≈ 95.45%, νeff = ${r.nuEff<1e9?r.nuEff.toFixed(1):'∞'} — ${r.nuEff>=30?'Distribución normal':'t-Student'}</div>
-      <div style="margin-top:14px">${svg}</div>
-      <div style="font-size:11px;color:var(--ink3);margin-top:4px">● Plano 0° (azul)  ● Plano 90° (verde-azul)  ■ Intervalo U (naranja)</div>
-      ${confH}
-    </div>
-    <div class="card" style="margin-bottom:16px">
-      <div class="card-head"><div class="card-title"><div class="card-icon icon-purple">📊</div>Presupuesto de incertidumbre — JCGM 100:2008 (GUM)</div></div>
-      <div class="tbl-wrap"><table class="tbl"><thead><tr><th>Fuente</th><th>Tipo</th><th>Distribución</th><th class="num">u(xi) [mm]</th><th class="num">ci</th><th class="num">|ci·u(xi)|</th><th class="num">Contrib.</th></tr></thead>
-      <tbody>${rows}</tbody>
-      <tfoot>
-        <tr class="tbl-foot"><td colspan="5">uc = √Σ[ci·u(xi)]²</td><td class="num">${f6(r.uc)}</td><td class="num">100%</td></tr>
-        <tr class="tbl-final"><td colspan="5">U = k·uc  (k=${r.k.toFixed(3)}, p≈95.45%, νeff=${r.nuEff<1e9?r.nuEff.toFixed(1):'∞'})</td><td class="num">${f6(r.Uexp)}</td><td></td></tr>
-      </tfoot></table></div>
-    </div>
-    <div class="cols2" style="margin-bottom:16px">
-      <div class="card"><div class="card-head"><div class="card-title"><div class="card-icon icon-blue">📈</div>Estadísticos Tipo A</div></div>
-        <div class="tbl-wrap"><table class="tbl"><thead><tr><th>Parámetro</th><th class="num">Valor</th><th class="num">νi</th></tr></thead><tbody>
-          <tr><td class="lbl">n lecturas</td><td class="num">${r.n}</td><td class="num">—</td></tr>
-          <tr><td class="lbl">Media Ē</td><td class="num">${r.mean.toFixed(7)} mm</td><td class="num">—</td></tr>
-          <tr><td class="lbl">Desv. estándar s</td><td class="num">${r.s.toExponential(3)} mm</td><td class="num">${r.n-1}</td></tr>
-          <tr><td class="lbl">u_A1 = s/√n</td><td class="num">${f6(r.uA1)}</td><td class="num">${r.n-1}</td></tr>
-          <tr><td class="lbl">u_A2 (planos)</td><td class="num">${f6(r.uA2)}</td><td class="num">${r.all0.length>0&&r.all90.length>0?1:'—'}</td></tr>
-        </tbody></table></div>
-      </div>
-      <div class="card"><div class="card-head"><div class="card-title"><div class="card-icon icon-teal">🎯</div>Lecturas</div></div>
-        <div class="tbl-wrap"><table class="tbl"><thead><tr><th>Plano</th><th>Rep.</th><th class="num">E [mm]</th><th class="num">Δ vs. Ē</th></tr></thead><tbody>
-          ${r.all0.map((v,i)=>`<tr><td><span class="chip chip-blue">0°</span></td><td>${i+1}</td><td class="num">${v.toFixed(6)}</td><td class="num" style="color:${Math.abs(v-r.mean)>r.uA1*3?'var(--red)':'var(--ink3)'}">${(v-r.mean).toExponential(2)}</td></tr>`).join('')}
-          ${r.all90.map((v,i)=>`<tr><td><span class="chip chip-teal">90°</span></td><td>${i+1}</td><td class="num">${v.toFixed(6)}</td><td class="num" style="color:${Math.abs(v-r.mean)>r.uA1*3?'var(--red)':'var(--ink3)'}">${(v-r.mean).toExponential(2)}</td></tr>`).join('')}
-        </tbody></table></div>
-      </div>
-    </div>
-    <div class="action-row">
-      <button class="btn btn-ghost" onclick="goStep(2)">← Mediciones</button>
-      <button class="btn btn-green btn-lg" onclick="goStep(4)">📄 Generar certificado →</button>
-    </div>`;
+// ── CLIENT LIST ──
+return (
+<div className="space-y-4">
+<div className="flex items-center justify-between">
+<div>
+<h2 className="font-bold text-slate-800 text-lg">Clientes</h2>
+<p className="text-xs text-slate-400 mt-0.5">Selecciona un cliente para ver sus equipos y calibraciones</p>
+</div>
+<Btn onClick={() => { setEditingC(null); setCForm({ …blankC, id: uid() }); setCModal(true); }} icon=“➕”>Nuevo cliente</Btn>
+</div>
+<div className="grid grid-cols-1 gap-3">
+{clients.length === 0 && (
+<Card className="flex flex-col items-center py-16 gap-3">
+<div className="text-5xl">🏭</div>
+<div className="text-slate-400 font-medium">Sin clientes — añade el primero</div>
+<Btn onClick={() => { setEditingC(null); setCForm({ …blankC, id: uid() }); setCModal(true); }} icon=“➕”>Añadir cliente</Btn>
+</Card>
+)}
+{clients.map(cl => {
+const totalCals = (cl.equipments || []).reduce((a, e) => a + getCals(e.id).length, 0);
+return (
+<Card key={cl.id}>
+<div className="flex items-center p-5 gap-4">
+<div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center text-white font-bold text-lg flex-shrink-0 shadow-sm shadow-blue-200">
+{cl.name.charAt(0).toUpperCase()}
+</div>
+<div className="flex-1 min-w-0">
+<div className="flex items-center gap-2">
+<span className="font-bold text-slate-800">{cl.name}</span>
+{cl.code && <Badge color="slate">{cl.code}</Badge>}
+</div>
+<div className="text-xs text-slate-400 mt-0.5 truncate">{cl.address || cl.email || cl.contact || ‘Sin datos de contacto’}</div>
+<div className="flex items-center gap-3 mt-2">
+<span className="text-xs text-slate-400">🔩 {(cl.equipments || []).length} equipos</span>
+<span className="text-xs text-slate-400">📋 {totalCals} calibraciones</span>
+</div>
+</div>
+<div className="flex items-center gap-2">
+<Btn size=“sm” variant=“ghost” onClick={() => { setEditingC(cl.id); setCForm({ …cl }); setCModal(true); }} icon=“✏️”>Editar</Btn>
+<Btn size=“sm” variant=“danger” onClick={() => delClient(cl)} icon=“🗑”>Eliminar</Btn>
+<Btn size=“sm” onClick={() => { setActiveClient(cl); setView(‘equipment’); }} icon=“→”>Ver equipos</Btn>
+</div>
+</div>
+</Card>
+);
+})}
+</div>
+{/* Client modal */}
+<Modal open={cModal} onClose={() => setCModal(false)} title={editingC ? ‘Editar cliente’ : ‘Nuevo cliente’}>
+<div className="grid grid-cols-2 gap-4">
+<Fld label="Código"><Inp value={cForm.code} onChange={e => FC(‘code’, e.target.value)} placeholder=“CLI-001” /></Fld>
+<Fld label="Nombre" required><Inp value={cForm.name} onChange={e => FC(‘name’, e.target.value)} /></Fld>
+<div className="col-span-2"><Fld label="Dirección"><Inp value={cForm.address} onChange={e => FC(‘address’, e.target.value)} /></Fld></div>
+<Fld label="Contacto"><Inp value={cForm.contact} onChange={e => FC(‘contact’, e.target.value)} /></Fld>
+<Fld label="Email"><Inp type=“email” value={cForm.email} onChange={e => FC(‘email’, e.target.value)} /></Fld>
+<div className="col-span-2"><Fld label="Teléfono"><Inp value={cForm.phone} onChange={e => FC(‘phone’, e.target.value)} /></Fld></div>
+</div>
+<div className="flex justify-end gap-2 mt-5 pt-4 border-t border-slate-100">
+<Btn variant=“ghost” onClick={() => setCModal(false)}>Cancelar</Btn>
+<Btn onClick={submitC} icon="💾">{editingC ? ‘Guardar’ : ‘Crear cliente’}</Btn>
+</div>
+</Modal>
+<Confirm open={!!delConfirm} msg={`¿Eliminar cliente "${delConfirm?.item?.name}"? Se perderán todos sus equipos.`} onOk={confirmDel} onCancel={() => setDelConfirm(null)} />
+</div>
+);
 }
 
-// ── RENDER CERT ────────────────────────────────────────────────
-function renderCert() {
-  const r=gumResult;
-  const certNum=`CAL-${new Date().getFullYear()}-${String(Math.floor(Math.random()*9000)+1000)}`;
-  const today=new Date().toLocaleDateString('es-ES',{year:'numeric',month:'long',day:'numeric'});
-  const sw=`v1.0.0-${Math.random().toString(36).slice(2,8)}`;
-  const lab=G('lab_name')||'Laboratorio de Metrología Dimensional';
-  const budRows=r.comps.map(c=>`<tr><td>${c.name}</td><td class="${c.type==='A'?'ta':'tb'}">${c.type}</td><td class="nr">${f6(c.u)}</td><td class="nr">${c.ci===1?'1.000':c.ci.toFixed(3)}</td><td class="nr" style="font-weight:600">${f6(c.u)}</td><td class="nr">${c.contrib.toFixed(1)}%</td></tr>`).join('');
-  E('cert-output').innerHTML=`
-    <div class="flex-b" style="margin-bottom:14px" class="no-print">
-      <div style="font-size:13px;color:var(--ink3)">Certificado listo · Usa <b>Ctrl+P</b> → "Guardar como PDF"</div>
-      <div class="flex-c">
-        <button class="btn btn-ghost" onclick="goStep(3)">← Incertidumbre</button>
-        <button class="btn btn-primary" onclick="window.print()">🖨 Imprimir / PDF</button>
-      </div>
-    </div>
-    <div class="cert-shell">
-      <div class="cert-top-stripe"></div>
-      <div class="cert-inner">
-        <div class="cert-header">
-          <div><div class="cert-lab-name">${lab}</div><div class="cert-lab-sub">Laboratorio Acreditado · ISO/IEC 17025:2017</div></div>
-          <div><div class="cert-accred-badge">ENAC</div><div class="cert-accred-sub">EURAMET cg-10 · JCGM 100</div><div class="cert-accred-sub">ThreadCal Pro ${sw}</div></div>
-        </div>
-        <div class="cert-title">CERTIFICADO DE CALIBRACIÓN</div>
-        <div class="cert-num">Nº ${certNum}</div>
-        <div class="cert-sec">
-          <div class="cert-sec-title">§1 Identificación</div>
-          ${kv('Código proyecto',G('proj_code'))} ${kv('Cliente',G('client'))} ${kv('Referencia elemento',G('part_ref'))} ${kv('Fecha medición',G('meas_date'))} ${kv('Fecha emisión',today)} ${kv('Operador',G('operator'))}
-        </div>
-        <div class="cert-sec">
-          <div class="cert-sec-title">§2 Elemento calibrado</div>
-          ${kv('Tipo de rosca',PRESET_NAMES[activePreset]+' — '+(G('direction')==='external'?'Tornillo (externo)':'Tuerca (interno)'))}
-          ${kv('Designación','∅'+G('nominal_d')+' × '+G('pitch')+' mm,  α = '+G('flank_angle')+'°')}
-          ${kv('Clase tolerancia',G('tol_class'))}
-          ${kv('Coef. dilatación α_th',G('alpha_th')+' × 10⁻⁶ K⁻¹')}
-        </div>
-        <div class="cert-sec">
-          <div class="cert-sec-title">§3 Instrumento y condiciones</div>
-          ${kv('Banco',G('inst_model')+' · S/N: '+G('inst_sn'))}
-          ${kv('Cert. calibración banco',G('inst_cert')+' · válido hasta: '+G('inst_expiry'))}
-          ${kv('U banco (k=2)',G('u_cal')+' mm')}
-          ${kv('Hilo W calibrado',G('wire_cal')+' mm · Cert.: '+G('wire_cert'))}
-          ${kv('Fuerza de palpado',r.g.F.toFixed(4)+' N ('+G('meas_force')+' '+G('force_unit')+')')}
-          ${kv('Temperatura',G('temp_c')+' °C (ref. 20.0 °C — ISO 1:2016)')}
-          ${kv('Humedad relativa',G('humidity')+' %')}
-        </div>
-        <div class="cert-sec">
-          <div class="cert-sec-title">§4 Resultado</div>
-          <div class="cert-result-box">
-            <div class="cert-result-label">Diámetro de paso E (mensurando)</div>
-            <div class="cert-result-value">E = (${r.mean.toFixed(5)} ± ${fmtE(r.Uexp)}) mm</div>
-            <div class="cert-result-note">Incertidumbre expandida U = k·uc, k = ${r.k.toFixed(3)}, p ≈ 95.45% (${r.nuEff>=30?'distribución normal':'t-Student, νeff = '+r.nuEff.toFixed(1)})</div>
+// ═══════════════════════════════════════════════════════════
+// NEW CALIBRATION WIZARD
+// ═══════════════════════════════════════════════════════════
+function NewCalibration({ equip, client, onSaved, onCancel, existing }) {
+const cfg = DB.get(‘config’) || {};
+const machines = DB.get(‘machines’) || MACHINE_SEED;
+const techs = DB.get(‘techs’) || [];
+
+const init = existing || {
+certNum: `CAL-${new Date().getFullYear()}-${String(Math.floor(Math.random() * 9000) + 1000)}`,
+date: today(), machineId: ‘’, techId: ‘’,
+threadId: ‘’, threadName: ‘’, tolClass: ‘’, direction: ‘external’,
+tolMin: ‘’, tolMax: ‘’,
+wireId: ‘’, wireDiam: ‘’, uWire: 0.00015, wireCert: ‘’,
+temp: 20.0, humidity: 48, uTemp: 0.1, uForce: 0.002, uAngle: 0.1,
+alpha_th: 11.5, e_mod: 210, nu: 0.30,
+readings0: [’’, ‘’, ‘’], readings90: [’’, ‘’, ‘’],
+signature: ‘’, status: ‘DRAFT’, gum: null,
+equipId: equip?.id, clientId: client?.id,
+clientName: client?.name, equipRef: equip?.ref,
+labName: cfg.labName || ‘Laboratorio de Metrología’,
+};
+const [s, setS] = useState(init);
+const [step, setStep] = useState(0);
+const sv = (k, v) => setS(p => ({ …p, [k]: v }));
+
+const machine = machines.find(m => m.id === s.machineId);
+const tech = techs.find(t => t.id === s.techId);
+const thread = THREADS.find(t => t.id === s.threadId);
+const wire = WIRES.find(w => w.id === s.wireId);
+
+useEffect(() => {
+if (thread) {
+sv(‘threadName’, thread.name);
+sv(‘tolClass’, s.direction === ‘external’ ? thread.tolExt : thread.tolInt);
+// auto best-wire suggestion
+}
+}, [s.threadId, s.direction]);
+
+useEffect(() => {
+if (wire) { sv(‘wireDiam’, wire.diam); sv(‘uWire’, wire.uW); }
+}, [s.wireId]);
+
+useEffect(() => {
+const mat = MATERIALS[equip?.material];
+if (mat) { sv(‘alpha_th’, mat.alpha); sv(‘e_mod’, mat.e); sv(‘nu’, mat.nu); }
+}, []);
+
+const geo = {
+W: +s.wireDiam || 0.866, alpha: thread?.alpha || 60, p: thread?.p || 1.5,
+T: +s.temp, F: machine ? (machine.forceUnit === ‘cN’ ? machine.force / 100 : +machine.force) : 0.04,
+alpha_th: +s.alpha_th * 1e-6, E_mod: +s.e_mod * 1e9, nu: +s.nu,
+};
+
+const bw = thread ? bestWire(thread.p, thread.alpha) : 0;
+const getE = (v) => { const r = +v; if (!v || isNaN(r)) return null; return calcE(r, geo); };
+const r0vals = s.readings0.map(v => getE(v)?.E).filter(v => v != null);
+const r90vals = s.readings90.map(v => getE(v)?.E).filter(v => v != null);
+
+const runGUM = () => {
+const ucal = machine ? +machine.uCal : 0.0006;
+const res = machine ? +machine.resolution : 0.0001;
+const g = calcGUM(r0vals, r90vals, geo, ucal, res, +s.uWire, +s.uForce, +s.uTemp, +s.uAngle, thread?.d);
+if (g) sv(‘gum’, g);
+return g;
+};
+
+const doSave = (gum) => {
+const cal = {
+…s, gum: gum || s.gum, status: ‘ISSUED’,
+threadName: thread?.name || s.threadName,
+techName: tech?.name || tech?.code || ‘—’,
+savedAt: new Date().toISOString(),
+};
+const cals = DB.get(‘calibrations’) || [];
+const idx = cals.findIndex(c => c.certNum === cal.certNum);
+if (idx >= 0) cals[idx] = cal; else cals.unshift(cal);
+DB.set(‘calibrations’, cals);
+onSaved(cal);
+};
+
+const canvasRef = useRef(null);
+const [drawing, setDrawing] = useState(false);
+const startDraw = (e) => {
+setDrawing(true);
+const c = canvasRef.current, r = c.getBoundingClientRect(), ctx = c.getContext(‘2d’);
+ctx.beginPath(); ctx.moveTo(e.clientX - r.left, e.clientY - r.top);
+};
+const draw = (e) => {
+if (!drawing) return;
+const c = canvasRef.current, r = c.getBoundingClientRect(), ctx = c.getContext(‘2d’);
+ctx.lineWidth = 2; ctx.lineCap = ‘round’; ctx.strokeStyle = ‘#1e293b’;
+ctx.lineTo(e.clientX - r.left, e.clientY - r.top); ctx.stroke();
+};
+const endDraw = () => { setDrawing(false); sv(‘signature’, canvasRef.current?.toDataURL()); };
+
+const STEPS = [‘Proyecto’, ‘Rosca’, ‘Hilo & Cond.’, ‘Mediciones’, ‘Resultado’, ‘Certificado’];
+
+return (
+<div className="space-y-4 max-w-4xl mx-auto">
+{/* Header */}
+<div className="flex items-center gap-3">
+<button onClick={onCancel} className="w-8 h-8 flex items-center justify-center rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-50 transition-colors">←</button>
+<div>
+<h2 className="font-bold text-slate-800">{existing ? ‘Editar / Recalibrar’ : ‘Nueva calibración’}</h2>
+<p className="text-xs text-slate-400 font-mono">{client?.name} → {equip?.ref} · {s.certNum}</p>
+</div>
+</div>
+{/* Step pills */}
+<div className="flex gap-1.5 overflow-x-auto pb-1">
+{STEPS.map((name, i) => (
+<button key={i} onClick={() => setStep(i)}
+className={`flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-all ${step === i ? 'bg-blue-600 text-white' : i < step ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'}`}>
+{i < step ? ‘✓’ : <span className="w-3.5 h-3.5 rounded-full bg-current/20 flex items-center justify-center text-[9px]">{i + 1}</span>}
+{name}
+</button>
+))}
+</div>
+
+```
+  {/* ── STEP 0: PROYECTO ── */}
+  {step === 0 && (
+    <div className="grid grid-cols-2 gap-4">
+      <Card>
+        <Hdg icon="📋" title="Datos del encargo" color="blue" />
+        <div className="p-5 space-y-3">
+          <div className="grid grid-cols-2 gap-3">
+            <Fld label="Nº Certificado"><Inp value={s.certNum} onChange={e => sv('certNum', e.target.value)} /></Fld>
+            <Fld label="Fecha"><Inp type="date" value={s.date} onChange={e => sv('date', e.target.value)} /></Fld>
           </div>
-          <p style="font-size:11px;color:#555">n=${r.n}  ·  Ē=${r.mean.toFixed(7)} mm  ·  s=${r.s.toExponential(3)} mm  ·  uc=${f6(r.uc)} mm</p>
+          <Fld label="Laboratorio"><Inp value={s.labName} onChange={e => sv('labName', e.target.value)} /></Fld>
+          <Fld label="Técnico responsable">
+            <Sel value={s.techId} onChange={e => sv('techId', e.target.value)}>
+              <option value="">— Seleccionar técnico —</option>
+              {techs.map(t => <option key={t.id} value={t.id}>{t.code} — {t.name}</option>)}
+            </Sel>
+          </Fld>
+          <Fld label="Banco de medición">
+            <Sel value={s.machineId} onChange={e => sv('machineId', e.target.value)}>
+              <option value="">— Seleccionar banco —</option>
+              {machines.map(m => <option key={m.id} value={m.id}>{m.brand} {m.model}{m.sn ? ` · SN: ${m.sn}` : ''}</option>)}
+            </Sel>
+          </Fld>
+          {machine && (
+            <div className="bg-blue-50 border border-blue-100 rounded-lg p-3 text-xs space-y-1">
+              <div className="flex justify-between"><span className="text-blue-500">U cal (k=2):</span><span className="font-mono font-bold">{machine.uCal} mm</span></div>
+              <div className="flex justify-between"><span className="text-blue-500">Fuerza:</span><span className="font-mono font-bold">{machine.force} {machine.forceUnit}</span></div>
+              {machine.certExpiry && <div className="flex justify-between"><span className="text-blue-500">Cal. válida:</span><span className="font-mono">{machine.certExpiry}</span></div>}
+            </div>
+          )}
         </div>
-        <div class="cert-sec">
-          <div class="cert-sec-title">§5 Presupuesto GUM — JCGM 100:2008</div>
-          <table class="cert-bud-tbl"><thead><tr><th>Fuente</th><th>T.</th><th class="nr">u(xi) [mm]</th><th class="nr">ci</th><th class="nr">|ci·u(xi)|</th><th class="nr">%</th></tr></thead>
-          <tbody>${budRows}</tbody>
-          <tfoot>
-            <tr class="cert-bud-tot"><td colspan="4">uc combinada</td><td class="nr">${f6(r.uc)}</td><td class="nr">100%</td></tr>
-            <tr class="cert-bud-tot" style="background:#eff6ff"><td colspan="4">U = ${r.k.toFixed(3)} × uc  (k=${r.k.toFixed(3)}, p≈95.45%)</td><td class="nr" style="color:#2563eb">${f6(r.Uexp)}</td><td></td></tr>
-          </tfoot></table>
-          <p style="font-size:10px;color:#888;margin-top:6px">EURAMET cg-10. Correcciones: térmica (ISO 1) + Hertz. Software: ThreadCal Pro ${sw}.</p>
+      </Card>
+      <Card>
+        <Hdg icon="🏭" title="Equipo a calibrar" color="teal" />
+        <div className="p-5 space-y-3">
+          <div className="bg-teal-50 border border-teal-100 rounded-xl p-4 space-y-2">
+            <div className="flex items-center gap-2">
+              <span className="text-2xl">🔩</span>
+              <div>
+                <div className="font-bold text-slate-800">{equip?.ref}</div>
+                <div className="text-xs text-slate-500">{equip?.desc}</div>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs">
+              <div><span className="text-slate-400">Cliente:</span> <span className="font-semibold">{client?.name}</span></div>
+              <div><span className="text-slate-400">S/N:</span> <span className="font-mono">{equip?.serial || '—'}</span></div>
+              <div><span className="text-slate-400">Material:</span> <span className="font-semibold">{equip?.material}</span></div>
+            </div>
+          </div>
+          <Fld label="Dirección de rosca">
+            <Sel value={s.direction} onChange={e => sv('direction', e.target.value)}>
+              <option value="external">Tornillo (externo)</option>
+              <option value="internal">Tuerca (interno)</option>
+            </Sel>
+          </Fld>
         </div>
-        <div class="cert-sec">
-          <div class="cert-sec-title">§6 Trazabilidad</div>
-          <p style="font-size:12px;color:#444;line-height:1.6">Mediciones trazables a patrones nacionales CEM a través de cadena documentada: BIPM → CEM → Laboratorio acreditado ENAC → Instrumento. Los certificados de calibración están disponibles en el expediente del proyecto.</p>
+      </Card>
+      <div className="col-span-2 flex justify-end">
+        <Btn onClick={() => setStep(1)}>Siguiente: Rosca →</Btn>
+      </div>
+    </div>
+  )}
+
+  {/* ── STEP 1: ROSCA ── */}
+  {step === 1 && (
+    <div className="space-y-4">
+      <Card>
+        <Hdg icon="⚙️" title="Selección de rosca" sub="Todas las normas ISO/ASME cargadas" color="blue" />
+        <div className="p-5 space-y-4">
+          <div className="grid grid-cols-3 gap-3">
+            <div className="col-span-1">
+              <Fld label="Norma">
+                <Sel value={s.threadStd || ''} onChange={e => { sv('threadStd', e.target.value); sv('threadId', ''); }}>
+                  <option value="">Todas</option>
+                  {THREAD_STANDARDS.filter(s => s.id !== 'CUSTOM').map(std =>
+                    <option key={std.id} value={std.id}>{std.label}</option>
+                  )}
+                </Sel>
+              </Fld>
+            </div>
+            <div className="col-span-2">
+              <Fld label="Rosca">
+                <Sel value={s.threadId} onChange={e => sv('threadId', e.target.value)}>
+                  <option value="">— Seleccionar rosca —</option>
+                  {THREADS
+                    .filter(t => !s.threadStd || t.std === s.threadStd)
+                    .map(t => <option key={t.id} value={t.id}>{t.name} — ∅{t.d}×{t.p} mm</option>)}
+                </Sel>
+              </Fld>
+            </div>
+          </div>
+          {thread && (
+            <div className="grid grid-cols-4 gap-3">
+              {[
+                { l: 'D nominal', v: `${thread.d} mm` },
+                { l: 'Paso p', v: `${thread.p} mm` },
+                { l: 'D de paso d2', v: `${thread.d2} mm` },
+                { l: 'D menor d1', v: `${thread.d1} mm` },
+                { l: 'Ángulo α', v: `${thread.alpha}°` },
+                { l: 'Norma', v: thread.norm },
+                { l: 'Tol. ext.', v: thread.tolExt },
+                { l: 'Tol. int.', v: thread.tolInt },
+              ].map(item => (
+                <div key={item.l} className="bg-slate-50 rounded-lg p-3 border border-slate-100">
+                  <div className="text-[10px] text-slate-400 font-bold uppercase tracking-wide mb-1">{item.l}</div>
+                  <div className="font-mono font-bold text-slate-800 text-sm">{item.v}</div>
+                </div>
+              ))}
+            </div>
+          )}
+          <div className="grid grid-cols-3 gap-3">
+            <Fld label="Clase tolerancia">
+              <Inp value={s.tolClass} onChange={e => sv('tolClass', e.target.value)} placeholder={thread ? (s.direction === 'external' ? thread.tolExt : thread.tolInt) : '6g'} />
+            </Fld>
+            <Fld label="Tol. mín." unit="mm"><Inp type="number" value={s.tolMin} onChange={e => sv('tolMin', e.target.value)} step="0.0001" placeholder="Opcional" /></Fld>
+            <Fld label="Tol. máx." unit="mm"><Inp type="number" value={s.tolMax} onChange={e => sv('tolMax', e.target.value)} step="0.0001" placeholder="Opcional" /></Fld>
+          </div>
         </div>
-        <div class="cert-footer">
-          <div class="cert-sign"><div class="cert-sign-line"></div><div class="cert-sign-name">${G('operator')||'Operador'}</div><div class="cert-sign-role">Técnico de medición</div></div>
-          <div class="cert-foot-mid">Cert. nº ${certNum}<br>${today}<br><span style="font-family:'DM Mono',monospace;font-size:9px">${sw}</span><br>Válido sólo íntegramente.</div>
-          <div class="cert-sign"><div class="cert-sign-line"></div><div class="cert-sign-name">Responsable Técnico</div><div class="cert-sign-role">Revisión y aprobación</div></div>
+      </Card>
+      <div className="flex justify-between">
+        <Btn variant="ghost" onClick={() => setStep(0)}>← Volver</Btn>
+        <Btn onClick={() => setStep(2)} disabled={!s.threadId}>Siguiente: Hilo & Condiciones →</Btn>
+      </div>
+    </div>
+  )}
+
+  {/* ── STEP 2: HILO & CONDICIONES ── */}
+  {step === 2 && (
+    <div className="grid grid-cols-2 gap-4">
+      <Card>
+        <Hdg icon="📏" title="Hilo de medición" color="teal" />
+        <div className="p-5 space-y-3">
+          {thread && bw > 0 && (
+            <div className="bg-emerald-50 border border-emerald-100 rounded-lg p-3 text-sm">
+              <div className="text-emerald-700 font-bold">Hilo óptimo: <span className="font-mono">{bw.toFixed(5)} mm</span></div>
+              <div className="text-emerald-600 text-xs mt-0.5">Rango válido: [{(0.56 * thread.p).toFixed(4)}, {(0.90 * thread.p).toFixed(4)}] mm</div>
+            </div>
+          )}
+          <Fld label="Hilo de la base de datos">
+            <Sel value={s.wireId} onChange={e => sv('wireId', e.target.value)}>
+              <option value="">— Seleccionar hilo —</option>
+              {WIRES
+                .filter(w => !thread || (w.pMin <= thread.p && w.pMax >= thread.p))
+                .map(w => <option key={w.id} value={w.id}>{w.code} — W={w.diam} mm</option>)}
+              <optgroup label="Todos los hilos">
+                {WIRES
+                  .filter(w => !thread || !(w.pMin <= thread.p && w.pMax >= thread.p))
+                  .map(w => <option key={w.id} value={w.id}>{w.code} — W={w.diam} mm</option>)}
+              </optgroup>
+            </Sel>
+          </Fld>
+          <div className="grid grid-cols-2 gap-3">
+            <Fld label="W calibrado" unit="mm"><Inp type="number" value={s.wireDiam} onChange={e => sv('wireDiam', e.target.value)} step="0.00001" placeholder="0.86603" /></Fld>
+            <Fld label="u(W) k=1" unit="mm"><Inp type="number" value={s.uWire} onChange={e => sv('uWire', e.target.value)} step="0.00001" min="0" /></Fld>
+          </div>
+          <Fld label="Certificado hilo"><Inp value={s.wireCert} onChange={e => sv('wireCert', e.target.value)} placeholder="ENAC-C-XXXX" /></Fld>
+        </div>
+      </Card>
+      <Card>
+        <Hdg icon="🌡️" title="Condiciones ambientales y material" color="amber" />
+        <div className="p-5 space-y-3">
+          <div className="grid grid-cols-2 gap-3">
+            <Fld label="Temperatura" unit="°C">
+              <Inp type="number" value={s.temp} onChange={e => sv('temp', e.target.value)} step="0.1" />
+            </Fld>
+            <Fld label="Humedad" unit="%"><Inp type="number" value={s.humidity} onChange={e => sv('humidity', e.target.value)} step="1" /></Fld>
+          </div>
+          <div className="grid grid-cols-3 gap-2">
+            <Fld label="u(T)" unit="°C"><Inp type="number" value={s.uTemp} onChange={e => sv('uTemp', e.target.value)} step="0.01" min="0" /></Fld>
+            <Fld label="u(F)" unit="N"><Inp type="number" value={s.uForce} onChange={e => sv('uForce', e.target.value)} step="0.001" min="0" /></Fld>
+            <Fld label="u(α)" unit="°"><Inp type="number" value={s.uAngle} onChange={e => sv('uAngle', e.target.value)} step="0.01" min="0" /></Fld>
+          </div>
+          <Fld label="Material">
+            <Sel value={Object.keys(MATERIALS).find(k => MATERIALS[k].alpha === +s.alpha_th) || ''} onChange={e => { const m = MATERIALS[e.target.value]; if (m) { sv('alpha_th', m.alpha); sv('e_mod', m.e); sv('nu', m.nu); } }}>
+              {Object.keys(MATERIALS).map(k => <option key={k} value={k}>{k}</option>)}
+            </Sel>
+          </Fld>
+          <div className="grid grid-cols-3 gap-2">
+            <Fld label="α_th" unit="×10⁻⁶/K"><Inp type="number" value={s.alpha_th} onChange={e => sv('alpha_th', e.target.value)} step="0.1" /></Fld>
+            <Fld label="E" unit="GPa"><Inp type="number" value={s.e_mod} onChange={e => sv('e_mod', e.target.value)} step="1" /></Fld>
+            <Fld label="ν"><Inp type="number" value={s.nu} onChange={e => sv('nu', e.target.value)} step="0.01" /></Fld>
+          </div>
+          {+s.temp !== 20 && (
+            <div className="bg-amber-50 border border-amber-100 rounded-lg p-2 text-xs text-amber-700">
+              ⚠️ ΔT = {(+s.temp - 20).toFixed(1)} °C respecto a 20 °C (ISO 1:2016). Se aplicará corrección térmica.
+            </div>
+          )}
+        </div>
+      </Card>
+      <div className="col-span-2 flex justify-between">
+        <Btn variant="ghost" onClick={() => setStep(1)}>← Volver</Btn>
+        <Btn onClick={() => setStep(3)}>Siguiente: Mediciones →</Btn>
+      </div>
+    </div>
+  )}
+
+  {/* ── STEP 3: MEDICIONES ── */}
+  {step === 3 && (
+    <div className="space-y-4">
+      {/* correction strip */}
+      {thread && s.wireDiam && (
+        <div className="grid grid-cols-4 gap-3">
+          {(() => {
+            const testM = thread.d + 3 * (+s.wireDiam);
+            const r = calcE(testM, geo);
+            return [
+              { l: 'ΔM térmica', v: fmt(r.dT, 6), u: 'mm', info: `T=${s.temp}°C` },
+              { l: 'δ Hertz', v: fmt(r.dH, 6), u: 'mm', info: 'Corrección elástica' },
+              { l: '−W(1+1/sinα/2)', v: fmt(-r.wt, 6), u: 'mm', info: 'Término hilo' },
+              { l: 'p/(2·tanα/2)', v: fmt(r.pt, 6), u: 'mm', info: 'Término paso' },
+            ].map(item => (
+              <div key={item.l} className="bg-white rounded-xl border border-slate-200 shadow-sm p-3">
+                <div className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">{item.l}</div>
+                <div className="font-mono font-bold text-slate-800 mt-1">{item.v} <span className="text-slate-400 text-xs font-normal">{item.u}</span></div>
+                <div className="text-[10px] text-slate-400 mt-0.5">{item.info}</div>
+              </div>
+            ));
+          })()}
+        </div>
+      )}
+      <div className="grid grid-cols-2 gap-4">
+        {[0, 90].map(plane => {
+          const key = `readings${plane}`;
+          const vals = plane === 0 ? r0vals : r90vals;
+          const mean = vals.length ? vals.reduce((a,b)=>a+b,0)/vals.length : null;
+          const std = vals.length > 1 ? Math.sqrt(vals.reduce((a,b)=>a+(b-mean)**2,0)/(vals.length-1)) : null;
+          return (
+            <Card key={plane}>
+              <Hdg icon={plane === 0 ? '📐' : '🔄'} title={`Lecturas — Plano ${plane}°`} color={plane === 0 ? 'blue' : 'teal'}
+                right={<button onClick={() => sv(key, [...s[key], ''])} className="text-xs font-semibold text-blue-600 hover:text-blue-700 flex items-center gap-1">➕ Añadir</button>} />
+              <div className="p-4 space-y-2">
+                <div className="grid grid-cols-4 gap-1.5 text-[10px] font-bold text-slate-400 uppercase tracking-wide mb-2">
+                  <span>#</span><span>M_raw [mm]</span><span>M_corr [mm]</span><span>E [mm]</span>
+                </div>
+                {s[key].map((v, i) => {
+                  const res = getE(v);
+                  return (
+                    <div key={i} className="grid grid-cols-4 gap-1.5 items-center">
+                      <span className="text-xs font-bold text-slate-300 text-right">{i + 1}</span>
+                      <Inp type="number" step="0.00001" placeholder="M_raw…" value={v}
+                        onChange={e => { const a = [...s[key]]; a[i] = e.target.value; sv(key, a); }} />
+                      <div className={`font-mono text-[11px] px-2 py-1.5 rounded-lg text-right border ${res ? 'bg-teal-50 border-teal-100 text-teal-700' : 'bg-slate-50 border-slate-100 text-slate-300'}`}>{res ? res.M_c.toFixed(5) : '—'}</div>
+                      <div className="flex gap-1">
+                        <div className={`flex-1 font-mono text-[11px] px-2 py-1.5 rounded-lg text-right border font-semibold ${res ? 'bg-blue-50 border-blue-100 text-blue-700' : 'bg-slate-50 border-slate-100 text-slate-300'}`}>{res ? res.E.toFixed(5) : '—'}</div>
+                        <button onClick={() => { const a = [...s[key]]; a.splice(i, 1); sv(key, a); }} className="w-5 h-5 flex items-center justify-center text-slate-300 hover:text-red-400 transition-colors text-xs">×</button>
+                      </div>
+                    </div>
+                  );
+                })}
+                {vals.length >= 2 && (
+                  <div className="grid grid-cols-3 gap-2 mt-3 bg-slate-50 rounded-lg p-3 border border-slate-100">
+                    <div><div className="text-[10px] text-slate-400 font-bold uppercase">Media Ē</div><div className="font-mono text-sm font-bold">{mean.toFixed(5)}</div></div>
+                    <div><div className="text-[10px] text-slate-400 font-bold uppercase">Desv. Est. s</div><div className="font-mono text-sm font-bold">{std.toExponential(2)}</div></div>
+                    <div><div className="text-[10px] text-slate-400 font-bold uppercase">n</div><div className="font-mono text-sm font-bold">{vals.length}</div></div>
+                  </div>
+                )}
+              </div>
+            </Card>
+          );
+        })}
+      </div>
+      <div className="flex justify-between">
+        <Btn variant="ghost" onClick={() => setStep(2)}>← Volver</Btn>
+        <Btn onClick={() => { const g = runGUM(); if (!g) { alert('Mínimo 2 lecturas válidas'); return; } setStep(4); }} icon="🧮">Calcular GUM →</Btn>
+      </div>
+    </div>
+  )}
+
+  {/* ── STEP 4: RESULTADO GUM ── */}
+  {step === 4 && s.gum && (() => {
+    const g = s.gum;
+    let conforms = null;
+    if (s.tolMin !== '' && s.tolMax !== '') {
+      const lo = g.mean - g.U, hi = g.mean + g.U;
+      const full = lo >= +s.tolMin && hi <= +s.tolMax;
+      const inT = g.mean >= +s.tolMin && g.mean <= +s.tolMax;
+      conforms = full ? 'ok' : inT ? 'warn' : 'err';
+    }
+    return (
+      <div className="space-y-4">
+        <div className="bg-gradient-to-br from-blue-50 to-sky-50 border border-blue-100 rounded-2xl p-6 text-center">
+          <div className="text-xs text-slate-400 font-mono mb-2">E = M − W·(1+1/sinα/2) + p/(2·tanα/2) · EURAMET cg-10</div>
+          <div className="text-3xl font-bold font-mono text-blue-700">
+            {g.mean.toFixed(5)} <span className="text-amber-500">±</span> <span className="text-amber-600">{fmt(g.U)}</span>
+            <span className="text-slate-400 text-lg font-normal ml-2">mm</span>
+          </div>
+          <div className="text-xs text-slate-400 mt-2">k = {g.k.toFixed(3)} · p ≈ 95.45% · νeff = {g.nuEff < 1e9 ? g.nuEff.toFixed(1) : '∞'}</div>
+          {conforms && (
+            <div className={`mt-3 inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-bold border ${conforms === 'ok' ? 'bg-emerald-100 text-emerald-700 border-emerald-200' : conforms === 'warn' ? 'bg-amber-100 text-amber-700 border-amber-200' : 'bg-red-100 text-red-700 border-red-200'}`}>
+              {conforms === 'ok' ? '✅ CONFORME' : conforms === 'warn' ? '⚠️ INDETERMINADO' : '❌ NO CONFORME'}
+            </div>
+          )}
+        </div>
+        {/* Budget */}
+        <Card>
+          <Hdg icon="📊" title="Presupuesto de incertidumbre — JCGM 100:2008" color="purple" />
+          <div className="overflow-x-auto">
+            <table className="w-full text-xs">
+              <thead><tr className="border-b border-slate-100">
+                {['Fuente','T.','u(xi) [mm]','Contribución'].map(h =>
+                  <th key={h} className="text-left text-[10px] font-bold text-slate-400 uppercase tracking-wider px-4 py-3">{h}</th>)}
+              </tr></thead>
+              <tbody>
+                {g.comps.map((c, i) => (
+                  <tr key={i} className="border-b border-slate-50">
+                    <td className="px-4 py-2.5 text-slate-700">{c.name}</td>
+                    <td className="px-4 py-2.5"><span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${c.type === 'A' ? 'bg-blue-100 text-blue-700' : 'bg-teal-100 text-teal-700'}`}>{c.type}</span></td>
+                    <td className="px-4 py-2.5 font-mono text-right">{fmt(c.u, 6)}</td>
+                    <td className="px-4 py-2.5 w-48">
+                      <div className="flex items-center gap-2">
+                        <div className="flex-1 h-1.5 bg-slate-100 rounded-full"><div className={`h-full rounded-full ${c.type === 'A' ? 'bg-blue-400' : 'bg-teal-400'}`} style={{ width: `${c.pct}%` }} /></div>
+                        <span className="w-8 text-right text-slate-500">{c.pct.toFixed(1)}%</span>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+              <tfoot>
+                <tr className="bg-blue-50 border-t-2 border-blue-200">
+                  <td colSpan={2} className="px-4 py-3 font-bold text-blue-800">U = {g.k.toFixed(3)} × uc</td>
+                  <td className="px-4 py-3 font-mono font-bold text-right text-blue-700">{fmt(g.U, 6)}</td>
+                  <td />
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        </Card>
+        {/* Signature */}
+        <Card>
+          <Hdg icon="✍️" title="Firma del técnico" color="slate" />
+          <div className="p-5 flex gap-4 items-start">
+            <div className="flex-1">
+              <p className="text-xs text-slate-500 mb-2">Dibuja tu firma en el recuadro con el ratón.</p>
+              <div className="border-2 border-dashed border-slate-200 rounded-xl overflow-hidden bg-white hover:border-blue-300 transition-colors cursor-crosshair">
+                <canvas ref={canvasRef} width={380} height={90} className="block w-full"
+                  onMouseDown={startDraw} onMouseMove={draw} onMouseUp={endDraw} onMouseLeave={endDraw} />
+              </div>
+              <button onClick={() => { const c = canvasRef.current; c.getContext('2d').clearRect(0, 0, c.width, c.height); sv('signature', ''); }} className="mt-1.5 text-xs text-slate-400 hover:text-red-500 transition-colors">× Borrar firma</button>
+            </div>
+            {s.signature && <img src={s.signature} alt="Firma" className="border border-slate-200 rounded-lg h-20 bg-white" />}
+          </div>
+        </Card>
+        <div className="flex justify-between">
+          <Btn variant="ghost" onClick={() => setStep(3)}>← Mediciones</Btn>
+          <div className="flex gap-2">
+            <Btn variant="ghost" onClick={() => setStep(5)}>Ver certificado →</Btn>
+            <Btn variant="success" onClick={() => doSave(s.gum)} icon="💾">Guardar y emitir</Btn>
+          </div>
         </div>
       </div>
-    </div>`;
+    );
+  })()}
+  {step === 4 && !s.gum && (
+    <div className="p-8 text-center text-slate-400">Vuelve al paso de mediciones y pulsa "Calcular GUM".</div>
+  )}
+
+  {/* ── STEP 5: CERT PREVIEW ── */}
+  {step === 5 && <CertPreview cal={{ ...s, techName: tech?.name || '—', threadName: thread?.name || '—' }} onBack={() => setStep(4)} />}
+</div>
+```
+
+);
 }
 
-// ── IMPORT ──────────────────────────────────────────────────────
-function importFile(input) {
-  const f=input.files[0]; if(!f) return;
-  const r=new FileReader(); r.onload=e=>parseTxt(e.target.result); r.readAsText(f,'utf-8');
+// ═══════════════════════════════════════════════════════════
+// CERTIFICATE VIEW
+// ═══════════════════════════════════════════════════════════
+function CalView({ cal, onBack, onRecal }) {
+return (
+<div className="space-y-4">
+<div className="flex items-center gap-3">
+<button onClick={onBack} className="w-8 h-8 flex items-center justify-center rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-50 transition-colors">←</button>
+<div>
+<h2 className="font-bold text-slate-800">Calibración {cal.certNum}</h2>
+<div className="flex items-center gap-2 mt-0.5">
+<span className="text-xs text-slate-400">{cal.clientName} → {cal.equipRef} · {fmtDate(cal.date)}</span>
+<Badge color={cal.status === ‘ISSUED’ ? ‘green’ : ‘amber’}>{cal.status}</Badge>
+</div>
+</div>
+<div className="ml-auto flex gap-2">
+<Btn size="sm" variant="amber" onClick={onRecal} icon="🔄">Recalibrar</Btn>
+</div>
+</div>
+<CertPreview cal={cal} onBack={onBack} />
+</div>
+);
 }
-function dzOver(e)  { e.preventDefault(); E('drop-zone').classList.add('over'); }
-function dzLeave(e) { E('drop-zone').classList.remove('over'); }
-function dzDrop(e)  { e.preventDefault(); dzLeave(e); const f=e.dataTransfer.files[0]; if(!f)return; const r=new FileReader(); r.onload=ev=>parseTxt(ev.target.result); r.readAsText(f,'utf-8'); }
 
-function parseTxt(content) {
-  const lines=content.split(/\r?\n/);
-  const find=(pats) => { for(const ln of lines) for(const p of pats){ const m=ln.match(p); if(m) return m[1]?.trim(); } return null; };
-  const parsed={
-    instrument: find([/instrumento\s*[:\-]\s*(.+)/i,/instrument\s*[:\-]\s*(.+)/i,/device\s*[:\-]\s*(.+)/i,/banco\s*[:\-]\s*(.+)/i]),
-    serial:     find([/s\/n\s*[:\-]\s*(.+)/i,/serie\s*[:\-]\s*(.+)/i,/serial\s*[:\-]\s*(.+)/i]),
-    date:       find([/fecha\s*[:\-]\s*([\d.\/-]+)/i,/date\s*[:\-]\s*([\d.\/-]+)/i]),
-    operator:   find([/operador\s*[:\-]\s*(.+)/i,/operator\s*[:\-]\s*(.+)/i]),
-    client:     find([/cliente\s*[:\-]\s*(.+)/i,/client\s*[:\-]\s*(.+)/i]),
-    partRef:    find([/pieza\s*[:\-]\s*(.+)/i,/part\s*[:\-]\s*(.+)/i,/referencia\s*[:\-]\s*(.+)/i]),
-    nomD:       find([/di[aá]m(?:etro)?\s*nominal\s*[:\-]\s*([\d.]+)/i,/nominal\s*dia(?:meter)?\s*[:\-]\s*([\d.]+)/i]),
-    pitch:      find([/paso\s*[:\-]\s*([\d.]+)/i,/pitch\s*[:\-]\s*([\d.]+)/i]),
-    flank:      find([/[aá]ngulo\s*(?:de\s*)?flanco\s*[:\-]\s*([\d.]+)/i,/flank\s*[:\-]\s*([\d.]+)/i]),
-    wire:       find([/hilo\s*w?\s*[:\-]\s*([\d.]+)/i,/wire\s*w?\s*[:\-]\s*([\d.]+)/i,/di[aá]m.*hilo\s*[:\-]\s*([\d.]+)/i]),
-    force:      find([/fuerza\s*[:\-]\s*([\d.]+)/i,/force\s*[:\-]\s*([\d.]+)/i]),
-    temp:       find([/temperatura\s*[:\-]\s*([\d.]+)/i,/temp(?:erature)?\s*[:\-]\s*([\d.]+)/i]),
-  };
-  // readings by plane
-  const byPlane={};
-  let curPlane=null;
-  for(const ln of lines){
-    const pm=ln.match(/(?:plano|plane)\s*([\d.]+)[°\s]/i);
-    if(pm){ curPlane=parseFloat(pm[1]); if(!byPlane[curPlane]) byPlane[curPlane]=[]; continue; }
-    const rm=ln.match(/(?:lectura|reading)\s*\d*\s*[:\-]?\s*([\d.,]+)/i);
-    if(rm&&curPlane!==null){ byPlane[curPlane].push(parseFloat(rm[1].replace(',','.'))); continue; }
-    const nm=ln.replace(',','.').match(/^\s*((?:1[0-9]|2[0-9])\.[\d]{4,})\s*$/);
-    if(nm&&curPlane!==null){ const v=parseFloat(nm[1]); if(v>5&&v<200) byPlane[curPlane].push(v); }
-  }
-  // Apply
-  if(parsed.instrument) V('inst_model', parsed.instrument.includes('828')?'Mahr 828':parsed.instrument);
-  if(parsed.serial)   V('inst_sn',    parsed.serial);
-  if(parsed.operator) V('operator',   parsed.operator);
-  if(parsed.client)   V('client',     parsed.client);
-  if(parsed.partRef)  V('part_ref',   parsed.partRef);
-  if(parsed.nomD)     V('nominal_d',  parsed.nomD);
-  if(parsed.pitch)    V('pitch',      parsed.pitch);
-  if(parsed.flank)    V('flank_angle',parsed.flank);
-  if(parsed.wire)     V('wire_cal',   parsed.wire);
-  if(parsed.force)    V('meas_force', parsed.force);
-  if(parsed.temp)     V('temp_c',     parsed.temp);
-  if(parsed.date){
-    let dt=parsed.date;
-    if(dt.match(/^\d{2}\.\d{2}\.\d{4}$/)){ const [d2,m,y]=dt.split('.'); dt=`${y}-${m}-${d2}`; }
-    V('meas_date', dt);
-  }
-  // inject readings
-  const keys=Object.keys(byPlane).map(Number).sort((a,b)=>a-b);
-  if(keys.length>0){ clearReadings(0); for(const v of byPlane[keys[0]]) injectReading(0,v); }
-  if(keys.length>1){ clearReadings(90); for(const v of byPlane[keys[1]]) injectReading(90,v); }
-  onThreadChange(); updateTempHint(); checkWireRange(); updateCorrStrip();
-  // show preview
-  E('import-preview').style.display='block';
-  E('drop-zone').style.display='none';
-  const flds=[
-    ['Instrumento',parsed.instrument], ['Nº Serie',parsed.serial], ['Operador',parsed.operator],
-    ['Cliente',parsed.client], ['Diám. nominal',parsed.nomD?parsed.nomD+' mm':null],
-    ['Paso',parsed.pitch?parsed.pitch+' mm':null], ['Ángulo flanco',parsed.flank?parsed.flank+'°':null],
-    ['Hilo W',parsed.wire?parsed.wire+' mm':null], ['Fuerza',parsed.force?parsed.force+' (verificar unidad)':null],
-    ['Temperatura',parsed.temp?parsed.temp+' °C':null],
-    ['Planos detectados',Object.keys(byPlane).length>0?Object.entries(byPlane).map(([k,v])=>`${k}°: ${v.length} lect.`).join(', '):null],
-  ].filter(([,v])=>v);
-  E('import-fields').innerHTML=flds.map(([k,v])=>`<div class="import-field-row"><span class="import-field-key">${k}</span><span class="import-field-val">${v}</span></div>`).join('');
-  E('import-code').textContent=content.slice(0,1000)+(content.length>1000?'\n…':'');
+function CertPreview({ cal, onBack }) {
+const g = cal.gum;
+const machines = DB.get(‘machines’) || MACHINE_SEED;
+const machine = machines.find(m => m.id === cal.machineId);
+const cfg = DB.get(‘config’) || {};
+
+if (!g) return <div className="p-8 text-center text-slate-400">Sin datos de cálculo en esta calibración.</div>;
+
+return (
+<div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+{/* accent stripe */}
+<div style={{ height: 4, background: ‘linear-gradient(90deg, #2563eb, #0d9488)’ }} />
+<div className="p-8 space-y-5">
+{/* header */}
+<div className="flex justify-between items-start border-b-2 border-slate-900 pb-5">
+<div className="flex items-center gap-4">
+{cfg.logoData && <img src={cfg.logoData} alt="Logo" className="h-12 object-contain" />}
+<div>
+<div className="font-black text-xl text-slate-900">{cal.labName || ‘Laboratorio de Metrología’}</div>
+<div className="text-xs text-slate-400 tracking-widest uppercase mt-0.5">Laboratorio Acreditado · ISO/IEC 17025:2017</div>
+</div>
+</div>
+<div className="text-right">
+<div className="bg-slate-900 text-white text-xs font-black px-3 py-1 rounded tracking-widest">ENAC</div>
+<div className="text-[10px] text-slate-400 mt-1.5">EURAMET cg-10 · JCGM 100:2008</div>
+</div>
+</div>
+<div className="text-center">
+<div className="font-black text-2xl tracking-widest uppercase">Certificado de Calibración</div>
+<div className="font-mono text-slate-500 mt-1">Nº {cal.certNum}</div>
+</div>
+{/* §1 */}
+<CertSection title="§1 Identificación">
+<KV label="Nº Certificado" value={cal.certNum} />
+<KV label="Fecha" value={fmtDate(cal.date)} />
+<KV label="Cliente" value={cal.clientName} />
+<KV label="Referencia equipo" value={cal.equipRef} />
+<KV label="Técnico" value={cal.techName} />
+</CertSection>
+{/* §2 */}
+<CertSection title="§2 Elemento calibrado">
+<KV label="Rosca" value={cal.threadName} />
+<KV label=“Dirección” value={cal.direction === ‘external’ ? ‘Tornillo (externo)’ : ‘Tuerca (interno)’} />
+<KV label=“Clase tolerancia” value={cal.tolClass || ‘—’} />
+<KV label=“Material” value={Object.keys(MATERIALS).find(k => MATERIALS[k].alpha === +cal.alpha_th) || ‘—’} />
+</CertSection>
+{/* §3 */}
+<CertSection title="§3 Instrumento">
+<KV label=“Banco” value={machine ? `${machine.brand} ${machine.model}${machine.sn ? ` · SN: ${machine.sn}` : ''}` : ‘—’} />
+<KV label=“U cal banco (k=2)” value={machine ? `${machine.uCal} mm` : ‘—’} />
+<KV label=“Hilo W” value={cal.wireDiam ? `${cal.wireDiam} mm · cert: ${cal.wireCert || '—'}` : ‘—’} />
+<KV label=“Temperatura” value={`${cal.temp} °C (ref. 20.0 °C — ISO 1:2016)`} />
+<KV label=“Humedad” value={`${cal.humidity || '—'} %`} />
+</CertSection>
+{/* §4 RESULT */}
+<CertSection title="§4 Resultado">
+<div className="col-span-2 bg-gradient-to-br from-blue-50 to-sky-50 border border-blue-200 rounded-xl p-5 text-center">
+<div className="text-xs text-slate-400 mb-2 font-mono">Diámetro de paso E</div>
+<div className="text-2xl font-black font-mono text-blue-800">E = ({g.mean.toFixed(5)} ± {fmt(g.U)}) mm</div>
+<div className="text-xs text-slate-400 mt-2">U = k·uc · k = {g.k.toFixed(3)} · p ≈ 95.45% · νeff = {g.nuEff < 1e9 ? g.nuEff.toFixed(1) : ‘∞’}</div>
+</div>
+<KV label="n lecturas" value={g.n} />
+<KV label=“Media Ē” value={`${g.mean.toFixed(7)} mm`} mono />
+<KV label=“Desviación estándar s” value={`${g.s.toExponential(3)} mm`} mono />
+<KV label=“Incertidumbre combinada uc” value={`${fmt(g.uc, 6)} mm`} mono />
+</CertSection>
+{/* §5 BUDGET */}
+<div>
+<div className="bg-slate-900 text-white text-[10px] font-black px-3 py-1.5 rounded-sm tracking-widest uppercase inline-block mb-3">§5 Presupuesto GUM — JCGM 100:2008</div>
+<table className="w-full text-xs border border-slate-200 rounded-lg overflow-hidden">
+<thead className="bg-slate-50">
+<tr>{[‘Fuente’,‘Tipo’,‘u(xi) mm’,’%’].map(h => <th key={h} className="px-4 py-2 text-left text-[10px] font-bold text-slate-500 uppercase tracking-wide">{h}</th>)}</tr>
+</thead>
+<tbody>
+{g.comps.map((c, i) => (
+<tr key={i} className="border-t border-slate-100">
+<td className="px-4 py-2 text-slate-700">{c.name}</td>
+<td className=“px-4 py-2 font-bold” style={{ color: c.type === ‘A’ ? ‘#1d4ed8’ : ‘#0d9488’ }}>{c.type}</td>
+<td className="px-4 py-2 font-mono text-right">{fmt(c.u, 6)}</td>
+<td className="px-4 py-2 text-right">{c.pct.toFixed(1)}%</td>
+</tr>
+))}
+<tr className="bg-blue-50 border-t-2 border-blue-200">
+<td colSpan={2} className="px-4 py-2 font-black text-blue-900">U = {g.k.toFixed(3)} × uc</td>
+<td className="px-4 py-2 font-mono font-black text-right text-blue-700">{fmt(g.U, 6)}</td>
+<td />
+</tr>
+</tbody>
+</table>
+</div>
+{/* §6 */}
+<CertSection title="§6 Trazabilidad">
+<p className="col-span-2 text-sm text-slate-600 leading-relaxed">Las mediciones son trazables a patrones nacionales del CEM (Centro Español de Metrología) mediante cadena documentada: BIPM → CEM → Laboratorio acreditado ENAC → Instrumento de medición.</p>
+<p className="col-span-2 text-sm text-slate-600">Método: EURAMET cg-10. Correcciones aplicadas: térmica (ISO 1:2016) + deformación elástica Hertz. Software: ThreadCal Pro v4.</p>
+</CertSection>
+{/* Signatures */}
+<div className="flex justify-between items-end pt-6 border-t border-slate-200">
+<div className="text-center">
+{cal.signature ? <img src={cal.signature} alt="Firma" className="h-14 mb-2 mx-auto" /> : <div className=“w-36 border-t border-slate-400 mb-2 mx-auto” style={{ marginTop: 40 }} />}
+<div className="font-bold text-sm text-slate-800">{cal.techName || ‘—’}</div>
+<div className="text-xs text-slate-400">Técnico de calibración</div>
+</div>
+<div className="text-center text-xs text-slate-400 space-y-0.5">
+<div className="font-mono">{cal.certNum}</div>
+<div>{fmtDate(cal.date)}</div>
+<div>ThreadCal Pro v4</div>
+<div className="text-[10px]">Válido sólo íntegramente</div>
+</div>
+<div className="text-center">
+<div className=“w-36 border-t border-slate-400 mb-2 mx-auto” style={{ marginTop: 40 }} />
+<div className="font-bold text-sm text-slate-800">Responsable Técnico</div>
+<div className="text-xs text-slate-400">Revisión y aprobación</div>
+</div>
+</div>
+</div>
+</div>
+);
 }
-function clearReadings(plane){ readings[plane]=[]; E(`readings-${plane}`).innerHTML=''; E(`stats-${plane}`).style.display='none'; }
-function injectReading(plane,value){ addReading(plane); const n=readings[plane].length-1; const inp=E(`m-${plane}-${n}`); if(inp){ inp.value=value.toFixed(5); updateReading(plane,n); } }
-function clearImport(){ E('import-preview').style.display='none'; E('drop-zone').style.display='block'; document.getElementById('file-import').value=''; }
 
-// ── HELPERS ─────────────────────────────────────────────────────
-const G = id => document.getElementById(id)?.value ?? '';
-const E = id => document.getElementById(id);
-const V = (id,val) => { const el=document.getElementById(id); if(el) el.value=val; };
-const kv = (k,v) => `<div class="cert-kv"><div class="cert-k">${k}:</div><div class="cert-v">${v||'—'}</div></div>`;
-function f6(v){ if(!v&&v!==0) return '—'; return Math.abs(v)<0.001?v.toExponential(3):v.toFixed(6); }
-function fmtE(v){ if(!v&&v!==0) return '—'; return Math.abs(v)<0.001?v.toExponential(3):v.toFixed(5); }
+const CertSection = ({ title, children }) => (
+
+  <div>
+    <div className="bg-slate-900 text-white text-[10px] font-black px-3 py-1.5 rounded-sm tracking-widest uppercase inline-block mb-3">{title}</div>
+    <div className="grid grid-cols-2 gap-x-8 gap-y-1.5">{children}</div>
+  </div>
+);
+const KV = ({ label, value, mono }) => (
+  <div className="flex gap-3 text-sm border-b border-slate-50 pb-1.5">
+    <span className="text-slate-400 w-44 flex-shrink-0">{label}:</span>
+    <span className={`font-semibold text-slate-800 ${mono ? 'font-mono text-xs' : ''}`}>{value || '—'}</span>
+  </div>
+);
+
+// ═══════════════════════════════════════════════════════════
+// CONFIGURACIÓN TAB
+// ═══════════════════════════════════════════════════════════
+function ConfigSection() {
+const [tab, setTab] = useState(‘lab’);
+const tabs = [
+{ id:‘lab’, l:‘Laboratorio’, icon:‘🏛️’ },
+{ id:‘machines’, l:‘Bancos’, icon:‘🔧’ },
+{ id:‘techs’, l:‘Técnicos’, icon:‘👷’ },
+{ id:‘threads’, l:‘Roscas’, icon:‘⚙️’ },
+{ id:‘wires’, l:‘Hilos’, icon:‘📏’ },
+{ id:‘formulas’, l:‘Fórmulas’, icon:‘📐’ },
+];
+return (
+<div className="space-y-4">
+<div><h2 className="font-bold text-slate-800 text-lg">Configuración</h2><p className="text-xs text-slate-400 mt-0.5">Bancos, técnicos, hilos, roscas y datos del laboratorio</p></div>
+<div className="flex gap-1.5 border-b border-slate-200 pb-0">
+{tabs.map(t => (
+<button key={t.id} onClick={() => setTab(t.id)}
+className={`flex items-center gap-1.5 px-4 py-2.5 text-sm font-semibold transition-all border-b-2 -mb-px ${tab === t.id ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-500 hover:text-slate-700'}`}>
+<span>{t.icon}</span>{t.l}
+</button>
+))}
+</div>
+<div className="pt-2">
+{tab === ‘lab’ && <LabConfig />}
+{tab === ‘machines’ && <MachinesConfig />}
+{tab === ‘techs’ && <TechsConfig />}
+{tab === ‘threads’ && <ThreadsConfig />}
+{tab === ‘wires’ && <WiresConfig />}
+{tab === ‘formulas’ && <FormulasInfo />}
+</div>
+</div>
+);
+}
+
+function LabConfig() {
+const [cfg, setCfg] = useState(() => DB.get(‘config’) || { labName:’’, address:’’, accred:’’, logoData:’’ });
+const save = () => { DB.set(‘config’, cfg); alert(‘✅ Configuración guardada’); };
+const F = (k,v) => setCfg(c => ({…c,[k]:v}));
+const handleLogo = (e) => { const f=e.target.files[0]; if(!f) return; const r=new FileReader(); r.onload=ev=>F(‘logoData’,ev.target.result); r.readAsDataURL(f); };
+return (
+<div className="max-w-xl space-y-4">
+<Card>
+<Hdg icon="🏛️" title="Datos del laboratorio" sub="Aparecen en todos los certificados" />
+<div className="p-5 space-y-3">
+<Fld label="Nombre del laboratorio"><Inp value={cfg.labName} onChange={e=>F(‘labName’,e.target.value)} placeholder=“Laboratorio de Metrología Dimensional” /></Fld>
+<Fld label="Dirección"><Inp value={cfg.address} onChange={e=>F(‘address’,e.target.value)} /></Fld>
+<Fld label="Nº Acreditación ENAC"><Inp value={cfg.accred} onChange={e=>F(‘accred’,e.target.value)} placeholder=“ENAC-I-XXX/LE-XXX” /></Fld>
+</div>
+</Card>
+<Card>
+<Hdg icon="🖼️" title="Logo" sub="PNG, JPG o SVG — aparece en los certificados" color="teal" />
+<div className="p-5 space-y-3">
+<label className="flex items-center gap-3 p-4 border-2 border-dashed border-slate-200 rounded-xl cursor-pointer hover:border-blue-300 hover:bg-blue-50 transition-all">
+<span className="text-2xl">📁</span>
+<div><div className="font-semibold text-slate-700 text-sm">Cargar logo</div><div className="text-xs text-slate-400">PNG · JPG · SVG · máx. 2MB</div></div>
+<input type="file" accept="image/*" className="hidden" onChange={handleLogo} />
+</label>
+{cfg.logoData && (
+<div className="flex items-center gap-4">
+<img src={cfg.logoData} alt="Logo" className="h-14 object-contain border border-slate-200 rounded-lg p-2 bg-white" />
+<button onClick={() => F(‘logoData’,’’)} className=“text-xs text-red-500 hover:text-red-700”>× Eliminar logo</button>
+</div>
+)}
+</div>
+</Card>
+<div className="flex justify-end"><Btn onClick={save} icon="💾">Guardar configuración</Btn></div>
+</div>
+);
+}
+
+function MachinesConfig() {
+const [machines, setMachines] = useState(() => DB.get(‘machines’) || MACHINE_SEED);
+const [modal, setModal] = useState(false);
+const [editing, setEditing] = useState(null);
+const [del, setDel] = useState(null);
+const blank = { id:uid(), brand:’’, model:’’, sn:’’, uCal:0.0006, resolution:0.0001, force:4, forceUnit:‘cN’, cert:’’, certDate:’’, certExpiry:’’, note:’’ };
+const [form, setForm] = useState(blank);
+const save = (m) => { DB.set(‘machines’, m); setMachines(m); };
+const F = (k,v) => setForm(f=>({…f,[k]:v}));
+const submit = () => { save(editing ? machines.map(m=>m.id===editing?form:m) : […machines,form]); setModal(false); };
+return (
+<div className="space-y-4">
+<div className="flex justify-between items-center">
+<div><h3 className="font-bold text-slate-800">Bancos de medición</h3><p className="text-xs text-slate-400">Máquinas reutilizables en calibraciones</p></div>
+<Btn onClick={()=>{setEditing(null);setForm({…blank,id:uid()});setModal(true);}} icon=“➕” size=“sm”>Nuevo banco</Btn>
+</div>
+<Card><Tbl cols={[{k:‘brand’,l:‘Marca’,bold:true},{k:‘model’,l:‘Modelo’,bold:true},{k:‘sn’,l:‘S/N’},{k:‘uCal’,l:‘U(k=2) mm’,mono:true},{k:‘force’,l:‘Fuerza’,mono:true},{k:‘cert’,l:‘Certificado’},{k:‘certExpiry’,l:‘Válido hasta’}]}
+rows={machines.map(m=>({…m,force:`${m.force} ${m.forceUnit}`}))}
+onEdit={row=>{const m=machines.find(x=>x.sn===row.sn&&x.model===row.model)||machines[0];setEditing(m.id);setForm({…m});setModal(true);}}
+onDel={row=>setDel(machines.find(x=>x.model===row.model))} empty=“Sin bancos registrados” /></Card>
+<Modal open={modal} onClose={()=>setModal(false)} title={editing?‘Editar banco’:‘Nuevo banco’} wide>
+<div className="grid grid-cols-2 gap-4">
+<Fld label="Marca"><Inp value={form.brand} onChange={e=>F(‘brand’,e.target.value)} /></Fld>
+<Fld label="Modelo"><Inp value={form.model} onChange={e=>F(‘model’,e.target.value)} /></Fld>
+<Fld label="Nº serie"><Inp value={form.sn} onChange={e=>F(‘sn’,e.target.value)} /></Fld>
+<Fld label="U cal (k=2)" unit="mm"><Inp type=“number” value={form.uCal} onChange={e=>F(‘uCal’,+e.target.value)} step=“0.00001” /></Fld>
+<Fld label="Resolución" unit="mm"><Inp type=“number” value={form.resolution} onChange={e=>F(‘resolution’,+e.target.value)} step=“0.00001” /></Fld>
+<div className="flex gap-2">
+<Fld label="Fuerza"><Inp type=“number” value={form.force} onChange={e=>F(‘force’,+e.target.value)} step=“0.01” /></Fld>
+<Fld label="Unidad"><Sel value={form.forceUnit} onChange={e=>F(‘forceUnit’,e.target.value)} className=”!w-20”><option>cN</option><option>N</option><option>daN</option></Sel></Fld>
+</div>
+<Fld label="Certificado"><Inp value={form.cert} onChange={e=>F(‘cert’,e.target.value)} /></Fld>
+<Fld label="Fecha cal."><Inp type=“date” value={form.certDate} onChange={e=>F(‘certDate’,e.target.value)} /></Fld>
+<Fld label="Válido hasta"><Inp type=“date” value={form.certExpiry} onChange={e=>F(‘certExpiry’,e.target.value)} /></Fld>
+<div className="col-span-2"><Fld label="Notas"><textarea className=“w-full text-sm px-3 py-2 rounded-lg border border-slate-200 bg-slate-50 focus:bg-white focus:border-blue-400 outline-none resize-none h-14” value={form.note} onChange={e=>F(‘note’,e.target.value)} /></Fld></div>
+</div>
+<div className="flex justify-end gap-2 mt-4 pt-4 border-t border-slate-100">
+<Btn variant=“ghost” onClick={()=>setModal(false)}>Cancelar</Btn>
+<Btn onClick={submit} icon="💾">{editing?‘Guardar’:‘Crear’}</Btn>
+</div>
+</Modal>
+<Confirm open={!!del} msg={`¿Eliminar banco "${del?.model}"?`} onOk={()=>{save(machines.filter(m=>m.id!==del.id));setDel(null);}} onCancel={()=>setDel(null)} />
+</div>
+);
+}
+
+function TechsConfig() {
+const [techs, setTechs] = useState(() => DB.get(‘techs’) || []);
+const [modal, setModal] = useState(false);
+const [editing, setEditing] = useState(null);
+const [del, setDel] = useState(null);
+const blank = { id:uid(), code:’’, name:’’, role:‘Técnico de calibración’, email:’’, qual:’’ };
+const [form, setForm] = useState(blank);
+const save = (t) => { DB.set(‘techs’, t); setTechs(t); };
+const F = (k,v) => setForm(f=>({…f,[k]:v}));
+const submit = () => { save(editing ? techs.map(t=>t.id===editing?form:t) : […techs,form]); setModal(false); };
+return (
+<div className="space-y-4">
+<div className="flex justify-between items-center">
+<div><h3 className="font-bold text-slate-800">Técnicos</h3><p className="text-xs text-slate-400">Personal habilitado para calibraciones</p></div>
+<Btn onClick={()=>{setEditing(null);setForm({…blank,id:uid()});setModal(true);}} icon=“➕” size=“sm”>Nuevo técnico</Btn>
+</div>
+<Card><Tbl cols={[{k:‘code’,l:‘Código’,bold:true},{k:‘name’,l:‘Nombre’,bold:true},{k:‘role’,l:‘Rol’},{k:‘qual’,l:‘Cualificación’},{k:‘email’,l:‘Email’}]}
+rows={techs} onEdit={row=>{setEditing(row.id);setForm({…row});setModal(true);}} onDel={row=>setDel(row)} empty=“Sin técnicos” /></Card>
+<Modal open={modal} onClose={()=>setModal(false)} title={editing?‘Editar técnico’:‘Nuevo técnico’}>
+<div className="grid grid-cols-2 gap-4">
+<Fld label="Código"><Inp value={form.code} onChange={e=>F(‘code’,e.target.value)} placeholder=“OP-001” /></Fld>
+<Fld label="Nombre"><Inp value={form.name} onChange={e=>F(‘name’,e.target.value)} /></Fld>
+<div className="col-span-2"><Fld label="Rol"><Inp value={form.role} onChange={e=>F(‘role’,e.target.value)} /></Fld></div>
+<Fld label="Cualificación"><Inp value={form.qual} onChange={e=>F(‘qual’,e.target.value)} /></Fld>
+<Fld label="Email"><Inp type=“email” value={form.email} onChange={e=>F(‘email’,e.target.value)} /></Fld>
+</div>
+<div className="flex justify-end gap-2 mt-4 pt-4 border-t border-slate-100">
+<Btn variant=“ghost” onClick={()=>setModal(false)}>Cancelar</Btn>
+<Btn onClick={submit} icon="💾">{editing?‘Guardar’:‘Crear’}</Btn>
+</div>
+</Modal>
+<Confirm open={!!del} msg={`¿Eliminar técnico "${del?.name}"?`} onOk={()=>{save(techs.filter(t=>t.id!==del.id));setDel(null);}} onCancel={()=>setDel(null)} />
+</div>
+);
+}
+
+function ThreadsConfig() {
+const [filter, setFilter] = useState(’’);
+const [stdFilter, setStdFilter] = useState(’’);
+const [modal, setModal] = useState(false);
+const [customThreads, setCustomThreads] = useState(() => DB.get(‘customThreads’) || []);
+const blank = { id:uid(), std:‘CUSTOM’, name:’’, d:’’, p:’’, d2:’’, d1:’’, alpha:60, tolExt:’’, tolInt:’’, norm:’’ };
+const [form, setForm] = useState(blank);
+const F = (k,v) => setForm(f=>({…f,[k]:v}));
+const allThreads = […THREADS, …customThreads];
+const filtered = allThreads.filter(t =>
+(!stdFilter || t.std === stdFilter) &&
+(!filter || t.name.toLowerCase().includes(filter.toLowerCase()))
+);
+const submit = () => {
+const upd = […customThreads, form];
+DB.set(‘customThreads’, upd); setCustomThreads(upd); setModal(false);
+};
+const stdColor = { M:‘blue’, UNC:‘teal’, UNF:‘teal’, BSW:‘amber’, BSF:‘amber’, Tr:‘purple’, ACME:‘red’, NPT:‘green’, BSPP:‘green’, BSPT:‘green’, CUSTOM:‘slate’ };
+return (
+<div className="space-y-4">
+<div className="flex items-center justify-between">
+<div><h3 className="font-bold text-slate-800">Base de datos de roscas</h3><p className="text-xs text-slate-400">{THREADS.length} roscas precargadas · {customThreads.length} personalizadas</p></div>
+<Btn onClick={()=>{setForm({…blank,id:uid()});setModal(true);}} icon=“➕” size=“sm”>Añadir rosca</Btn>
+</div>
+<div className="flex gap-3">
+<input className=“flex-1 text-sm px-3 py-2 rounded-lg border border-slate-200 bg-white focus:border-blue-400 outline-none” placeholder=“Buscar rosca…” value={filter} onChange={e=>setFilter(e.target.value)} />
+<Sel value={stdFilter} onChange={e=>setStdFilter(e.target.value)} className=“w-44”>
+<option value="">Todas las normas</option>
+{THREAD_STANDARDS.filter(s=>s.id!==‘CUSTOM’).map(s=><option key={s.id} value={s.id}>{s.label}</option>)}
+</Sel>
+</div>
+<Card>
+<Tbl cols={[
+{k:‘stdB’,l:‘Norma’},{k:‘name’,l:‘Designación’,bold:true},
+{k:‘d’,l:‘D [mm]’,mono:true},{k:‘p’,l:‘p [mm]’,mono:true},{k:‘d2’,l:‘d2 [mm]’,mono:true},
+{k:‘alpha’,l:‘α [°]’,mono:true},{k:‘tolExt’,l:‘Tol.Ext’,mono:true},{k:‘tolInt’,l:‘Tol.Int’,mono:true},
+]} rows={filtered.map(t=>({
+…t,
+stdB: <Badge color={stdColor[t.std]||‘slate’}>{t.std}</Badge>,
+d: (+t.d).toFixed(3), p: (+t.p).toFixed(3), d2: (+t.d2).toFixed(4),
+_raw: t,
+}))} empty=“Sin resultados” />
+</Card>
+<Modal open={modal} onClose={()=>setModal(false)} title=“Nueva rosca personalizada”>
+<div className="grid grid-cols-2 gap-4">
+<Fld label="Designación"><Inp value={form.name} onChange={e=>F(‘name’,e.target.value)} placeholder=“M14×1.5-CUSTOM” /></Fld>
+<Fld label="Norma"><Inp value={form.norm} onChange={e=>F(‘norm’,e.target.value)} placeholder=“ISO / DIN / ASME…” /></Fld>
+<Fld label="D nominal" unit="mm"><Inp type=“number” value={form.d} onChange={e=>F(‘d’,+e.target.value)} step=“0.001” /></Fld>
+<Fld label="Paso p" unit="mm"><Inp type=“number” value={form.p} onChange={e=>F(‘p’,+e.target.value)} step=“0.001” /></Fld>
+<Fld label="d2 (paso)" unit="mm"><Inp type=“number” value={form.d2} onChange={e=>F(‘d2’,+e.target.value)} step=“0.0001” /></Fld>
+<Fld label="d1 (menor)" unit="mm"><Inp type=“number” value={form.d1} onChange={e=>F(‘d1’,+e.target.value)} step=“0.0001” /></Fld>
+<Fld label="Ángulo α" unit="°"><Inp type=“number” value={form.alpha} onChange={e=>F(‘alpha’,+e.target.value)} step=“0.5” /></Fld>
+<Fld label="Tolerancia ext."><Inp value={form.tolExt} onChange={e=>F(‘tolExt’,e.target.value)} /></Fld>
+</div>
+<div className="flex justify-end gap-2 mt-4 pt-4 border-t border-slate-100">
+<Btn variant=“ghost” onClick={()=>setModal(false)}>Cancelar</Btn>
+<Btn onClick={submit} icon="💾">Añadir rosca</Btn>
+</div>
+</Modal>
+</div>
+);
+}
+
+function WiresConfig() {
+const [userWires, setUserWires] = useState(() => DB.get(‘userWires’) || []);
+const [modal, setModal] = useState(false);
+const [editing, setEditing] = useState(null);
+const blank = { id:uid(), code:’’, diam:’’, uW:0.0002, cert:’’, certExpiry:’’, pMin:’’, pMax:’’, note:’’ };
+const [form, setForm] = useState(blank);
+const allWires = […WIRES, …userWires];
+const save = (w) => { DB.set(‘userWires’, w); setUserWires(w); };
+const F = (k,v) => setForm(f=>({…f,[k]:v}));
+const submit = () => {
+const upd = editing ? userWires.map(w=>w.id===editing?form:w) : […userWires,form];
+save(upd); setModal(false);
+};
+return (
+<div className="space-y-4">
+<div className="flex items-center justify-between">
+<div><h3 className="font-bold text-slate-800">Hilos de medición</h3><p className="text-xs text-slate-400">{WIRES.length} hilos ISO estándar precargados · {userWires.length} personalizados</p></div>
+<Btn onClick={()=>{setEditing(null);setForm({…blank,id:uid()});setModal(true);}} icon=“➕” size=“sm”>Añadir hilo</Btn>
+</div>
+<Card>
+<Tbl cols={[
+{k:‘code’,l:‘Código’,bold:true},{k:‘diam’,l:‘W [mm]’,mono:true},
+{k:‘uW’,l:‘u(W) k=1’,mono:true},{k:‘cert’,l:‘Certificado’},
+{k:‘pMin’,l:‘p mín’,mono:true},{k:‘pMax’,l:‘p máx’,mono:true},{k:‘note’,l:‘Aplicación’},
+]} rows={allWires.map(w=>({…w,diam:w.diam.toFixed(5)}))}
+onEdit={row=>{const w=userWires.find(x=>x.code===row.code);if(w){setEditing(w.id);setForm({…w});setModal(true);}}}
+onDel={row=>{const w=userWires.find(x=>x.code===row.code);if(w)save(userWires.filter(x=>x.id!==w.id));}}
+empty=“Sin hilos” />
+</Card>
+<Modal open={modal} onClose={()=>setModal(false)} title={editing?‘Editar hilo’:‘Nuevo hilo’} wide>
+<div className="grid grid-cols-3 gap-4">
+<Fld label="Código"><Inp value={form.code} onChange={e=>F(‘code’,e.target.value)} placeholder=“W-0.866” /></Fld>
+<Fld label="Diámetro W" unit="mm"><Inp type=“number” value={form.diam} onChange={e=>F(‘diam’,+e.target.value)} step=“0.00001” /></Fld>
+<Fld label="u(W) k=1" unit="mm"><Inp type=“number” value={form.uW} onChange={e=>F(‘uW’,+e.target.value)} step=“0.00001” /></Fld>
+<Fld label="Certificado"><Inp value={form.cert} onChange={e=>F(‘cert’,e.target.value)} /></Fld>
+<Fld label="Válido hasta"><Inp type=“date” value={form.certExpiry} onChange={e=>F(‘certExpiry’,e.target.value)} /></Fld>
+<Fld label="p mín" unit="mm"><Inp type=“number” value={form.pMin} onChange={e=>F(‘pMin’,+e.target.value)} step=“0.01” /></Fld>
+<Fld label="p máx" unit="mm"><Inp type=“number” value={form.pMax} onChange={e=>F(‘pMax’,+e.target.value)} step=“0.01” /></Fld>
+<div className="col-span-3"><Fld label="Nota / aplicación"><Inp value={form.note} onChange={e=>F(‘note’,e.target.value)} /></Fld></div>
+</div>
+<div className="flex justify-end gap-2 mt-4 pt-4 border-t border-slate-100">
+<Btn variant=“ghost” onClick={()=>setModal(false)}>Cancelar</Btn>
+<Btn onClick={submit} icon="💾">{editing?‘Guardar’:‘Añadir hilo’}</Btn>
+</div>
+</Modal>
+</div>
+);
+}
+
+function FormulasInfo() {
+const sections = [
+{ title:‘EURAMET cg-10 — Tres Hilos’, color:’#2563eb’, items:[
+{ f:‘E = M − W·(1 + 1/sin(α/2)) + p / (2·tan(α/2))’, d:‘Diámetro de paso a partir de la lectura del banco. M=lectura, W=diám. hilo, α=ángulo flanco, p=paso.’ },
+{ f:‘Para α=60° (ISO): E = M − 3·W + 0.86603·p’, d:‘Simplificación directa para roscas Métricas ISO.’ },
+{ f:‘W_opt = p / (2·cos(α/2))’, d:‘Hilo óptimo. Para α=60°: W = p/√3 ≈ 0.5774·p’ },
+{ f:‘0.56·p ≤ W ≤ 0.90·p’, d:‘Rango válido de hilos para contacto correcto en el flanco.’ },
+]},
+{ title:‘Corrección Térmica — ISO 1:2016’, color:’#d97706’, items:[
+{ f:‘ΔM = −M · α_th · (T − 20°C)’, d:‘T_ref = 20 °C. α_th = coef. dilatación material (K⁻¹).’ },
+{ f:‘M_th = M + ΔM’, d:‘M corregida por temperatura antes de aplicar Hertz.’ },
+]},
+{ title:‘Corrección de Hertz’, color:’#0d9488’, items:[
+{ f:‘δ_H = 2·[3F/(4E*)]^(2/3)·(1/R)^(1/3)’, d:‘F=fuerza(N), R=radio hilo(m), E*=módulo reducido(Pa).’ },
+{ f:‘E* = E_mat / (2·(1−ν²))’, d:‘Módulo reducido de contacto elástico.’ },
+{ f:‘M_c = M_th − δ_H’, d:‘Lectura final corregida térmica y elásticamente.’ },
+]},
+{ title:‘GUM — JCGM 100:2008’, color:’#7c3aed’, items:[
+{ f:‘u_A1 = s/√n’, d:‘Tipo A. s=desv.est. lecturas E, n=número de lecturas.’ },
+{ f:‘u_A2 = |Ē_0° − Ē_90°|/√2’, d:‘Tipo A. Variación entre planos de medición.’ },
+{ f:‘u_B1 = U_cal/k_cal’, d:‘Tipo B. Incertidumbre certificado banco (k_cal=2).’ },
+{ f:‘u_B2 = r/(2√3)’, d:‘Tipo B. Resolución encoder. Distribución rectangular.’ },
+{ f:‘u_B3 = |c_W|·u(W), c_W = −(1+1/sin(α/2))’, d:‘Tipo B. Sensibilidad al diámetro del hilo.’ },
+{ f:‘u_c = √[Σ(u_i)²]’, d:‘Incertidumbre combinada. Propagación cuadrática.’ },
+{ f:‘ν_eff = u_c⁴ / Σ[u_i⁴/ν_i]’, d:‘Welch-Satterthwaite. Grados de libertad efectivos.’ },
+{ f:‘U = k·u_c  (k ≈ 2.00 para ν_eff ≥ 30)’, d:‘Incertidumbre expandida al 95.45%.’ },
+]},
+{ title:‘Conformidad — JCGM 106:2012’, color:’#059669’, items:[
+{ f:‘CONFORME: [Ē−U, Ē+U] ⊆ [T_inf, T_sup]’, d:‘Intervalo completo dentro de tolerancia.’ },
+{ f:‘NO CONFORME: Ē ∉ [T_inf, T_sup]’, d:‘Valor nominal fuera de tolerancia.’ },
+{ f:‘INDETERMINADO: Ē ∈ T pero intervalo solapa frontera’, d:‘Requiere análisis adicional (JCGM 106 §6).’ },
+]},
+];
+return (
+<div className="space-y-4 max-w-3xl">
+<div className="bg-emerald-50 border border-emerald-100 rounded-xl p-4 text-sm text-emerald-800">
+<strong>Conformidad normativa:</strong> EURAMET cg-10 · JCGM 100:2008 (GUM) · ISO 1:2016 · ISO/IEC 17025:2017 · JCGM 106:2012
+</div>
+{sections.map(sec => (
+<Card key={sec.title}>
+<Hdg icon="📐" title={sec.title} />
+<div className="divide-y divide-slate-50">
+{sec.items.map((item, i) => (
+<div key={i} className="p-4">
+<div className=“font-mono text-sm rounded-lg px-4 py-3 mb-2 overflow-x-auto whitespace-nowrap” style={{ background:’#0f172a’, color:’#34d399’ }}>
+{item.f}
+</div>
+{item.d && <p className="text-xs text-slate-500">{item.d}</p>}
+</div>
+))}
+</div>
+</Card>
+))}
+</div>
+);
+}
+
+// ═══════════════════════════════════════════════════════════
+// APP ROOT
+// ═══════════════════════════════════════════════════════════
+const NAV = [
+{ id:‘clients’, label:‘Clientes’, icon:‘🏭’, sub:‘Equipos · Calibraciones’ },
+{ id:‘config’,  label:‘Configuración’, icon:‘⚙️’, sub:‘Bancos · Técnicos · Roscas · Hilos’ },
+];
+
+const AppMain = function App() {
+const [section, setSection] = useState(‘clients’);
+const cfg = DB.get(‘config’) || {};
+
+return (
+<div className=“min-h-screen bg-slate-50 flex” style={{ fontFamily: “‘system-ui’, sans-serif” }}>
+{/* SIDEBAR */}
+<aside className="w-52 bg-white border-r border-slate-200 flex flex-col flex-shrink-0 shadow-sm">
+{/* Brand */}
+<div className="px-4 py-5 border-b border-slate-100">
+<div className="flex items-center gap-2.5">
+{cfg.logoData
+? <img src={cfg.logoData} alt="Logo" className="h-8 w-8 object-contain rounded-lg" />
+: <div className=“w-9 h-9 rounded-xl flex items-center justify-center text-white font-black text-sm shadow-sm” style={{ background: ‘linear-gradient(135deg,#2563eb,#0d9488)’ }}>TC</div>
+}
+<div>
+<div className="font-black text-slate-900 text-sm tracking-tight">ThreadCal</div>
+<div className="font-black text-blue-600 text-sm tracking-tight">Pro v4</div>
+</div>
+</div>
+<div className="flex gap-1 mt-2.5 flex-wrap">
+{[‘ISO 17025’,‘EURAMET’,‘GUM’].map(b => (
+<span key={b} className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-blue-50 text-blue-600">{b}</span>
+))}
+</div>
+</div>
+{/* Nav */}
+<nav className="flex-1 py-3 px-2 space-y-0.5">
+{NAV.map(n => (
+<button key={n.id} onClick={() => setSection(n.id)}
+className={`w-full text-left flex items-start gap-2.5 px-3 py-3 rounded-xl transition-all ${section === n.id ? 'bg-blue-50 text-blue-700' : 'text-slate-600 hover:bg-slate-50'}`}>
+<span className="text-lg flex-shrink-0 mt-0.5">{n.icon}</span>
+<div>
+<div className={`text-sm font-bold leading-tight ${section === n.id ? 'text-blue-700' : 'text-slate-700'}`}>{n.label}</div>
+<div className="text-[10px] text-slate-400 mt-0.5 leading-tight">{n.sub}</div>
+</div>
+</button>
+))}
+</nav>
+<div className="px-4 py-3 border-t border-slate-100">
+<div className="text-[10px] text-slate-400 leading-relaxed">
+Datos en memoria de sesión<br />
+<span className="text-amber-500 font-semibold">⚡ Modo demo</span>
+</div>
+</div>
+</aside>
+
+```
+  {/* MAIN */}
+  <main className="flex-1 overflow-y-auto min-h-screen">
+    <div className="max-w-6xl mx-auto px-6 py-6">
+      {section === 'clients' && <ClientsSection />}
+      {section === 'config' && <ConfigSection />}
+    </div>
+  </main>
+</div>
+```
+
+);
+}
+
+ReactDOM.createRoot(document.getElementById(“root”)).render(React.createElement(AppMain));
 </script>
 
 </body>
