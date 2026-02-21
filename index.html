@@ -7,38 +7,38 @@
 <title>ThreadCal Pro v4 — ISO 17025</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
-<script src="https://cdn.tailwindcss.com"></script>
-<script>
-tailwind.config = {
-  theme: { extend: { fontFamily: { sans: ["DM Sans","system-ui","sans-serif"], mono: ["DM Mono","monospace"] } } }
-}
-</script>
+<script src="https://cdn.tailwindcss.com?plugins="></script>
 <style>
 * { -webkit-font-smoothing: antialiased; }
+body { font-family: "DM Sans", system-ui, sans-serif; }
+.font-mono, code, pre, input[type=number] { font-family: "DM Mono", monospace !important; }
 ::-webkit-scrollbar { width:5px; height:5px; }
 ::-webkit-scrollbar-track { background:#f1f5f9; }
 ::-webkit-scrollbar-thumb { background:#cbd5e1; border-radius:3px; }
+::-webkit-scrollbar-thumb:hover { background:#94a3b8; }
 @media print {
   aside, .no-print { display:none !important; }
   body { background:white !important; }
-  main { padding:0 !important; }
 }
 </style>
 </head>
 <body class="bg-slate-50">
 <div id="root"></div>
-<script type="text/babel" data-presets="react">
+<script>
+// React globals
 const { useState, useEffect, useRef, useCallback } = React;
+</script>
+<script>
+ function _nullishCoalesce(lhs, rhsFn) { if (lhs != null) { return lhs; } else { return rhsFn(); } } function _optionalChain(ops) { let lastAccessLHS = undefined; let value = ops[0]; let i = 1; while (i < ops.length) { const op = ops[i]; const fn = ops[i + 1]; i += 2; if ((op === 'optionalAccess' || op === 'optionalCall') && value == null) { return undefined; } if (op === 'access' || op === 'optionalAccess') { lastAccessLHS = value; value = fn(value); } else if (op === 'call' || op === 'optionalCall') { value = fn((...args) => value.call(lastAccessLHS, ...args)); lastAccessLHS = undefined; } } return value; }
 
 // ═══════════════════════════════════════════════════════════
 // STORAGE
 // ═══════════════════════════════════════════════════════════
 const DB = {
-get: (k) => { try { const v = localStorage.getItem(“tc4_”+k); return v ? JSON.parse(v) : null; } catch { return null; } },
-set: (k, v) => { try { localStorage.setItem(“tc4_”+k, JSON.stringify(v)); } catch {} },
-del: (k) => { try { localStorage.removeItem(“tc4_”+k); } catch {} },
+get: (k) => { try { const v = localStorage.getItem(“tc4_”+k); return v ? JSON.parse(v) : null; } catch(e) { return null; } },
+set: (k, v) => { try { localStorage.setItem(“tc4_”+k, JSON.stringify(v)); } catch(e) {} },
+del: (k) => { try { localStorage.removeItem(“tc4_”+k); } catch(e) {} },
 };
 const uid = () => Math.random().toString(36).slice(2, 9) + Date.now().toString(36).slice(-4);
 const today = () => new Date().toISOString().slice(0, 10);
@@ -195,10 +195,10 @@ const RAW_THREADS = [
 const THREADS = RAW_THREADS.map(t => ({
 id: `${t.s}_${t.n}`.replace(/[\s”/.]/g, ‘_’),
 std: t.s, name: t.n, d: t.d, p: t.p, d2: t.d2, d1: t.d1, fine: !!t.f,
-alpha: THREAD_STANDARDS.find(s => s.id === t.s)?.alpha || 60,
-tolExt: THREAD_STANDARDS.find(s => s.id === t.s)?.tolExt || ‘—’,
-tolInt: THREAD_STANDARDS.find(s => s.id === t.s)?.tolInt || ‘—’,
-norm: THREAD_STANDARDS.find(s => s.id === t.s)?.norm || ‘—’,
+alpha: _optionalChain([THREAD_STANDARDS, ‘access’, _ => _.find, ‘call’, _2 => _2(s => s.id === t.s), ‘optionalAccess’, _3 => _3.alpha]) || 60,
+tolExt: _optionalChain([THREAD_STANDARDS, ‘access’, _4 => _4.find, ‘call’, _5 => _5(s => s.id === t.s), ‘optionalAccess’, _6 => _6.tolExt]) || ‘—’,
+tolInt: _optionalChain([THREAD_STANDARDS, ‘access’, _7 => _7.find, ‘call’, _8 => _8(s => s.id === t.s), ‘optionalAccess’, _9 => _9.tolInt]) || ‘—’,
+norm: _optionalChain([THREAD_STANDARDS, ‘access’, _10 => _10.find, ‘call’, _11 => _11(s => s.id === t.s), ‘optionalAccess’, _12 => _12.norm]) || ‘—’,
 }));
 
 const WIRES = [
@@ -321,85 +321,83 @@ amber:   ‘bg-amber-500 hover:bg-amber-600 text-white shadow-sm’,
 const Btn = ({ children, variant=‘primary’, size=‘md’, onClick, disabled, className=’’, icon }) => {
 const s = { sm:‘text-xs px-3 py-1.5 gap-1.5’, md:‘text-sm px-4 py-2 gap-2’, lg:‘text-sm px-5 py-2.5 gap-2’ }[size];
 return (
-<button onClick={onClick} disabled={disabled}
-className={`inline-flex items-center font-semibold rounded-lg transition-all ${C[variant]} ${s} ${disabled ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer'} ${className}`}>
-{icon && <span className="flex-shrink-0">{icon}</span>}{children}
-</button>
+React.createElement(‘button’, { onClick: onClick, disabled: disabled,
+className: `inline-flex items-center font-semibold rounded-lg transition-all ${C[variant]} ${s} ${disabled ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer'} ${className}`,}
+, icon && React.createElement(‘span’, { className: “flex-shrink-0”,}, icon), children
+)
 );
 };
 
 const Inp = (props) => (
-<input {…props} className={`w-full text-sm px-3 py-2 rounded-lg border border-slate-200 bg-slate-50 focus:bg-white focus:border-blue-400 focus:ring-2 focus:ring-blue-100 outline-none transition-all font-mono placeholder:font-sans placeholder:text-slate-300 ${props.readOnly ? 'text-slate-400 cursor-default' : ''} ${props.className || ''}`} />
+React.createElement(‘input’, { …props, className: `w-full text-sm px-3 py-2 rounded-lg border border-slate-200 bg-slate-50 focus:bg-white focus:border-blue-400 focus:ring-2 focus:ring-blue-100 outline-none transition-all font-mono placeholder:font-sans placeholder:text-slate-300 ${props.readOnly ? 'text-slate-400 cursor-default' : ''} ${props.className || ''}`,} )
 );
 
 const Sel = ({ children, …props }) => (
-<select {…props} className={`w-full text-sm px-3 py-2 rounded-lg border border-slate-200 bg-slate-50 focus:bg-white focus:border-blue-400 focus:ring-2 focus:ring-blue-100 outline-none transition-all cursor-pointer ${props.className || ''}`}>
-{children}
-</select>
+React.createElement(‘select’, { …props, className: `w-full text-sm px-3 py-2 rounded-lg border border-slate-200 bg-slate-50 focus:bg-white focus:border-blue-400 focus:ring-2 focus:ring-blue-100 outline-none transition-all cursor-pointer ${props.className || ''}`,}
+, children
+)
 );
 
 const Fld = ({ label, unit, children, hint }) => (
-
-  <div className="space-y-1.5">
-    <label className="block text-[11px] font-bold text-slate-400 uppercase tracking-wider">
-      {label}{unit && <span className="ml-1 font-normal normal-case tracking-normal text-slate-300">[{unit}]</span>}
-    </label>
-    {children}
-    {hint && <p className="text-[11px] text-slate-400">{hint}</p>}
-  </div>
+React.createElement(‘div’, { className: “space-y-1.5”,}
+, React.createElement(‘label’, { className: “block text-[11px] font-bold text-slate-400 uppercase tracking-wider”     ,}
+, label, unit && React.createElement(‘span’, { className: “ml-1 font-normal normal-case tracking-normal text-slate-300”    ,}, “[”, unit, “]”)
+)
+, children
+, hint && React.createElement(‘p’, { className: “text-[11px] text-slate-400” ,}, hint)
+)
 );
 
 const Card = ({ children, className = ‘’ }) => (
-
-  <div className={`bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden ${className}`}>{children}</div>
+React.createElement(‘div’, { className: `bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden ${className}`,}, children)
 );
 
 const Hdg = ({ icon, title, sub, right, color = ‘blue’ }) => {
 const col = { blue:‘bg-blue-600’, teal:‘bg-teal-600’, amber:‘bg-amber-500’, green:‘bg-emerald-600’, purple:‘bg-purple-600’, slate:‘bg-slate-600’, red:‘bg-red-500’ }[color];
 return (
-<div className="flex items-center justify-between px-5 py-4 border-b border-slate-100">
-<div className="flex items-center gap-3">
-<div className={`w-7 h-7 rounded-lg flex items-center justify-center text-white flex-shrink-0 ${col}`}>
-<span className="text-xs">{icon}</span>
-</div>
-<div>
-<div className="font-bold text-slate-800 text-sm leading-tight">{title}</div>
-{sub && <div className="text-[11px] text-slate-400 leading-tight mt-0.5">{sub}</div>}
-</div>
-</div>
-{right && <div className="flex items-center gap-2">{right}</div>}
-</div>
+React.createElement(‘div’, { className: “flex items-center justify-between px-5 py-4 border-b border-slate-100”      ,}
+, React.createElement(‘div’, { className: “flex items-center gap-3”  ,}
+, React.createElement(‘div’, { className: `w-7 h-7 rounded-lg flex items-center justify-center text-white flex-shrink-0 ${col}`,}
+, React.createElement(‘span’, { className: “text-xs”,}, icon)
+)
+, React.createElement(‘div’, null
+, React.createElement(‘div’, { className: “font-bold text-slate-800 text-sm leading-tight”   ,}, title)
+, sub && React.createElement(‘div’, { className: “text-[11px] text-slate-400 leading-tight mt-0.5”   ,}, sub)
+)
+)
+, right && React.createElement(‘div’, { className: “flex items-center gap-2”  ,}, right)
+)
 );
 };
 
 const Modal = ({ open, onClose, title, children, wide }) => {
 if (!open) return null;
 return (
-<div className=“fixed inset-0 z-50 flex items-center justify-center p-4” style={{ background: ‘rgba(15,23,42,0.5)’, backdropFilter: ‘blur(4px)’ }}>
-<div className={`bg-white rounded-2xl shadow-2xl w-full max-h-[90vh] overflow-y-auto ${wide ? 'max-w-3xl' : 'max-w-lg'}`}>
-<div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 sticky top-0 bg-white z-10">
-<h2 className="font-bold text-slate-800 text-base">{title}</h2>
-<button onClick={onClose} className="w-7 h-7 flex items-center justify-center rounded-full text-slate-400 hover:bg-slate-100 transition-colors text-lg leading-none">×</button>
-</div>
-<div className="p-6">{children}</div>
-</div>
-</div>
+React.createElement(‘div’, { className: “fixed inset-0 z-50 flex items-center justify-center p-4”      , style: { background: ‘rgba(15,23,42,0.5)’, backdropFilter: ‘blur(4px)’ },}
+, React.createElement(‘div’, { className: `bg-white rounded-2xl shadow-2xl w-full max-h-[90vh] overflow-y-auto ${wide ? 'max-w-3xl' : 'max-w-lg'}`,}
+, React.createElement(‘div’, { className: “flex items-center justify-between px-6 py-4 border-b border-slate-100 sticky top-0 bg-white z-10”          ,}
+, React.createElement(‘h2’, { className: “font-bold text-slate-800 text-base”  ,}, title)
+, React.createElement(‘button’, { onClick: onClose, className: “w-7 h-7 flex items-center justify-center rounded-full text-slate-400 hover:bg-slate-100 transition-colors text-lg leading-none”          ,}, “×”)
+)
+, React.createElement(‘div’, { className: “p-6”,}, children)
+)
+)
 );
 };
 
 const Confirm = ({ open, msg, onOk, onCancel }) => (
-<Modal open={open} onClose={onCancel} title="Confirmar">
-<p className="text-slate-600 mb-5 text-sm">{msg}</p>
-<div className="flex justify-end gap-2">
-<Btn variant="ghost" onClick={onCancel}>Cancelar</Btn>
-<Btn variant="danger" onClick={onOk}>Eliminar</Btn>
-</div>
-</Modal>
+React.createElement(Modal, { open: open, onClose: onCancel, title: “Confirmar”,}
+, React.createElement(‘p’, { className: “text-slate-600 mb-5 text-sm”  ,}, msg)
+, React.createElement(‘div’, { className: “flex justify-end gap-2”  ,}
+, React.createElement(Btn, { variant: “ghost”, onClick: onCancel,}, “Cancelar”)
+, React.createElement(Btn, { variant: “danger”, onClick: onOk,}, “Eliminar”)
+)
+)
 );
 
 const Badge = ({ children, color = ‘blue’ }) => {
 const c = { blue:‘bg-blue-100 text-blue-700’, teal:‘bg-teal-100 text-teal-700’, amber:‘bg-amber-100 text-amber-700’, green:‘bg-emerald-100 text-emerald-700’, red:‘bg-red-100 text-red-700’, purple:‘bg-purple-100 text-purple-700’, slate:‘bg-slate-100 text-slate-600’ }[color];
-return <span className={`inline-flex text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wide ${c}`}>{children}</span>;
+return React.createElement(‘span’, { className: `inline-flex text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wide ${c}`,}, children);
 };
 
 // ═══════════════════════════════════════════════════════════
@@ -407,37 +405,37 @@ return <span className={`inline-flex text-[10px] font-bold px-2 py-0.5 rounded-f
 // ═══════════════════════════════════════════════════════════
 function Tbl({ cols, rows, onEdit, onDel, onView, empty = ‘Sin registros’ }) {
 return (
-<div className="overflow-x-auto">
-<table className="w-full text-sm min-w-full">
-<thead>
-<tr className="border-b border-slate-100">
-{cols.map(c => <th key={c.k} className="text-left text-[10px] font-bold text-slate-400 uppercase tracking-wider px-4 py-3">{c.l}</th>)}
-<th className="px-4 py-3 text-right text-[10px] font-bold text-slate-400 uppercase tracking-wider">Acciones</th>
-</tr>
-</thead>
-<tbody>
-{rows.length === 0 && (
-<tr><td colSpan={cols.length + 1} className=“text-center text-slate-300 py-10 text-sm”>{empty}</td></tr>
-)}
-{rows.map((row, i) => (
-<tr key={i} className="border-b border-slate-50 hover:bg-slate-50/80 transition-colors">
-{cols.map(c => (
-<td key={c.k} className={`px-4 py-3 ${c.mono ? 'font-mono text-xs' : ''} ${c.bold ? 'font-semibold text-slate-800' : 'text-slate-500'} ${c.max ? 'max-w-[180px] truncate' : ''}`}>
-{row._raw?.[c.k] ?? row[c.k] ?? ‘—’}
-</td>
-))}
-<td className="px-4 py-3">
-<div className="flex items-center justify-end gap-1">
-{onView && <button onClick={() => onView(row)} className=“w-7 h-7 rounded-lg flex items-center justify-center text-slate-300 hover:bg-blue-50 hover:text-blue-600 transition-colors text-sm”>👁</button>}
-{onEdit && <button onClick={() => onEdit(row)} className=“w-7 h-7 rounded-lg flex items-center justify-center text-slate-300 hover:bg-blue-50 hover:text-blue-600 transition-colors text-sm”>✏️</button>}
-{onDel && <button onClick={() => onDel(row)} className=“w-7 h-7 rounded-lg flex items-center justify-center text-slate-300 hover:bg-red-50 hover:text-red-500 transition-colors text-sm”>🗑</button>}
-</div>
-</td>
-</tr>
-))}
-</tbody>
-</table>
-</div>
+React.createElement(‘div’, { className: “overflow-x-auto”,}
+, React.createElement(‘table’, { className: “w-full text-sm min-w-full”  ,}
+, React.createElement(‘thead’, null
+, React.createElement(‘tr’, { className: “border-b border-slate-100” ,}
+, cols.map(c => React.createElement(‘th’, { key: c.k, className: “text-left text-[10px] font-bold text-slate-400 uppercase tracking-wider px-4 py-3”       ,}, c.l))
+, React.createElement(‘th’, { className: “px-4 py-3 text-right text-[10px] font-bold text-slate-400 uppercase tracking-wider”       ,}, “Acciones”)
+)
+)
+, React.createElement(‘tbody’, null
+, rows.length === 0 && (
+React.createElement(‘tr’, null, React.createElement(‘td’, { colSpan: cols.length + 1, className: “text-center text-slate-300 py-10 text-sm”   ,}, empty))
+)
+, rows.map((row, i) => (
+React.createElement(‘tr’, { key: i, className: “border-b border-slate-50 hover:bg-slate-50/80 transition-colors”   ,}
+, cols.map(c => (
+React.createElement(‘td’, { key: c.k, className: `px-4 py-3 ${c.mono ? 'font-mono text-xs' : ''} ${c.bold ? 'font-semibold text-slate-800' : 'text-slate-500'} ${c.max ? 'max-w-[180px] truncate' : ''}`,}
+, _nullishCoalesce(_nullishCoalesce(_optionalChain([row, ‘access’, _13 => _13._raw, ‘optionalAccess’, _14 => _14[c.k]]), () => ( row[c.k])), () => ( ‘—’))
+)
+))
+, React.createElement(‘td’, { className: “px-4 py-3” ,}
+, React.createElement(‘div’, { className: “flex items-center justify-end gap-1”   ,}
+, onView && React.createElement(‘button’, { onClick: () => onView(row), className: “w-7 h-7 rounded-lg flex items-center justify-center text-slate-300 hover:bg-blue-50 hover:text-blue-600 transition-colors text-sm”          ,}, “👁”)
+, onEdit && React.createElement(‘button’, { onClick: () => onEdit(row), className: “w-7 h-7 rounded-lg flex items-center justify-center text-slate-300 hover:bg-blue-50 hover:text-blue-600 transition-colors text-sm”          ,}, “✏️”)
+, onDel && React.createElement(‘button’, { onClick: () => onDel(row), className: “w-7 h-7 rounded-lg flex items-center justify-center text-slate-300 hover:bg-red-50 hover:text-red-500 transition-colors text-sm”          ,}, “🗑”)
+)
+)
+)
+))
+)
+)
+)
 );
 }
 
@@ -467,7 +465,7 @@ const FE = (k, v) => setEForm(f => ({ …f, [k]: v }));
 const submitC = () => {
 const upd = editingC ? clients.map(c => c.id === editingC ? { …cForm, equipments: c.equipments } : c) : […clients, { …cForm, equipments: [] }];
 saveClients(upd); setCModal(false);
-if (activeClient?.id === editingC) setActiveClient(upd.find(c => c.id === editingC));
+if (_optionalChain([activeClient, ‘optionalAccess’, _15 => _15.id]) === editingC) setActiveClient(upd.find(c => c.id === editingC));
 };
 const submitE = () => {
 const cl = clients.find(c => c.id === activeClient.id);
@@ -482,7 +480,7 @@ const delEquip = (e) => setDelConfirm({ type: ‘equip’, item: e });
 const confirmDel = () => {
 if (delConfirm.type === ‘client’) {
 saveClients(clients.filter(c => c.id !== delConfirm.item.id));
-if (activeClient?.id === delConfirm.item.id) { setView(‘list’); setActiveClient(null); }
+if (_optionalChain([activeClient, ‘optionalAccess’, _16 => _16.id]) === delConfirm.item.id) { setView(‘list’); setActiveClient(null); }
 } else {
 const cl = clients.find(c => c.id === activeClient.id);
 const eqs = cl.equipments.filter(e => e.id !== delConfirm.item.id);
@@ -495,192 +493,192 @@ setDelConfirm(null);
 const getCals = (equipId) => (DB.get(‘calibrations’) || []).filter(c => c.equipId === equipId);
 
 if (view === ‘newcal’) {
-return <NewCalibration equip={activeEquip} client={activeClient}
-onSaved={(cal) => { setActiveCal(cal); setView(‘viewcal’); }}
-onCancel={() => setView(‘calibration’)} existing={null} />;
+return React.createElement(NewCalibration, { equip: activeEquip, client: activeClient,
+onSaved: (cal) => { setActiveCal(cal); setView(‘viewcal’); },
+onCancel: () => setView(‘calibration’), existing: null,} );
 }
 if (view === ‘viewcal’ && activeCal) {
-return <CalView cal={activeCal} onBack={() => setView(‘calibration’)}
-onRecal={() => { setView(‘newcal’); }}
-onEdit={() => setView(‘newcal’)} />;
+return React.createElement(CalView, { cal: activeCal, onBack: () => setView(‘calibration’),
+onRecal: () => { setView(‘newcal’); },
+onEdit: () => setView(‘newcal’),} );
 }
 if (view === ‘calibration’ && activeEquip) {
 const cals = getCals(activeEquip.id);
 return (
-<div className="space-y-4">
-{/* breadcrumb */}
-<div className="flex items-center gap-2 text-sm">
-<button onClick={() => setView(‘list’)} className=“text-blue-600 hover:underline font-medium”>{activeClient.name}</button>
-<span className="text-slate-300">/</span>
-<button onClick={() => setView(‘equipment’)} className=“text-blue-600 hover:underline font-medium”>{activeEquip.ref}</button>
-<span className="text-slate-300">/</span>
-<span className="text-slate-600 font-semibold">Calibraciones</span>
-</div>
-<Card>
-<Hdg icon=“📋” title={`Equipo: ${activeEquip.ref}`} sub={`${activeEquip.desc} · ${activeEquip.serial || 'sin S/N'} · ${activeEquip.material}`} color=“teal”
-right={<Btn onClick={() => setView(‘newcal’)} icon=“➕” size=“sm”>Nueva calibración</Btn>} />
-{cals.length === 0 ? (
-<div className="flex flex-col items-center justify-center py-14 gap-3">
-<div className="text-5xl">📏</div>
-<div className="text-slate-400 font-medium">Sin calibraciones para este equipo</div>
-<Btn onClick={() => setView(‘newcal’)} icon=“➕”>Primera calibración</Btn>
-</div>
+React.createElement(‘div’, { className: “space-y-4”,}
+/* breadcrumb */
+, React.createElement(‘div’, { className: “flex items-center gap-2 text-sm”   ,}
+, React.createElement(‘button’, { onClick: () => setView(‘list’), className: “text-blue-600 hover:underline font-medium”  ,}, activeClient.name)
+, React.createElement(‘span’, { className: “text-slate-300”,}, “/”)
+, React.createElement(‘button’, { onClick: () => setView(‘equipment’), className: “text-blue-600 hover:underline font-medium”  ,}, activeEquip.ref)
+, React.createElement(‘span’, { className: “text-slate-300”,}, “/”)
+, React.createElement(‘span’, { className: “text-slate-600 font-semibold” ,}, “Calibraciones”)
+)
+, React.createElement(Card, null
+, React.createElement(Hdg, { icon: “📋”, title: `Equipo: ${activeEquip.ref}`, sub: `${activeEquip.desc} · ${activeEquip.serial || 'sin S/N'} · ${activeEquip.material}`, color: “teal”,
+right: React.createElement(Btn, { onClick: () => setView(‘newcal’), icon: “➕”, size: “sm”,}, “Nueva calibración” ),} )
+, cals.length === 0 ? (
+React.createElement(‘div’, { className: “flex flex-col items-center justify-center py-14 gap-3”     ,}
+, React.createElement(‘div’, { className: “text-5xl”,}, “📏”)
+, React.createElement(‘div’, { className: “text-slate-400 font-medium” ,}, “Sin calibraciones para este equipo”    )
+, React.createElement(Btn, { onClick: () => setView(‘newcal’), icon: “➕”,}, “Primera calibración” )
+)
 ) : (
-<Tbl cols={[
+React.createElement(Tbl, { cols: [
 { k: ‘certNum’, l: ‘Certificado’, bold: true, mono: true },
 { k: ‘date’, l: ‘Fecha’ },
 { k: ‘threadName’, l: ‘Rosca’ },
 { k: ‘result’, l: ‘E ± U [mm]’, mono: true },
 { k: ‘techName’, l: ‘Técnico’ },
 { k: ‘statusB’, l: ‘Estado’ },
-]} rows={cals.map(c => ({
+], rows: cals.map(c => ({
 …c,
 date: fmtDate(c.date),
 result: c.gum ? `${c.gum.mean.toFixed(5)} ± ${fmt(c.gum.U)}` : ‘—’,
-statusB: <Badge color={c.status === ‘ISSUED’ ? ‘green’ : ‘amber’}>{c.status}</Badge>,
+statusB: React.createElement(Badge, { color: c.status === ‘ISSUED’ ? ‘green’ : ‘amber’,}, c.status),
 _raw: c,
-}))}
-onView={row => { setActiveCal(row._raw); setView(‘viewcal’); }}
-onEdit={row => { setActiveCal(row._raw); setView(‘newcal’); }}
-onDel={row => {
+})),
+onView: row => { setActiveCal(row._raw); setView(‘viewcal’); },
+onEdit: row => { setActiveCal(row._raw); setView(‘newcal’); },
+onDel: row => {
 const cals = (DB.get(‘calibrations’) || []).filter(c => c.certNum !== row._raw.certNum);
 DB.set(‘calibrations’, cals);
 setActiveEquip({ …activeEquip }); // force re-render trick
-}}
-/>
-)}
-</Card>
-<Confirm open={!!delConfirm} msg=”¿Eliminar este registro?” onOk={confirmDel} onCancel={() => setDelConfirm(null)} />
-</div>
+},}
+)
+)
+)
+, React.createElement(Confirm, { open: !!delConfirm, msg: “¿Eliminar este registro?”  , onOk: confirmDel, onCancel: () => setDelConfirm(null),} )
+)
 );
 }
 if (view === ‘equipment’ && activeClient) {
 return (
-<div className="space-y-4">
-<div className="flex items-center gap-2 text-sm">
-<button onClick={() => setView(‘list’)} className=“text-blue-600 hover:underline font-medium”>{activeClient.name}</button>
-<span className="text-slate-300">/</span>
-<span className="text-slate-600 font-semibold">Equipos</span>
-</div>
-<Card>
-<Hdg icon=“🏭” title={activeClient.name} sub={`${activeClient.code} · ${activeClient.address || 'Sin dirección'}`} color=“blue”
-right={
-<div className="flex gap-2">
-<Btn size=“sm” variant=“ghost” onClick={() => { setEditingC(activeClient.id); setCForm({ …activeClient }); setCModal(true); }} icon=“✏️”>Editar cliente</Btn>
-<Btn size=“sm” onClick={() => { setEditingE(null); setEForm({ …blankE, id: uid() }); setEModal(true); }} icon=“➕”>Añadir equipo</Btn>
-</div>
-} />
-{(activeClient.equipments || []).length === 0 ? (
-<div className="flex flex-col items-center py-12 gap-3">
-<div className="text-4xl">🔩</div>
-<div className="text-slate-400">Sin equipos registrados</div>
-<Btn onClick={() => { setEditingE(null); setEForm({ …blankE, id: uid() }); setEModal(true); }} icon=“➕”>Añadir primer equipo</Btn>
-</div>
+React.createElement(‘div’, { className: “space-y-4”,}
+, React.createElement(‘div’, { className: “flex items-center gap-2 text-sm”   ,}
+, React.createElement(‘button’, { onClick: () => setView(‘list’), className: “text-blue-600 hover:underline font-medium”  ,}, activeClient.name)
+, React.createElement(‘span’, { className: “text-slate-300”,}, “/”)
+, React.createElement(‘span’, { className: “text-slate-600 font-semibold” ,}, “Equipos”)
+)
+, React.createElement(Card, null
+, React.createElement(Hdg, { icon: “🏭”, title: activeClient.name, sub: `${activeClient.code} · ${activeClient.address || 'Sin dirección'}`, color: “blue”,
+right:
+React.createElement(‘div’, { className: “flex gap-2” ,}
+, React.createElement(Btn, { size: “sm”, variant: “ghost”, onClick: () => { setEditingC(activeClient.id); setCForm({ …activeClient }); setCModal(true); }, icon: “✏️”,}, “Editar cliente” )
+, React.createElement(Btn, { size: “sm”, onClick: () => { setEditingE(null); setEForm({ …blankE, id: uid() }); setEModal(true); }, icon: “➕”,}, “Añadir equipo” )
+)
+,} )
+, (activeClient.equipments || []).length === 0 ? (
+React.createElement(‘div’, { className: “flex flex-col items-center py-12 gap-3”    ,}
+, React.createElement(‘div’, { className: “text-4xl”,}, “🔩”)
+, React.createElement(‘div’, { className: “text-slate-400”,}, “Sin equipos registrados”  )
+, React.createElement(Btn, { onClick: () => { setEditingE(null); setEForm({ …blankE, id: uid() }); setEModal(true); }, icon: “➕”,}, “Añadir primer equipo”  )
+)
 ) : (
-<Tbl cols={[
+React.createElement(Tbl, { cols: [
 { k: ‘ref’, l: ‘Referencia’, bold: true },
 { k: ‘desc’, l: ‘Descripción’, max: true },
 { k: ‘serial’, l: ‘Nº Serie’ },
 { k: ‘material’, l: ‘Material’ },
 { k: ‘ncals’, l: ‘Calibraciones’, mono: true },
-]} rows={(activeClient.equipments || []).map(e => ({
+], rows: (activeClient.equipments || []).map(e => ({
 …e,
 ncals: getCals(e.id).length || ‘0’,
 _raw: e,
-}))}
-onView={row => { setActiveEquip(row._raw); setView(‘calibration’); }}
-onEdit={row => { setEditingE(row._raw.id); setEForm({ …row._raw }); setEModal(true); }}
-onDel={row => delEquip(row._raw)}
-/>
-)}
-</Card>
-{/* Equipment modal */}
-<Modal open={eModal} onClose={() => setEModal(false)} title={editingE ? ‘Editar equipo’ : ‘Nuevo equipo’}>
-<div className="grid grid-cols-2 gap-4">
-<Fld label="Referencia" required><Inp value={eForm.ref} onChange={e => FE(‘ref’, e.target.value)} placeholder=“EQ-001” /></Fld>
-<Fld label="Nº de serie"><Inp value={eForm.serial} onChange={e => FE(‘serial’, e.target.value)} /></Fld>
-<div className="col-span-2"><Fld label="Descripción"><Inp value={eForm.desc} onChange={e => FE(‘desc’, e.target.value)} placeholder=“Tornillo M14×1.5 lote 2025-A” /></Fld></div>
-<div className="col-span-2"><Fld label="Material">
-<Sel value={eForm.material} onChange={e => FE(‘material’, e.target.value)}>
-{Object.keys(MATERIALS).map(m => <option key={m}>{m}</option>)}
-</Sel>
-</Fld></div>
-<div className="col-span-2"><Fld label="Notas"><textarea className=“w-full text-sm px-3 py-2 rounded-lg border border-slate-200 bg-slate-50 focus:bg-white focus:border-blue-400 outline-none resize-none h-16” value={eForm.notes} onChange={e => FE(‘notes’, e.target.value)} /></Fld></div>
-</div>
-<div className="flex justify-end gap-2 mt-5 pt-4 border-t border-slate-100">
-<Btn variant=“ghost” onClick={() => setEModal(false)}>Cancelar</Btn>
-<Btn onClick={submitE} icon="💾">{editingE ? ‘Guardar cambios’ : ‘Crear equipo’}</Btn>
-</div>
-</Modal>
-<Confirm open={!!delConfirm} msg={`¿Eliminar "${delConfirm?.item?.ref || delConfirm?.item?.name}"?`} onOk={confirmDel} onCancel={() => setDelConfirm(null)} />
-</div>
+})),
+onView: row => { setActiveEquip(row._raw); setView(‘calibration’); },
+onEdit: row => { setEditingE(row._raw.id); setEForm({ …row._raw }); setEModal(true); },
+onDel: row => delEquip(row._raw),}
+)
+)
+)
+/* Equipment modal */
+, React.createElement(Modal, { open: eModal, onClose: () => setEModal(false), title: editingE ? ‘Editar equipo’ : ‘Nuevo equipo’,}
+, React.createElement(‘div’, { className: “grid grid-cols-2 gap-4”  ,}
+, React.createElement(Fld, { label: “Referencia”, required: true,}, React.createElement(Inp, { value: eForm.ref, onChange: e => FE(‘ref’, e.target.value), placeholder: “EQ-001”,} ))
+, React.createElement(Fld, { label: “Nº de serie”  ,}, React.createElement(Inp, { value: eForm.serial, onChange: e => FE(‘serial’, e.target.value),} ))
+, React.createElement(‘div’, { className: “col-span-2”,}, React.createElement(Fld, { label: “Descripción”,}, React.createElement(Inp, { value: eForm.desc, onChange: e => FE(‘desc’, e.target.value), placeholder: “Tornillo M14×1.5 lote 2025-A”   ,} )))
+, React.createElement(‘div’, { className: “col-span-2”,}, React.createElement(Fld, { label: “Material”,}
+, React.createElement(Sel, { value: eForm.material, onChange: e => FE(‘material’, e.target.value),}
+, Object.keys(MATERIALS).map(m => React.createElement(‘option’, { key: m,}, m))
+)
+))
+, React.createElement(‘div’, { className: “col-span-2”,}, React.createElement(Fld, { label: “Notas”,}, React.createElement(‘textarea’, { className: “w-full text-sm px-3 py-2 rounded-lg border border-slate-200 bg-slate-50 focus:bg-white focus:border-blue-400 outline-none resize-none h-16”            , value: eForm.notes, onChange: e => FE(‘notes’, e.target.value),} )))
+)
+, React.createElement(‘div’, { className: “flex justify-end gap-2 mt-5 pt-4 border-t border-slate-100”      ,}
+, React.createElement(Btn, { variant: “ghost”, onClick: () => setEModal(false),}, “Cancelar”)
+, React.createElement(Btn, { onClick: submitE, icon: “💾”,}, editingE ? ‘Guardar cambios’ : ‘Crear equipo’)
+)
+)
+, React.createElement(Confirm, { open: !!delConfirm, msg: `¿Eliminar "${_optionalChain([delConfirm, 'optionalAccess', _17 => _17.item, 'optionalAccess', _18 => _18.ref]) || _optionalChain([delConfirm, 'optionalAccess', _19 => _19.item, 'optionalAccess', _20 => _20.name])}"?`, onOk: confirmDel, onCancel: () => setDelConfirm(null),} )
+)
 );
 }
 
 // ── CLIENT LIST ──
 return (
-<div className="space-y-4">
-<div className="flex items-center justify-between">
-<div>
-<h2 className="font-bold text-slate-800 text-lg">Clientes</h2>
-<p className="text-xs text-slate-400 mt-0.5">Selecciona un cliente para ver sus equipos y calibraciones</p>
-</div>
-<Btn onClick={() => { setEditingC(null); setCForm({ …blankC, id: uid() }); setCModal(true); }} icon=“➕”>Nuevo cliente</Btn>
-</div>
-<div className="grid grid-cols-1 gap-3">
-{clients.length === 0 && (
-<Card className="flex flex-col items-center py-16 gap-3">
-<div className="text-5xl">🏭</div>
-<div className="text-slate-400 font-medium">Sin clientes — añade el primero</div>
-<Btn onClick={() => { setEditingC(null); setCForm({ …blankC, id: uid() }); setCModal(true); }} icon=“➕”>Añadir cliente</Btn>
-</Card>
-)}
-{clients.map(cl => {
+React.createElement(‘div’, { className: “space-y-4”,}
+, React.createElement(‘div’, { className: “flex items-center justify-between”  ,}
+, React.createElement(‘div’, null
+, React.createElement(‘h2’, { className: “font-bold text-slate-800 text-lg”  ,}, “Clientes”)
+, React.createElement(‘p’, { className: “text-xs text-slate-400 mt-0.5”  ,}, “Selecciona un cliente para ver sus equipos y calibraciones”        )
+)
+, React.createElement(Btn, { onClick: () => { setEditingC(null); setCForm({ …blankC, id: uid() }); setCModal(true); }, icon: “➕”,}, “Nuevo cliente” )
+)
+, React.createElement(‘div’, { className: “grid grid-cols-1 gap-3”  ,}
+, clients.length === 0 && (
+React.createElement(Card, { className: “flex flex-col items-center py-16 gap-3”    ,}
+, React.createElement(‘div’, { className: “text-5xl”,}, “🏭”)
+, React.createElement(‘div’, { className: “text-slate-400 font-medium” ,}, “Sin clientes — añade el primero”     )
+, React.createElement(Btn, { onClick: () => { setEditingC(null); setCForm({ …blankC, id: uid() }); setCModal(true); }, icon: “➕”,}, “Añadir cliente” )
+)
+)
+, clients.map(cl => {
 const totalCals = (cl.equipments || []).reduce((a, e) => a + getCals(e.id).length, 0);
 return (
-<Card key={cl.id}>
-<div className="flex items-center p-5 gap-4">
-<div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center text-white font-bold text-lg flex-shrink-0 shadow-sm shadow-blue-200">
-{cl.name.charAt(0).toUpperCase()}
-</div>
-<div className="flex-1 min-w-0">
-<div className="flex items-center gap-2">
-<span className="font-bold text-slate-800">{cl.name}</span>
-{cl.code && <Badge color="slate">{cl.code}</Badge>}
-</div>
-<div className="text-xs text-slate-400 mt-0.5 truncate">{cl.address || cl.email || cl.contact || ‘Sin datos de contacto’}</div>
-<div className="flex items-center gap-3 mt-2">
-<span className="text-xs text-slate-400">🔩 {(cl.equipments || []).length} equipos</span>
-<span className="text-xs text-slate-400">📋 {totalCals} calibraciones</span>
-</div>
-</div>
-<div className="flex items-center gap-2">
-<Btn size=“sm” variant=“ghost” onClick={() => { setEditingC(cl.id); setCForm({ …cl }); setCModal(true); }} icon=“✏️”>Editar</Btn>
-<Btn size=“sm” variant=“danger” onClick={() => delClient(cl)} icon=“🗑”>Eliminar</Btn>
-<Btn size=“sm” onClick={() => { setActiveClient(cl); setView(‘equipment’); }} icon=“→”>Ver equipos</Btn>
-</div>
-</div>
-</Card>
+React.createElement(Card, { key: cl.id,}
+, React.createElement(‘div’, { className: “flex items-center p-5 gap-4”   ,}
+, React.createElement(‘div’, { className: “w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center text-white font-bold text-lg flex-shrink-0 shadow-sm shadow-blue-200”              ,}
+, cl.name.charAt(0).toUpperCase()
+)
+, React.createElement(‘div’, { className: “flex-1 min-w-0” ,}
+, React.createElement(‘div’, { className: “flex items-center gap-2”  ,}
+, React.createElement(‘span’, { className: “font-bold text-slate-800” ,}, cl.name)
+, cl.code && React.createElement(Badge, { color: “slate”,}, cl.code)
+)
+, React.createElement(‘div’, { className: “text-xs text-slate-400 mt-0.5 truncate”   ,}, cl.address || cl.email || cl.contact || ‘Sin datos de contacto’)
+, React.createElement(‘div’, { className: “flex items-center gap-3 mt-2”   ,}
+, React.createElement(‘span’, { className: “text-xs text-slate-400” ,}, “🔩 “ , (cl.equipments || []).length, “ equipos” )
+, React.createElement(‘span’, { className: “text-xs text-slate-400” ,}, “📋 “ , totalCals, “ calibraciones” )
+)
+)
+, React.createElement(‘div’, { className: “flex items-center gap-2”  ,}
+, React.createElement(Btn, { size: “sm”, variant: “ghost”, onClick: () => { setEditingC(cl.id); setCForm({ …cl }); setCModal(true); }, icon: “✏️”,}, “Editar”)
+, React.createElement(Btn, { size: “sm”, variant: “danger”, onClick: () => delClient(cl), icon: “🗑”,}, “Eliminar”)
+, React.createElement(Btn, { size: “sm”, onClick: () => { setActiveClient(cl); setView(‘equipment’); }, icon: “→”,}, “Ver equipos” )
+)
+)
+)
 );
-})}
-</div>
-{/* Client modal */}
-<Modal open={cModal} onClose={() => setCModal(false)} title={editingC ? ‘Editar cliente’ : ‘Nuevo cliente’}>
-<div className="grid grid-cols-2 gap-4">
-<Fld label="Código"><Inp value={cForm.code} onChange={e => FC(‘code’, e.target.value)} placeholder=“CLI-001” /></Fld>
-<Fld label="Nombre" required><Inp value={cForm.name} onChange={e => FC(‘name’, e.target.value)} /></Fld>
-<div className="col-span-2"><Fld label="Dirección"><Inp value={cForm.address} onChange={e => FC(‘address’, e.target.value)} /></Fld></div>
-<Fld label="Contacto"><Inp value={cForm.contact} onChange={e => FC(‘contact’, e.target.value)} /></Fld>
-<Fld label="Email"><Inp type=“email” value={cForm.email} onChange={e => FC(‘email’, e.target.value)} /></Fld>
-<div className="col-span-2"><Fld label="Teléfono"><Inp value={cForm.phone} onChange={e => FC(‘phone’, e.target.value)} /></Fld></div>
-</div>
-<div className="flex justify-end gap-2 mt-5 pt-4 border-t border-slate-100">
-<Btn variant=“ghost” onClick={() => setCModal(false)}>Cancelar</Btn>
-<Btn onClick={submitC} icon="💾">{editingC ? ‘Guardar’ : ‘Crear cliente’}</Btn>
-</div>
-</Modal>
-<Confirm open={!!delConfirm} msg={`¿Eliminar cliente "${delConfirm?.item?.name}"? Se perderán todos sus equipos.`} onOk={confirmDel} onCancel={() => setDelConfirm(null)} />
-</div>
+})
+)
+/* Client modal */
+, React.createElement(Modal, { open: cModal, onClose: () => setCModal(false), title: editingC ? ‘Editar cliente’ : ‘Nuevo cliente’,}
+, React.createElement(‘div’, { className: “grid grid-cols-2 gap-4”  ,}
+, React.createElement(Fld, { label: “Código”,}, React.createElement(Inp, { value: cForm.code, onChange: e => FC(‘code’, e.target.value), placeholder: “CLI-001”,} ))
+, React.createElement(Fld, { label: “Nombre”, required: true,}, React.createElement(Inp, { value: cForm.name, onChange: e => FC(‘name’, e.target.value),} ))
+, React.createElement(‘div’, { className: “col-span-2”,}, React.createElement(Fld, { label: “Dirección”,}, React.createElement(Inp, { value: cForm.address, onChange: e => FC(‘address’, e.target.value),} )))
+, React.createElement(Fld, { label: “Contacto”,}, React.createElement(Inp, { value: cForm.contact, onChange: e => FC(‘contact’, e.target.value),} ))
+, React.createElement(Fld, { label: “Email”,}, React.createElement(Inp, { type: “email”, value: cForm.email, onChange: e => FC(‘email’, e.target.value),} ))
+, React.createElement(‘div’, { className: “col-span-2”,}, React.createElement(Fld, { label: “Teléfono”,}, React.createElement(Inp, { value: cForm.phone, onChange: e => FC(‘phone’, e.target.value),} )))
+)
+, React.createElement(‘div’, { className: “flex justify-end gap-2 mt-5 pt-4 border-t border-slate-100”      ,}
+, React.createElement(Btn, { variant: “ghost”, onClick: () => setCModal(false),}, “Cancelar”)
+, React.createElement(Btn, { onClick: submitC, icon: “💾”,}, editingC ? ‘Guardar’ : ‘Crear cliente’)
+)
+)
+, React.createElement(Confirm, { open: !!delConfirm, msg: `¿Eliminar cliente "${_optionalChain([delConfirm, 'optionalAccess', _21 => _21.item, 'optionalAccess', _22 => _22.name])}"? Se perderán todos sus equipos.`, onOk: confirmDel, onCancel: () => setDelConfirm(null),} )
+)
 );
 }
 
@@ -702,8 +700,8 @@ temp: 20.0, humidity: 48, uTemp: 0.1, uForce: 0.002, uAngle: 0.1,
 alpha_th: 11.5, e_mod: 210, nu: 0.30,
 readings0: [’’, ‘’, ‘’], readings90: [’’, ‘’, ‘’],
 signature: ‘’, status: ‘DRAFT’, gum: null,
-equipId: equip?.id, clientId: client?.id,
-clientName: client?.name, equipRef: equip?.ref,
+equipId: _optionalChain([equip, ‘optionalAccess’, _23 => _23.id]), clientId: _optionalChain([client, ‘optionalAccess’, _24 => _24.id]),
+clientName: _optionalChain([client, ‘optionalAccess’, _25 => _25.name]), equipRef: _optionalChain([equip, ‘optionalAccess’, _26 => _26.ref]),
 labName: cfg.labName || ‘Laboratorio de Metrología’,
 };
 const [s, setS] = useState(init);
@@ -728,25 +726,25 @@ if (wire) { sv(‘wireDiam’, wire.diam); sv(‘uWire’, wire.uW); }
 }, [s.wireId]);
 
 useEffect(() => {
-const mat = MATERIALS[equip?.material];
+const mat = MATERIALS[_optionalChain([equip, ‘optionalAccess’, _27 => _27.material])];
 if (mat) { sv(‘alpha_th’, mat.alpha); sv(‘e_mod’, mat.e); sv(‘nu’, mat.nu); }
 }, []);
 
 const geo = {
-W: +s.wireDiam || 0.866, alpha: thread?.alpha || 60, p: thread?.p || 1.5,
+W: +s.wireDiam || 0.866, alpha: _optionalChain([thread, ‘optionalAccess’, _28 => _28.alpha]) || 60, p: _optionalChain([thread, ‘optionalAccess’, _29 => _29.p]) || 1.5,
 T: +s.temp, F: machine ? (machine.forceUnit === ‘cN’ ? machine.force / 100 : +machine.force) : 0.04,
 alpha_th: +s.alpha_th * 1e-6, E_mod: +s.e_mod * 1e9, nu: +s.nu,
 };
 
 const bw = thread ? bestWire(thread.p, thread.alpha) : 0;
 const getE = (v) => { const r = +v; if (!v || isNaN(r)) return null; return calcE(r, geo); };
-const r0vals = s.readings0.map(v => getE(v)?.E).filter(v => v != null);
-const r90vals = s.readings90.map(v => getE(v)?.E).filter(v => v != null);
+const r0vals = s.readings0.map(v => _optionalChain([getE, ‘call’, _30 => _30(v), ‘optionalAccess’, _31 => _31.E])).filter(v => v != null);
+const r90vals = s.readings90.map(v => _optionalChain([getE, ‘call’, _32 => _32(v), ‘optionalAccess’, _33 => _33.E])).filter(v => v != null);
 
 const runGUM = () => {
 const ucal = machine ? +machine.uCal : 0.0006;
 const res = machine ? +machine.resolution : 0.0001;
-const g = calcGUM(r0vals, r90vals, geo, ucal, res, +s.uWire, +s.uForce, +s.uTemp, +s.uAngle, thread?.d);
+const g = calcGUM(r0vals, r90vals, geo, ucal, res, +s.uWire, +s.uForce, +s.uTemp, +s.uAngle, _optionalChain([thread, ‘optionalAccess’, _34 => _34.d]));
 if (g) sv(‘gum’, g);
 return g;
 };
@@ -754,8 +752,8 @@ return g;
 const doSave = (gum) => {
 const cal = {
 …s, gum: gum || s.gum, status: ‘ISSUED’,
-threadName: thread?.name || s.threadName,
-techName: tech?.name || tech?.code || ‘—’,
+threadName: _optionalChain([thread, ‘optionalAccess’, _35 => _35.name]) || s.threadName,
+techName: _optionalChain([tech, ‘optionalAccess’, _36 => _36.name]) || _optionalChain([tech, ‘optionalAccess’, _37 => _37.code]) || ‘—’,
 savedAt: new Date().toISOString(),
 };
 const cals = DB.get(‘calibrations’) || [];
@@ -778,126 +776,126 @@ const c = canvasRef.current, r = c.getBoundingClientRect(), ctx = c.getContext(�
 ctx.lineWidth = 2; ctx.lineCap = ‘round’; ctx.strokeStyle = ‘#1e293b’;
 ctx.lineTo(e.clientX - r.left, e.clientY - r.top); ctx.stroke();
 };
-const endDraw = () => { setDrawing(false); sv(‘signature’, canvasRef.current?.toDataURL()); };
+const endDraw = () => { setDrawing(false); sv(‘signature’, _optionalChain([canvasRef, ‘access’, _38 => _38.current, ‘optionalAccess’, _39 => _39.toDataURL, ‘call’, _40 => _40()])); };
 
 const STEPS = [‘Proyecto’, ‘Rosca’, ‘Hilo & Cond.’, ‘Mediciones’, ‘Resultado’, ‘Certificado’];
 
 return (
-<div className="space-y-4 max-w-4xl mx-auto">
-{/* Header */}
-<div className="flex items-center gap-3">
-<button onClick={onCancel} className="w-8 h-8 flex items-center justify-center rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-50 transition-colors">←</button>
-<div>
-<h2 className="font-bold text-slate-800">{existing ? ‘Editar / Recalibrar’ : ‘Nueva calibración’}</h2>
-<p className="text-xs text-slate-400 font-mono">{client?.name} → {equip?.ref} · {s.certNum}</p>
-</div>
-</div>
-{/* Step pills */}
-<div className="flex gap-1.5 overflow-x-auto pb-1">
-{STEPS.map((name, i) => (
-<button key={i} onClick={() => setStep(i)}
-className={`flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-all ${step === i ? 'bg-blue-600 text-white' : i < step ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'}`}>
-{i < step ? ‘✓’ : <span className="w-3.5 h-3.5 rounded-full bg-current/20 flex items-center justify-center text-[9px]">{i + 1}</span>}
-{name}
-</button>
-))}
-</div>
+React.createElement(‘div’, { className: “space-y-4 max-w-4xl mx-auto”  ,}
+/* Header */
+, React.createElement(‘div’, { className: “flex items-center gap-3”  ,}
+, React.createElement(‘button’, { onClick: onCancel, className: “w-8 h-8 flex items-center justify-center rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-50 transition-colors”          ,}, “←”)
+, React.createElement(‘div’, null
+, React.createElement(‘h2’, { className: “font-bold text-slate-800” ,}, existing ? ‘Editar / Recalibrar’ : ‘Nueva calibración’)
+, React.createElement(‘p’, { className: “text-xs text-slate-400 font-mono”  ,}, _optionalChain([client, ‘optionalAccess’, _41 => _41.name]), “ → “  , _optionalChain([equip, ‘optionalAccess’, _42 => _42.ref]), “ · “  , s.certNum)
+)
+)
+/* Step pills */
+, React.createElement(‘div’, { className: “flex gap-1.5 overflow-x-auto pb-1”   ,}
+, STEPS.map((name, i) => (
+React.createElement(‘button’, { key: i, onClick: () => setStep(i),
+className: `flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-all ${step === i ? 'bg-blue-600 text-white' : i < step ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'}`,}
+, i < step ? ‘✓’ : React.createElement(‘span’, { className: “w-3.5 h-3.5 rounded-full bg-current/20 flex items-center justify-center text-[9px]”       ,}, i + 1)
+, name
+)
+))
+)
 
 ```
-  {/* ── STEP 0: PROYECTO ── */}
-  {step === 0 && (
-    <div className="grid grid-cols-2 gap-4">
-      <Card>
-        <Hdg icon="📋" title="Datos del encargo" color="blue" />
-        <div className="p-5 space-y-3">
-          <div className="grid grid-cols-2 gap-3">
-            <Fld label="Nº Certificado"><Inp value={s.certNum} onChange={e => sv('certNum', e.target.value)} /></Fld>
-            <Fld label="Fecha"><Inp type="date" value={s.date} onChange={e => sv('date', e.target.value)} /></Fld>
-          </div>
-          <Fld label="Laboratorio"><Inp value={s.labName} onChange={e => sv('labName', e.target.value)} /></Fld>
-          <Fld label="Técnico responsable">
-            <Sel value={s.techId} onChange={e => sv('techId', e.target.value)}>
-              <option value="">— Seleccionar técnico —</option>
-              {techs.map(t => <option key={t.id} value={t.id}>{t.code} — {t.name}</option>)}
-            </Sel>
-          </Fld>
-          <Fld label="Banco de medición">
-            <Sel value={s.machineId} onChange={e => sv('machineId', e.target.value)}>
-              <option value="">— Seleccionar banco —</option>
-              {machines.map(m => <option key={m.id} value={m.id}>{m.brand} {m.model}{m.sn ? ` · SN: ${m.sn}` : ''}</option>)}
-            </Sel>
-          </Fld>
-          {machine && (
-            <div className="bg-blue-50 border border-blue-100 rounded-lg p-3 text-xs space-y-1">
-              <div className="flex justify-between"><span className="text-blue-500">U cal (k=2):</span><span className="font-mono font-bold">{machine.uCal} mm</span></div>
-              <div className="flex justify-between"><span className="text-blue-500">Fuerza:</span><span className="font-mono font-bold">{machine.force} {machine.forceUnit}</span></div>
-              {machine.certExpiry && <div className="flex justify-between"><span className="text-blue-500">Cal. válida:</span><span className="font-mono">{machine.certExpiry}</span></div>}
-            </div>
-          )}
-        </div>
-      </Card>
-      <Card>
-        <Hdg icon="🏭" title="Equipo a calibrar" color="teal" />
-        <div className="p-5 space-y-3">
-          <div className="bg-teal-50 border border-teal-100 rounded-xl p-4 space-y-2">
-            <div className="flex items-center gap-2">
-              <span className="text-2xl">🔩</span>
-              <div>
-                <div className="font-bold text-slate-800">{equip?.ref}</div>
-                <div className="text-xs text-slate-500">{equip?.desc}</div>
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs">
-              <div><span className="text-slate-400">Cliente:</span> <span className="font-semibold">{client?.name}</span></div>
-              <div><span className="text-slate-400">S/N:</span> <span className="font-mono">{equip?.serial || '—'}</span></div>
-              <div><span className="text-slate-400">Material:</span> <span className="font-semibold">{equip?.material}</span></div>
-            </div>
-          </div>
-          <Fld label="Dirección de rosca">
-            <Sel value={s.direction} onChange={e => sv('direction', e.target.value)}>
-              <option value="external">Tornillo (externo)</option>
-              <option value="internal">Tuerca (interno)</option>
-            </Sel>
-          </Fld>
-        </div>
-      </Card>
-      <div className="col-span-2 flex justify-end">
-        <Btn onClick={() => setStep(1)}>Siguiente: Rosca →</Btn>
-      </div>
-    </div>
-  )}
+  /* ── STEP 0: PROYECTO ── */
+  , step === 0 && (
+    React.createElement('div', { className: "grid grid-cols-2 gap-4"  ,}
+      , React.createElement(Card, null
+        , React.createElement(Hdg, { icon: "📋", title: "Datos del encargo"  , color: "blue",} )
+        , React.createElement('div', { className: "p-5 space-y-3" ,}
+          , React.createElement('div', { className: "grid grid-cols-2 gap-3"  ,}
+            , React.createElement(Fld, { label: "Nº Certificado" ,}, React.createElement(Inp, { value: s.certNum, onChange: e => sv('certNum', e.target.value),} ))
+            , React.createElement(Fld, { label: "Fecha",}, React.createElement(Inp, { type: "date", value: s.date, onChange: e => sv('date', e.target.value),} ))
+          )
+          , React.createElement(Fld, { label: "Laboratorio",}, React.createElement(Inp, { value: s.labName, onChange: e => sv('labName', e.target.value),} ))
+          , React.createElement(Fld, { label: "Técnico responsable" ,}
+            , React.createElement(Sel, { value: s.techId, onChange: e => sv('techId', e.target.value),}
+              , React.createElement('option', { value: "",}, "— Seleccionar técnico —"   )
+              , techs.map(t => React.createElement('option', { key: t.id, value: t.id,}, t.code, " — "  , t.name))
+            )
+          )
+          , React.createElement(Fld, { label: "Banco de medición"  ,}
+            , React.createElement(Sel, { value: s.machineId, onChange: e => sv('machineId', e.target.value),}
+              , React.createElement('option', { value: "",}, "— Seleccionar banco —"   )
+              , machines.map(m => React.createElement('option', { key: m.id, value: m.id,}, m.brand, " " , m.model, m.sn ? ` · SN: ${m.sn}` : ''))
+            )
+          )
+          , machine && (
+            React.createElement('div', { className: "bg-blue-50 border border-blue-100 rounded-lg p-3 text-xs space-y-1"      ,}
+              , React.createElement('div', { className: "flex justify-between" ,}, React.createElement('span', { className: "text-blue-500",}, "U cal (k=2):"  ), React.createElement('span', { className: "font-mono font-bold" ,}, machine.uCal, " mm" ))
+              , React.createElement('div', { className: "flex justify-between" ,}, React.createElement('span', { className: "text-blue-500",}, "Fuerza:"), React.createElement('span', { className: "font-mono font-bold" ,}, machine.force, " " , machine.forceUnit))
+              , machine.certExpiry && React.createElement('div', { className: "flex justify-between" ,}, React.createElement('span', { className: "text-blue-500",}, "Cal. válida:" ), React.createElement('span', { className: "font-mono",}, machine.certExpiry))
+            )
+          )
+        )
+      )
+      , React.createElement(Card, null
+        , React.createElement(Hdg, { icon: "🏭", title: "Equipo a calibrar"  , color: "teal",} )
+        , React.createElement('div', { className: "p-5 space-y-3" ,}
+          , React.createElement('div', { className: "bg-teal-50 border border-teal-100 rounded-xl p-4 space-y-2"     ,}
+            , React.createElement('div', { className: "flex items-center gap-2"  ,}
+              , React.createElement('span', { className: "text-2xl",}, "🔩")
+              , React.createElement('div', null
+                , React.createElement('div', { className: "font-bold text-slate-800" ,}, _optionalChain([equip, 'optionalAccess', _43 => _43.ref]))
+                , React.createElement('div', { className: "text-xs text-slate-500" ,}, _optionalChain([equip, 'optionalAccess', _44 => _44.desc]))
+              )
+            )
+            , React.createElement('div', { className: "grid grid-cols-2 gap-x-4 gap-y-1 text-xs"    ,}
+              , React.createElement('div', null, React.createElement('span', { className: "text-slate-400",}, "Cliente:"), " " , React.createElement('span', { className: "font-semibold",}, _optionalChain([client, 'optionalAccess', _45 => _45.name])))
+              , React.createElement('div', null, React.createElement('span', { className: "text-slate-400",}, "S/N:"), " " , React.createElement('span', { className: "font-mono",}, _optionalChain([equip, 'optionalAccess', _46 => _46.serial]) || '—'))
+              , React.createElement('div', null, React.createElement('span', { className: "text-slate-400",}, "Material:"), " " , React.createElement('span', { className: "font-semibold",}, _optionalChain([equip, 'optionalAccess', _47 => _47.material])))
+            )
+          )
+          , React.createElement(Fld, { label: "Dirección de rosca"  ,}
+            , React.createElement(Sel, { value: s.direction, onChange: e => sv('direction', e.target.value),}
+              , React.createElement('option', { value: "external",}, "Tornillo (externo)" )
+              , React.createElement('option', { value: "internal",}, "Tuerca (interno)" )
+            )
+          )
+        )
+      )
+      , React.createElement('div', { className: "col-span-2 flex justify-end"  ,}
+        , React.createElement(Btn, { onClick: () => setStep(1),}, "Siguiente: Rosca →"  )
+      )
+    )
+  )
 
-  {/* ── STEP 1: ROSCA ── */}
-  {step === 1 && (
-    <div className="space-y-4">
-      <Card>
-        <Hdg icon="⚙️" title="Selección de rosca" sub="Todas las normas ISO/ASME cargadas" color="blue" />
-        <div className="p-5 space-y-4">
-          <div className="grid grid-cols-3 gap-3">
-            <div className="col-span-1">
-              <Fld label="Norma">
-                <Sel value={s.threadStd || ''} onChange={e => { sv('threadStd', e.target.value); sv('threadId', ''); }}>
-                  <option value="">Todas</option>
-                  {THREAD_STANDARDS.filter(s => s.id !== 'CUSTOM').map(std =>
-                    <option key={std.id} value={std.id}>{std.label}</option>
-                  )}
-                </Sel>
-              </Fld>
-            </div>
-            <div className="col-span-2">
-              <Fld label="Rosca">
-                <Sel value={s.threadId} onChange={e => sv('threadId', e.target.value)}>
-                  <option value="">— Seleccionar rosca —</option>
-                  {THREADS
+  /* ── STEP 1: ROSCA ── */
+  , step === 1 && (
+    React.createElement('div', { className: "space-y-4",}
+      , React.createElement(Card, null
+        , React.createElement(Hdg, { icon: "⚙️", title: "Selección de rosca"  , sub: "Todas las normas ISO/ASME cargadas"    , color: "blue",} )
+        , React.createElement('div', { className: "p-5 space-y-4" ,}
+          , React.createElement('div', { className: "grid grid-cols-3 gap-3"  ,}
+            , React.createElement('div', { className: "col-span-1",}
+              , React.createElement(Fld, { label: "Norma",}
+                , React.createElement(Sel, { value: s.threadStd || '', onChange: e => { sv('threadStd', e.target.value); sv('threadId', ''); },}
+                  , React.createElement('option', { value: "",}, "Todas")
+                  , THREAD_STANDARDS.filter(s => s.id !== 'CUSTOM').map(std =>
+                    React.createElement('option', { key: std.id, value: std.id,}, std.label)
+                  )
+                )
+              )
+            )
+            , React.createElement('div', { className: "col-span-2",}
+              , React.createElement(Fld, { label: "Rosca",}
+                , React.createElement(Sel, { value: s.threadId, onChange: e => sv('threadId', e.target.value),}
+                  , React.createElement('option', { value: "",}, "— Seleccionar rosca —"   )
+                  , THREADS
                     .filter(t => !s.threadStd || t.std === s.threadStd)
-                    .map(t => <option key={t.id} value={t.id}>{t.name} — ∅{t.d}×{t.p} mm</option>)}
-                </Sel>
-              </Fld>
-            </div>
-          </div>
-          {thread && (
-            <div className="grid grid-cols-4 gap-3">
-              {[
+                    .map(t => React.createElement('option', { key: t.id, value: t.id,}, t.name, " — ∅"  , t.d, "×", t.p, " mm" ))
+                )
+              )
+            )
+          )
+          , thread && (
+            React.createElement('div', { className: "grid grid-cols-4 gap-3"  ,}
+              , [
                 { l: 'D nominal', v: `${thread.d} mm` },
                 { l: 'Paso p', v: `${thread.p} mm` },
                 { l: 'D de paso d2', v: `${thread.d2} mm` },
@@ -907,106 +905,106 @@ className={`flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full tex
                 { l: 'Tol. ext.', v: thread.tolExt },
                 { l: 'Tol. int.', v: thread.tolInt },
               ].map(item => (
-                <div key={item.l} className="bg-slate-50 rounded-lg p-3 border border-slate-100">
-                  <div className="text-[10px] text-slate-400 font-bold uppercase tracking-wide mb-1">{item.l}</div>
-                  <div className="font-mono font-bold text-slate-800 text-sm">{item.v}</div>
-                </div>
-              ))}
-            </div>
-          )}
-          <div className="grid grid-cols-3 gap-3">
-            <Fld label="Clase tolerancia">
-              <Inp value={s.tolClass} onChange={e => sv('tolClass', e.target.value)} placeholder={thread ? (s.direction === 'external' ? thread.tolExt : thread.tolInt) : '6g'} />
-            </Fld>
-            <Fld label="Tol. mín." unit="mm"><Inp type="number" value={s.tolMin} onChange={e => sv('tolMin', e.target.value)} step="0.0001" placeholder="Opcional" /></Fld>
-            <Fld label="Tol. máx." unit="mm"><Inp type="number" value={s.tolMax} onChange={e => sv('tolMax', e.target.value)} step="0.0001" placeholder="Opcional" /></Fld>
-          </div>
-        </div>
-      </Card>
-      <div className="flex justify-between">
-        <Btn variant="ghost" onClick={() => setStep(0)}>← Volver</Btn>
-        <Btn onClick={() => setStep(2)} disabled={!s.threadId}>Siguiente: Hilo & Condiciones →</Btn>
-      </div>
-    </div>
-  )}
+                React.createElement('div', { key: item.l, className: "bg-slate-50 rounded-lg p-3 border border-slate-100"    ,}
+                  , React.createElement('div', { className: "text-[10px] text-slate-400 font-bold uppercase tracking-wide mb-1"     ,}, item.l)
+                  , React.createElement('div', { className: "font-mono font-bold text-slate-800 text-sm"   ,}, item.v)
+                )
+              ))
+            )
+          )
+          , React.createElement('div', { className: "grid grid-cols-3 gap-3"  ,}
+            , React.createElement(Fld, { label: "Clase tolerancia" ,}
+              , React.createElement(Inp, { value: s.tolClass, onChange: e => sv('tolClass', e.target.value), placeholder: thread ? (s.direction === 'external' ? thread.tolExt : thread.tolInt) : '6g',} )
+            )
+            , React.createElement(Fld, { label: "Tol. mín." , unit: "mm",}, React.createElement(Inp, { type: "number", value: s.tolMin, onChange: e => sv('tolMin', e.target.value), step: "0.0001", placeholder: "Opcional",} ))
+            , React.createElement(Fld, { label: "Tol. máx." , unit: "mm",}, React.createElement(Inp, { type: "number", value: s.tolMax, onChange: e => sv('tolMax', e.target.value), step: "0.0001", placeholder: "Opcional",} ))
+          )
+        )
+      )
+      , React.createElement('div', { className: "flex justify-between" ,}
+        , React.createElement(Btn, { variant: "ghost", onClick: () => setStep(0),}, "← Volver" )
+        , React.createElement(Btn, { onClick: () => setStep(2), disabled: !s.threadId,}, "Siguiente: Hilo & Condiciones →"    )
+      )
+    )
+  )
 
-  {/* ── STEP 2: HILO & CONDICIONES ── */}
-  {step === 2 && (
-    <div className="grid grid-cols-2 gap-4">
-      <Card>
-        <Hdg icon="📏" title="Hilo de medición" color="teal" />
-        <div className="p-5 space-y-3">
-          {thread && bw > 0 && (
-            <div className="bg-emerald-50 border border-emerald-100 rounded-lg p-3 text-sm">
-              <div className="text-emerald-700 font-bold">Hilo óptimo: <span className="font-mono">{bw.toFixed(5)} mm</span></div>
-              <div className="text-emerald-600 text-xs mt-0.5">Rango válido: [{(0.56 * thread.p).toFixed(4)}, {(0.90 * thread.p).toFixed(4)}] mm</div>
-            </div>
-          )}
-          <Fld label="Hilo de la base de datos">
-            <Sel value={s.wireId} onChange={e => sv('wireId', e.target.value)}>
-              <option value="">— Seleccionar hilo —</option>
-              {WIRES
+  /* ── STEP 2: HILO & CONDICIONES ── */
+  , step === 2 && (
+    React.createElement('div', { className: "grid grid-cols-2 gap-4"  ,}
+      , React.createElement(Card, null
+        , React.createElement(Hdg, { icon: "📏", title: "Hilo de medición"  , color: "teal",} )
+        , React.createElement('div', { className: "p-5 space-y-3" ,}
+          , thread && bw > 0 && (
+            React.createElement('div', { className: "bg-emerald-50 border border-emerald-100 rounded-lg p-3 text-sm"     ,}
+              , React.createElement('div', { className: "text-emerald-700 font-bold" ,}, "Hilo óptimo: "  , React.createElement('span', { className: "font-mono",}, bw.toFixed(5), " mm" ))
+              , React.createElement('div', { className: "text-emerald-600 text-xs mt-0.5"  ,}, "Rango válido: ["  , (0.56 * thread.p).toFixed(4), ", " , (0.90 * thread.p).toFixed(4), "] mm" )
+            )
+          )
+          , React.createElement(Fld, { label: "Hilo de la base de datos"     ,}
+            , React.createElement(Sel, { value: s.wireId, onChange: e => sv('wireId', e.target.value),}
+              , React.createElement('option', { value: "",}, "— Seleccionar hilo —"   )
+              , WIRES
                 .filter(w => !thread || (w.pMin <= thread.p && w.pMax >= thread.p))
-                .map(w => <option key={w.id} value={w.id}>{w.code} — W={w.diam} mm</option>)}
-              <optgroup label="Todos los hilos">
-                {WIRES
+                .map(w => React.createElement('option', { key: w.id, value: w.id,}, w.code, " — W="  , w.diam, " mm" ))
+              , React.createElement('optgroup', { label: "Todos los hilos"  ,}
+                , WIRES
                   .filter(w => !thread || !(w.pMin <= thread.p && w.pMax >= thread.p))
-                  .map(w => <option key={w.id} value={w.id}>{w.code} — W={w.diam} mm</option>)}
-              </optgroup>
-            </Sel>
-          </Fld>
-          <div className="grid grid-cols-2 gap-3">
-            <Fld label="W calibrado" unit="mm"><Inp type="number" value={s.wireDiam} onChange={e => sv('wireDiam', e.target.value)} step="0.00001" placeholder="0.86603" /></Fld>
-            <Fld label="u(W) k=1" unit="mm"><Inp type="number" value={s.uWire} onChange={e => sv('uWire', e.target.value)} step="0.00001" min="0" /></Fld>
-          </div>
-          <Fld label="Certificado hilo"><Inp value={s.wireCert} onChange={e => sv('wireCert', e.target.value)} placeholder="ENAC-C-XXXX" /></Fld>
-        </div>
-      </Card>
-      <Card>
-        <Hdg icon="🌡️" title="Condiciones ambientales y material" color="amber" />
-        <div className="p-5 space-y-3">
-          <div className="grid grid-cols-2 gap-3">
-            <Fld label="Temperatura" unit="°C">
-              <Inp type="number" value={s.temp} onChange={e => sv('temp', e.target.value)} step="0.1" />
-            </Fld>
-            <Fld label="Humedad" unit="%"><Inp type="number" value={s.humidity} onChange={e => sv('humidity', e.target.value)} step="1" /></Fld>
-          </div>
-          <div className="grid grid-cols-3 gap-2">
-            <Fld label="u(T)" unit="°C"><Inp type="number" value={s.uTemp} onChange={e => sv('uTemp', e.target.value)} step="0.01" min="0" /></Fld>
-            <Fld label="u(F)" unit="N"><Inp type="number" value={s.uForce} onChange={e => sv('uForce', e.target.value)} step="0.001" min="0" /></Fld>
-            <Fld label="u(α)" unit="°"><Inp type="number" value={s.uAngle} onChange={e => sv('uAngle', e.target.value)} step="0.01" min="0" /></Fld>
-          </div>
-          <Fld label="Material">
-            <Sel value={Object.keys(MATERIALS).find(k => MATERIALS[k].alpha === +s.alpha_th) || ''} onChange={e => { const m = MATERIALS[e.target.value]; if (m) { sv('alpha_th', m.alpha); sv('e_mod', m.e); sv('nu', m.nu); } }}>
-              {Object.keys(MATERIALS).map(k => <option key={k} value={k}>{k}</option>)}
-            </Sel>
-          </Fld>
-          <div className="grid grid-cols-3 gap-2">
-            <Fld label="α_th" unit="×10⁻⁶/K"><Inp type="number" value={s.alpha_th} onChange={e => sv('alpha_th', e.target.value)} step="0.1" /></Fld>
-            <Fld label="E" unit="GPa"><Inp type="number" value={s.e_mod} onChange={e => sv('e_mod', e.target.value)} step="1" /></Fld>
-            <Fld label="ν"><Inp type="number" value={s.nu} onChange={e => sv('nu', e.target.value)} step="0.01" /></Fld>
-          </div>
-          {+s.temp !== 20 && (
-            <div className="bg-amber-50 border border-amber-100 rounded-lg p-2 text-xs text-amber-700">
-              ⚠️ ΔT = {(+s.temp - 20).toFixed(1)} °C respecto a 20 °C (ISO 1:2016). Se aplicará corrección térmica.
-            </div>
-          )}
-        </div>
-      </Card>
-      <div className="col-span-2 flex justify-between">
-        <Btn variant="ghost" onClick={() => setStep(1)}>← Volver</Btn>
-        <Btn onClick={() => setStep(3)}>Siguiente: Mediciones →</Btn>
-      </div>
-    </div>
-  )}
+                  .map(w => React.createElement('option', { key: w.id, value: w.id,}, w.code, " — W="  , w.diam, " mm" ))
+              )
+            )
+          )
+          , React.createElement('div', { className: "grid grid-cols-2 gap-3"  ,}
+            , React.createElement(Fld, { label: "W calibrado" , unit: "mm",}, React.createElement(Inp, { type: "number", value: s.wireDiam, onChange: e => sv('wireDiam', e.target.value), step: "0.00001", placeholder: "0.86603",} ))
+            , React.createElement(Fld, { label: "u(W) k=1" , unit: "mm",}, React.createElement(Inp, { type: "number", value: s.uWire, onChange: e => sv('uWire', e.target.value), step: "0.00001", min: "0",} ))
+          )
+          , React.createElement(Fld, { label: "Certificado hilo" ,}, React.createElement(Inp, { value: s.wireCert, onChange: e => sv('wireCert', e.target.value), placeholder: "ENAC-C-XXXX",} ))
+        )
+      )
+      , React.createElement(Card, null
+        , React.createElement(Hdg, { icon: "🌡️", title: "Condiciones ambientales y material"   , color: "amber",} )
+        , React.createElement('div', { className: "p-5 space-y-3" ,}
+          , React.createElement('div', { className: "grid grid-cols-2 gap-3"  ,}
+            , React.createElement(Fld, { label: "Temperatura", unit: "°C",}
+              , React.createElement(Inp, { type: "number", value: s.temp, onChange: e => sv('temp', e.target.value), step: "0.1",} )
+            )
+            , React.createElement(Fld, { label: "Humedad", unit: "%",}, React.createElement(Inp, { type: "number", value: s.humidity, onChange: e => sv('humidity', e.target.value), step: "1",} ))
+          )
+          , React.createElement('div', { className: "grid grid-cols-3 gap-2"  ,}
+            , React.createElement(Fld, { label: "u(T)", unit: "°C",}, React.createElement(Inp, { type: "number", value: s.uTemp, onChange: e => sv('uTemp', e.target.value), step: "0.01", min: "0",} ))
+            , React.createElement(Fld, { label: "u(F)", unit: "N",}, React.createElement(Inp, { type: "number", value: s.uForce, onChange: e => sv('uForce', e.target.value), step: "0.001", min: "0",} ))
+            , React.createElement(Fld, { label: "u(α)", unit: "°",}, React.createElement(Inp, { type: "number", value: s.uAngle, onChange: e => sv('uAngle', e.target.value), step: "0.01", min: "0",} ))
+          )
+          , React.createElement(Fld, { label: "Material",}
+            , React.createElement(Sel, { value: Object.keys(MATERIALS).find(k => MATERIALS[k].alpha === +s.alpha_th) || '', onChange: e => { const m = MATERIALS[e.target.value]; if (m) { sv('alpha_th', m.alpha); sv('e_mod', m.e); sv('nu', m.nu); } },}
+              , Object.keys(MATERIALS).map(k => React.createElement('option', { key: k, value: k,}, k))
+            )
+          )
+          , React.createElement('div', { className: "grid grid-cols-3 gap-2"  ,}
+            , React.createElement(Fld, { label: "α_th", unit: "×10⁻⁶/K",}, React.createElement(Inp, { type: "number", value: s.alpha_th, onChange: e => sv('alpha_th', e.target.value), step: "0.1",} ))
+            , React.createElement(Fld, { label: "E", unit: "GPa",}, React.createElement(Inp, { type: "number", value: s.e_mod, onChange: e => sv('e_mod', e.target.value), step: "1",} ))
+            , React.createElement(Fld, { label: "ν",}, React.createElement(Inp, { type: "number", value: s.nu, onChange: e => sv('nu', e.target.value), step: "0.01",} ))
+          )
+          , +s.temp !== 20 && (
+            React.createElement('div', { className: "bg-amber-50 border border-amber-100 rounded-lg p-2 text-xs text-amber-700"      ,}, "⚠️ ΔT = "
+                 , (+s.temp - 20).toFixed(1), " °C respecto a 20 °C (ISO 1:2016). Se aplicará corrección térmica."
+            )
+          )
+        )
+      )
+      , React.createElement('div', { className: "col-span-2 flex justify-between"  ,}
+        , React.createElement(Btn, { variant: "ghost", onClick: () => setStep(1),}, "← Volver" )
+        , React.createElement(Btn, { onClick: () => setStep(3),}, "Siguiente: Mediciones →"  )
+      )
+    )
+  )
 
-  {/* ── STEP 3: MEDICIONES ── */}
-  {step === 3 && (
-    <div className="space-y-4">
-      {/* correction strip */}
-      {thread && s.wireDiam && (
-        <div className="grid grid-cols-4 gap-3">
-          {(() => {
+  /* ── STEP 3: MEDICIONES ── */
+  , step === 3 && (
+    React.createElement('div', { className: "space-y-4",}
+      /* correction strip */
+      , thread && s.wireDiam && (
+        React.createElement('div', { className: "grid grid-cols-4 gap-3"  ,}
+          , (() => {
             const testM = thread.d + 3 * (+s.wireDiam);
             const r = calcE(testM, geo);
             return [
@@ -1015,65 +1013,65 @@ className={`flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full tex
               { l: '−W(1+1/sinα/2)', v: fmt(-r.wt, 6), u: 'mm', info: 'Término hilo' },
               { l: 'p/(2·tanα/2)', v: fmt(r.pt, 6), u: 'mm', info: 'Término paso' },
             ].map(item => (
-              <div key={item.l} className="bg-white rounded-xl border border-slate-200 shadow-sm p-3">
-                <div className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">{item.l}</div>
-                <div className="font-mono font-bold text-slate-800 mt-1">{item.v} <span className="text-slate-400 text-xs font-normal">{item.u}</span></div>
-                <div className="text-[10px] text-slate-400 mt-0.5">{item.info}</div>
-              </div>
+              React.createElement('div', { key: item.l, className: "bg-white rounded-xl border border-slate-200 shadow-sm p-3"     ,}
+                , React.createElement('div', { className: "text-[10px] text-slate-400 font-bold uppercase tracking-wider"    ,}, item.l)
+                , React.createElement('div', { className: "font-mono font-bold text-slate-800 mt-1"   ,}, item.v, " " , React.createElement('span', { className: "text-slate-400 text-xs font-normal"  ,}, item.u))
+                , React.createElement('div', { className: "text-[10px] text-slate-400 mt-0.5"  ,}, item.info)
+              )
             ));
-          })()}
-        </div>
-      )}
-      <div className="grid grid-cols-2 gap-4">
-        {[0, 90].map(plane => {
+          })()
+        )
+      )
+      , React.createElement('div', { className: "grid grid-cols-2 gap-4"  ,}
+        , [0, 90].map(plane => {
           const key = `readings${plane}`;
           const vals = plane === 0 ? r0vals : r90vals;
           const mean = vals.length ? vals.reduce((a,b)=>a+b,0)/vals.length : null;
           const std = vals.length > 1 ? Math.sqrt(vals.reduce((a,b)=>a+(b-mean)**2,0)/(vals.length-1)) : null;
           return (
-            <Card key={plane}>
-              <Hdg icon={plane === 0 ? '📐' : '🔄'} title={`Lecturas — Plano ${plane}°`} color={plane === 0 ? 'blue' : 'teal'}
-                right={<button onClick={() => sv(key, [...s[key], ''])} className="text-xs font-semibold text-blue-600 hover:text-blue-700 flex items-center gap-1">➕ Añadir</button>} />
-              <div className="p-4 space-y-2">
-                <div className="grid grid-cols-4 gap-1.5 text-[10px] font-bold text-slate-400 uppercase tracking-wide mb-2">
-                  <span>#</span><span>M_raw [mm]</span><span>M_corr [mm]</span><span>E [mm]</span>
-                </div>
-                {s[key].map((v, i) => {
+            React.createElement(Card, { key: plane,}
+              , React.createElement(Hdg, { icon: plane === 0 ? '📐' : '🔄', title: `Lecturas — Plano ${plane}°`, color: plane === 0 ? 'blue' : 'teal',
+                right: React.createElement('button', { onClick: () => sv(key, [...s[key], '']), className: "text-xs font-semibold text-blue-600 hover:text-blue-700 flex items-center gap-1"      ,}, "➕ Añadir" ),} )
+              , React.createElement('div', { className: "p-4 space-y-2" ,}
+                , React.createElement('div', { className: "grid grid-cols-4 gap-1.5 text-[10px] font-bold text-slate-400 uppercase tracking-wide mb-2"        ,}
+                  , React.createElement('span', null, "#"), React.createElement('span', null, "M_raw [mm]" ), React.createElement('span', null, "M_corr [mm]" ), React.createElement('span', null, "E [mm]" )
+                )
+                , s[key].map((v, i) => {
                   const res = getE(v);
                   return (
-                    <div key={i} className="grid grid-cols-4 gap-1.5 items-center">
-                      <span className="text-xs font-bold text-slate-300 text-right">{i + 1}</span>
-                      <Inp type="number" step="0.00001" placeholder="M_raw…" value={v}
-                        onChange={e => { const a = [...s[key]]; a[i] = e.target.value; sv(key, a); }} />
-                      <div className={`font-mono text-[11px] px-2 py-1.5 rounded-lg text-right border ${res ? 'bg-teal-50 border-teal-100 text-teal-700' : 'bg-slate-50 border-slate-100 text-slate-300'}`}>{res ? res.M_c.toFixed(5) : '—'}</div>
-                      <div className="flex gap-1">
-                        <div className={`flex-1 font-mono text-[11px] px-2 py-1.5 rounded-lg text-right border font-semibold ${res ? 'bg-blue-50 border-blue-100 text-blue-700' : 'bg-slate-50 border-slate-100 text-slate-300'}`}>{res ? res.E.toFixed(5) : '—'}</div>
-                        <button onClick={() => { const a = [...s[key]]; a.splice(i, 1); sv(key, a); }} className="w-5 h-5 flex items-center justify-center text-slate-300 hover:text-red-400 transition-colors text-xs">×</button>
-                      </div>
-                    </div>
+                    React.createElement('div', { key: i, className: "grid grid-cols-4 gap-1.5 items-center"   ,}
+                      , React.createElement('span', { className: "text-xs font-bold text-slate-300 text-right"   ,}, i + 1)
+                      , React.createElement(Inp, { type: "number", step: "0.00001", placeholder: "M_raw…", value: v,
+                        onChange: e => { const a = [...s[key]]; a[i] = e.target.value; sv(key, a); },} )
+                      , React.createElement('div', { className: `font-mono text-[11px] px-2 py-1.5 rounded-lg text-right border ${res ? 'bg-teal-50 border-teal-100 text-teal-700' : 'bg-slate-50 border-slate-100 text-slate-300'}`,}, res ? res.M_c.toFixed(5) : '—')
+                      , React.createElement('div', { className: "flex gap-1" ,}
+                        , React.createElement('div', { className: `flex-1 font-mono text-[11px] px-2 py-1.5 rounded-lg text-right border font-semibold ${res ? 'bg-blue-50 border-blue-100 text-blue-700' : 'bg-slate-50 border-slate-100 text-slate-300'}`,}, res ? res.E.toFixed(5) : '—')
+                        , React.createElement('button', { onClick: () => { const a = [...s[key]]; a.splice(i, 1); sv(key, a); }, className: "w-5 h-5 flex items-center justify-center text-slate-300 hover:text-red-400 transition-colors text-xs"        ,}, "×")
+                      )
+                    )
                   );
-                })}
-                {vals.length >= 2 && (
-                  <div className="grid grid-cols-3 gap-2 mt-3 bg-slate-50 rounded-lg p-3 border border-slate-100">
-                    <div><div className="text-[10px] text-slate-400 font-bold uppercase">Media Ē</div><div className="font-mono text-sm font-bold">{mean.toFixed(5)}</div></div>
-                    <div><div className="text-[10px] text-slate-400 font-bold uppercase">Desv. Est. s</div><div className="font-mono text-sm font-bold">{std.toExponential(2)}</div></div>
-                    <div><div className="text-[10px] text-slate-400 font-bold uppercase">n</div><div className="font-mono text-sm font-bold">{vals.length}</div></div>
-                  </div>
-                )}
-              </div>
-            </Card>
+                })
+                , vals.length >= 2 && (
+                  React.createElement('div', { className: "grid grid-cols-3 gap-2 mt-3 bg-slate-50 rounded-lg p-3 border border-slate-100"        ,}
+                    , React.createElement('div', null, React.createElement('div', { className: "text-[10px] text-slate-400 font-bold uppercase"   ,}, "Media Ē" ), React.createElement('div', { className: "font-mono text-sm font-bold"  ,}, mean.toFixed(5)))
+                    , React.createElement('div', null, React.createElement('div', { className: "text-[10px] text-slate-400 font-bold uppercase"   ,}, "Desv. Est. s"  ), React.createElement('div', { className: "font-mono text-sm font-bold"  ,}, std.toExponential(2)))
+                    , React.createElement('div', null, React.createElement('div', { className: "text-[10px] text-slate-400 font-bold uppercase"   ,}, "n"), React.createElement('div', { className: "font-mono text-sm font-bold"  ,}, vals.length))
+                  )
+                )
+              )
+            )
           );
-        })}
-      </div>
-      <div className="flex justify-between">
-        <Btn variant="ghost" onClick={() => setStep(2)}>← Volver</Btn>
-        <Btn onClick={() => { const g = runGUM(); if (!g) { alert('Mínimo 2 lecturas válidas'); return; } setStep(4); }} icon="🧮">Calcular GUM →</Btn>
-      </div>
-    </div>
-  )}
+        })
+      )
+      , React.createElement('div', { className: "flex justify-between" ,}
+        , React.createElement(Btn, { variant: "ghost", onClick: () => setStep(2),}, "← Volver" )
+        , React.createElement(Btn, { onClick: () => { const g = runGUM(); if (!g) { alert('Mínimo 2 lecturas válidas'); return; } setStep(4); }, icon: "🧮",}, "Calcular GUM →"  )
+      )
+    )
+  )
 
-  {/* ── STEP 4: RESULTADO GUM ── */}
-  {step === 4 && s.gum && (() => {
+  /* ── STEP 4: RESULTADO GUM ── */
+  , step === 4 && s.gum && (() => {
     const g = s.gum;
     let conforms = null;
     if (s.tolMin !== '' && s.tolMax !== '') {
@@ -1083,86 +1081,86 @@ className={`flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full tex
       conforms = full ? 'ok' : inT ? 'warn' : 'err';
     }
     return (
-      <div className="space-y-4">
-        <div className="bg-gradient-to-br from-blue-50 to-sky-50 border border-blue-100 rounded-2xl p-6 text-center">
-          <div className="text-xs text-slate-400 font-mono mb-2">E = M − W·(1+1/sinα/2) + p/(2·tanα/2) · EURAMET cg-10</div>
-          <div className="text-3xl font-bold font-mono text-blue-700">
-            {g.mean.toFixed(5)} <span className="text-amber-500">±</span> <span className="text-amber-600">{fmt(g.U)}</span>
-            <span className="text-slate-400 text-lg font-normal ml-2">mm</span>
-          </div>
-          <div className="text-xs text-slate-400 mt-2">k = {g.k.toFixed(3)} · p ≈ 95.45% · νeff = {g.nuEff < 1e9 ? g.nuEff.toFixed(1) : '∞'}</div>
-          {conforms && (
-            <div className={`mt-3 inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-bold border ${conforms === 'ok' ? 'bg-emerald-100 text-emerald-700 border-emerald-200' : conforms === 'warn' ? 'bg-amber-100 text-amber-700 border-amber-200' : 'bg-red-100 text-red-700 border-red-200'}`}>
-              {conforms === 'ok' ? '✅ CONFORME' : conforms === 'warn' ? '⚠️ INDETERMINADO' : '❌ NO CONFORME'}
-            </div>
-          )}
-        </div>
-        {/* Budget */}
-        <Card>
-          <Hdg icon="📊" title="Presupuesto de incertidumbre — JCGM 100:2008" color="purple" />
-          <div className="overflow-x-auto">
-            <table className="w-full text-xs">
-              <thead><tr className="border-b border-slate-100">
-                {['Fuente','T.','u(xi) [mm]','Contribución'].map(h =>
-                  <th key={h} className="text-left text-[10px] font-bold text-slate-400 uppercase tracking-wider px-4 py-3">{h}</th>)}
-              </tr></thead>
-              <tbody>
-                {g.comps.map((c, i) => (
-                  <tr key={i} className="border-b border-slate-50">
-                    <td className="px-4 py-2.5 text-slate-700">{c.name}</td>
-                    <td className="px-4 py-2.5"><span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${c.type === 'A' ? 'bg-blue-100 text-blue-700' : 'bg-teal-100 text-teal-700'}`}>{c.type}</span></td>
-                    <td className="px-4 py-2.5 font-mono text-right">{fmt(c.u, 6)}</td>
-                    <td className="px-4 py-2.5 w-48">
-                      <div className="flex items-center gap-2">
-                        <div className="flex-1 h-1.5 bg-slate-100 rounded-full"><div className={`h-full rounded-full ${c.type === 'A' ? 'bg-blue-400' : 'bg-teal-400'}`} style={{ width: `${c.pct}%` }} /></div>
-                        <span className="w-8 text-right text-slate-500">{c.pct.toFixed(1)}%</span>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-              <tfoot>
-                <tr className="bg-blue-50 border-t-2 border-blue-200">
-                  <td colSpan={2} className="px-4 py-3 font-bold text-blue-800">U = {g.k.toFixed(3)} × uc</td>
-                  <td className="px-4 py-3 font-mono font-bold text-right text-blue-700">{fmt(g.U, 6)}</td>
-                  <td />
-                </tr>
-              </tfoot>
-            </table>
-          </div>
-        </Card>
-        {/* Signature */}
-        <Card>
-          <Hdg icon="✍️" title="Firma del técnico" color="slate" />
-          <div className="p-5 flex gap-4 items-start">
-            <div className="flex-1">
-              <p className="text-xs text-slate-500 mb-2">Dibuja tu firma en el recuadro con el ratón.</p>
-              <div className="border-2 border-dashed border-slate-200 rounded-xl overflow-hidden bg-white hover:border-blue-300 transition-colors cursor-crosshair">
-                <canvas ref={canvasRef} width={380} height={90} className="block w-full"
-                  onMouseDown={startDraw} onMouseMove={draw} onMouseUp={endDraw} onMouseLeave={endDraw} />
-              </div>
-              <button onClick={() => { const c = canvasRef.current; c.getContext('2d').clearRect(0, 0, c.width, c.height); sv('signature', ''); }} className="mt-1.5 text-xs text-slate-400 hover:text-red-500 transition-colors">× Borrar firma</button>
-            </div>
-            {s.signature && <img src={s.signature} alt="Firma" className="border border-slate-200 rounded-lg h-20 bg-white" />}
-          </div>
-        </Card>
-        <div className="flex justify-between">
-          <Btn variant="ghost" onClick={() => setStep(3)}>← Mediciones</Btn>
-          <div className="flex gap-2">
-            <Btn variant="ghost" onClick={() => setStep(5)}>Ver certificado →</Btn>
-            <Btn variant="success" onClick={() => doSave(s.gum)} icon="💾">Guardar y emitir</Btn>
-          </div>
-        </div>
-      </div>
+      React.createElement('div', { className: "space-y-4",}
+        , React.createElement('div', { className: "bg-gradient-to-br from-blue-50 to-sky-50 border border-blue-100 rounded-2xl p-6 text-center"       ,}
+          , React.createElement('div', { className: "text-xs text-slate-400 font-mono mb-2"   ,}, "E = M − W·(1+1/sinα/2) + p/(2·tanα/2) · EURAMET cg-10"         )
+          , React.createElement('div', { className: "text-3xl font-bold font-mono text-blue-700"   ,}
+            , g.mean.toFixed(5), " " , React.createElement('span', { className: "text-amber-500",}, "±"), " " , React.createElement('span', { className: "text-amber-600",}, fmt(g.U))
+            , React.createElement('span', { className: "text-slate-400 text-lg font-normal ml-2"   ,}, "mm")
+          )
+          , React.createElement('div', { className: "text-xs text-slate-400 mt-2"  ,}, "k = "  , g.k.toFixed(3), " · p ≈ 95.45% · νeff = "        , g.nuEff < 1e9 ? g.nuEff.toFixed(1) : '∞')
+          , conforms && (
+            React.createElement('div', { className: `mt-3 inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-bold border ${conforms === 'ok' ? 'bg-emerald-100 text-emerald-700 border-emerald-200' : conforms === 'warn' ? 'bg-amber-100 text-amber-700 border-amber-200' : 'bg-red-100 text-red-700 border-red-200'}`,}
+              , conforms === 'ok' ? '✅ CONFORME' : conforms === 'warn' ? '⚠️ INDETERMINADO' : '❌ NO CONFORME'
+            )
+          )
+        )
+        /* Budget */
+        , React.createElement(Card, null
+          , React.createElement(Hdg, { icon: "📊", title: "Presupuesto de incertidumbre — JCGM 100:2008"     , color: "purple",} )
+          , React.createElement('div', { className: "overflow-x-auto",}
+            , React.createElement('table', { className: "w-full text-xs" ,}
+              , React.createElement('thead', null, React.createElement('tr', { className: "border-b border-slate-100" ,}
+                , ['Fuente','T.','u(xi) [mm]','Contribución'].map(h =>
+                  React.createElement('th', { key: h, className: "text-left text-[10px] font-bold text-slate-400 uppercase tracking-wider px-4 py-3"       ,}, h))
+              ))
+              , React.createElement('tbody', null
+                , g.comps.map((c, i) => (
+                  React.createElement('tr', { key: i, className: "border-b border-slate-50" ,}
+                    , React.createElement('td', { className: "px-4 py-2.5 text-slate-700"  ,}, c.name)
+                    , React.createElement('td', { className: "px-4 py-2.5" ,}, React.createElement('span', { className: `text-[10px] font-bold px-2 py-0.5 rounded-full ${c.type === 'A' ? 'bg-blue-100 text-blue-700' : 'bg-teal-100 text-teal-700'}`,}, c.type))
+                    , React.createElement('td', { className: "px-4 py-2.5 font-mono text-right"   ,}, fmt(c.u, 6))
+                    , React.createElement('td', { className: "px-4 py-2.5 w-48"  ,}
+                      , React.createElement('div', { className: "flex items-center gap-2"  ,}
+                        , React.createElement('div', { className: "flex-1 h-1.5 bg-slate-100 rounded-full"   ,}, React.createElement('div', { className: `h-full rounded-full ${c.type === 'A' ? 'bg-blue-400' : 'bg-teal-400'}`, style: { width: `${c.pct}%` },} ))
+                        , React.createElement('span', { className: "w-8 text-right text-slate-500"  ,}, c.pct.toFixed(1), "%")
+                      )
+                    )
+                  )
+                ))
+              )
+              , React.createElement('tfoot', null
+                , React.createElement('tr', { className: "bg-blue-50 border-t-2 border-blue-200"  ,}
+                  , React.createElement('td', { colSpan: 2, className: "px-4 py-3 font-bold text-blue-800"   ,}, "U = "  , g.k.toFixed(3), " × uc"  )
+                  , React.createElement('td', { className: "px-4 py-3 font-mono font-bold text-right text-blue-700"     ,}, fmt(g.U, 6))
+                  , React.createElement('td', null )
+                )
+              )
+            )
+          )
+        )
+        /* Signature */
+        , React.createElement(Card, null
+          , React.createElement(Hdg, { icon: "✍️", title: "Firma del técnico"  , color: "slate",} )
+          , React.createElement('div', { className: "p-5 flex gap-4 items-start"   ,}
+            , React.createElement('div', { className: "flex-1",}
+              , React.createElement('p', { className: "text-xs text-slate-500 mb-2"  ,}, "Dibuja tu firma en el recuadro con el ratón."        )
+              , React.createElement('div', { className: "border-2 border-dashed border-slate-200 rounded-xl overflow-hidden bg-white hover:border-blue-300 transition-colors cursor-crosshair"        ,}
+                , React.createElement('canvas', { ref: canvasRef, width: 380, height: 90, className: "block w-full" ,
+                  onMouseDown: startDraw, onMouseMove: draw, onMouseUp: endDraw, onMouseLeave: endDraw,} )
+              )
+              , React.createElement('button', { onClick: () => { const c = canvasRef.current; c.getContext('2d').clearRect(0, 0, c.width, c.height); sv('signature', ''); }, className: "mt-1.5 text-xs text-slate-400 hover:text-red-500 transition-colors"    ,}, "× Borrar firma"  )
+            )
+            , s.signature && React.createElement('img', { src: s.signature, alt: "Firma", className: "border border-slate-200 rounded-lg h-20 bg-white"    ,} )
+          )
+        )
+        , React.createElement('div', { className: "flex justify-between" ,}
+          , React.createElement(Btn, { variant: "ghost", onClick: () => setStep(3),}, "← Mediciones" )
+          , React.createElement('div', { className: "flex gap-2" ,}
+            , React.createElement(Btn, { variant: "ghost", onClick: () => setStep(5),}, "Ver certificado →"  )
+            , React.createElement(Btn, { variant: "success", onClick: () => doSave(s.gum), icon: "💾",}, "Guardar y emitir"  )
+          )
+        )
+      )
     );
-  })()}
-  {step === 4 && !s.gum && (
-    <div className="p-8 text-center text-slate-400">Vuelve al paso de mediciones y pulsa "Calcular GUM".</div>
-  )}
+  })()
+  , step === 4 && !s.gum && (
+    React.createElement('div', { className: "p-8 text-center text-slate-400"  ,}, "Vuelve al paso de mediciones y pulsa \"Calcular GUM\"."        )
+  )
 
-  {/* ── STEP 5: CERT PREVIEW ── */}
-  {step === 5 && <CertPreview cal={{ ...s, techName: tech?.name || '—', threadName: thread?.name || '—' }} onBack={() => setStep(4)} />}
-</div>
+  /* ── STEP 5: CERT PREVIEW ── */
+  , step === 5 && React.createElement(CertPreview, { cal: { ...s, techName: _optionalChain([tech, 'optionalAccess', _48 => _48.name]) || '—', threadName: _optionalChain([thread, 'optionalAccess', _49 => _49.name]) || '—' }, onBack: () => setStep(4),} )
+)
 ```
 
 );
@@ -1173,22 +1171,22 @@ className={`flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full tex
 // ═══════════════════════════════════════════════════════════
 function CalView({ cal, onBack, onRecal }) {
 return (
-<div className="space-y-4">
-<div className="flex items-center gap-3">
-<button onClick={onBack} className="w-8 h-8 flex items-center justify-center rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-50 transition-colors">←</button>
-<div>
-<h2 className="font-bold text-slate-800">Calibración {cal.certNum}</h2>
-<div className="flex items-center gap-2 mt-0.5">
-<span className="text-xs text-slate-400">{cal.clientName} → {cal.equipRef} · {fmtDate(cal.date)}</span>
-<Badge color={cal.status === ‘ISSUED’ ? ‘green’ : ‘amber’}>{cal.status}</Badge>
-</div>
-</div>
-<div className="ml-auto flex gap-2">
-<Btn size="sm" variant="amber" onClick={onRecal} icon="🔄">Recalibrar</Btn>
-</div>
-</div>
-<CertPreview cal={cal} onBack={onBack} />
-</div>
+React.createElement(‘div’, { className: “space-y-4”,}
+, React.createElement(‘div’, { className: “flex items-center gap-3”  ,}
+, React.createElement(‘button’, { onClick: onBack, className: “w-8 h-8 flex items-center justify-center rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-50 transition-colors”          ,}, “←”)
+, React.createElement(‘div’, null
+, React.createElement(‘h2’, { className: “font-bold text-slate-800” ,}, “Calibración “ , cal.certNum)
+, React.createElement(‘div’, { className: “flex items-center gap-2 mt-0.5”   ,}
+, React.createElement(‘span’, { className: “text-xs text-slate-400” ,}, cal.clientName, “ → “  , cal.equipRef, “ · “  , fmtDate(cal.date))
+, React.createElement(Badge, { color: cal.status === ‘ISSUED’ ? ‘green’ : ‘amber’,}, cal.status)
+)
+)
+, React.createElement(‘div’, { className: “ml-auto flex gap-2”  ,}
+, React.createElement(Btn, { size: “sm”, variant: “amber”, onClick: onRecal, icon: “🔄”,}, “Recalibrar”)
+)
+)
+, React.createElement(CertPreview, { cal: cal, onBack: onBack,} )
+)
 );
 }
 
@@ -1198,131 +1196,130 @@ const machines = DB.get(‘machines’) || MACHINE_SEED;
 const machine = machines.find(m => m.id === cal.machineId);
 const cfg = DB.get(‘config’) || {};
 
-if (!g) return <div className="p-8 text-center text-slate-400">Sin datos de cálculo en esta calibración.</div>;
+if (!g) return React.createElement(‘div’, { className: “p-8 text-center text-slate-400”  ,}, “Sin datos de cálculo en esta calibración.”      );
 
 return (
-<div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-{/* accent stripe */}
-<div style={{ height: 4, background: ‘linear-gradient(90deg, #2563eb, #0d9488)’ }} />
-<div className="p-8 space-y-5">
-{/* header */}
-<div className="flex justify-between items-start border-b-2 border-slate-900 pb-5">
-<div className="flex items-center gap-4">
-{cfg.logoData && <img src={cfg.logoData} alt="Logo" className="h-12 object-contain" />}
-<div>
-<div className="font-black text-xl text-slate-900">{cal.labName || ‘Laboratorio de Metrología’}</div>
-<div className="text-xs text-slate-400 tracking-widest uppercase mt-0.5">Laboratorio Acreditado · ISO/IEC 17025:2017</div>
-</div>
-</div>
-<div className="text-right">
-<div className="bg-slate-900 text-white text-xs font-black px-3 py-1 rounded tracking-widest">ENAC</div>
-<div className="text-[10px] text-slate-400 mt-1.5">EURAMET cg-10 · JCGM 100:2008</div>
-</div>
-</div>
-<div className="text-center">
-<div className="font-black text-2xl tracking-widest uppercase">Certificado de Calibración</div>
-<div className="font-mono text-slate-500 mt-1">Nº {cal.certNum}</div>
-</div>
-{/* §1 */}
-<CertSection title="§1 Identificación">
-<KV label="Nº Certificado" value={cal.certNum} />
-<KV label="Fecha" value={fmtDate(cal.date)} />
-<KV label="Cliente" value={cal.clientName} />
-<KV label="Referencia equipo" value={cal.equipRef} />
-<KV label="Técnico" value={cal.techName} />
-</CertSection>
-{/* §2 */}
-<CertSection title="§2 Elemento calibrado">
-<KV label="Rosca" value={cal.threadName} />
-<KV label=“Dirección” value={cal.direction === ‘external’ ? ‘Tornillo (externo)’ : ‘Tuerca (interno)’} />
-<KV label=“Clase tolerancia” value={cal.tolClass || ‘—’} />
-<KV label=“Material” value={Object.keys(MATERIALS).find(k => MATERIALS[k].alpha === +cal.alpha_th) || ‘—’} />
-</CertSection>
-{/* §3 */}
-<CertSection title="§3 Instrumento">
-<KV label=“Banco” value={machine ? `${machine.brand} ${machine.model}${machine.sn ? ` · SN: ${machine.sn}` : ''}` : ‘—’} />
-<KV label=“U cal banco (k=2)” value={machine ? `${machine.uCal} mm` : ‘—’} />
-<KV label=“Hilo W” value={cal.wireDiam ? `${cal.wireDiam} mm · cert: ${cal.wireCert || '—'}` : ‘—’} />
-<KV label=“Temperatura” value={`${cal.temp} °C (ref. 20.0 °C — ISO 1:2016)`} />
-<KV label=“Humedad” value={`${cal.humidity || '—'} %`} />
-</CertSection>
-{/* §4 RESULT */}
-<CertSection title="§4 Resultado">
-<div className="col-span-2 bg-gradient-to-br from-blue-50 to-sky-50 border border-blue-200 rounded-xl p-5 text-center">
-<div className="text-xs text-slate-400 mb-2 font-mono">Diámetro de paso E</div>
-<div className="text-2xl font-black font-mono text-blue-800">E = ({g.mean.toFixed(5)} ± {fmt(g.U)}) mm</div>
-<div className="text-xs text-slate-400 mt-2">U = k·uc · k = {g.k.toFixed(3)} · p ≈ 95.45% · νeff = {g.nuEff < 1e9 ? g.nuEff.toFixed(1) : ‘∞’}</div>
-</div>
-<KV label="n lecturas" value={g.n} />
-<KV label=“Media Ē” value={`${g.mean.toFixed(7)} mm`} mono />
-<KV label=“Desviación estándar s” value={`${g.s.toExponential(3)} mm`} mono />
-<KV label=“Incertidumbre combinada uc” value={`${fmt(g.uc, 6)} mm`} mono />
-</CertSection>
-{/* §5 BUDGET */}
-<div>
-<div className="bg-slate-900 text-white text-[10px] font-black px-3 py-1.5 rounded-sm tracking-widest uppercase inline-block mb-3">§5 Presupuesto GUM — JCGM 100:2008</div>
-<table className="w-full text-xs border border-slate-200 rounded-lg overflow-hidden">
-<thead className="bg-slate-50">
-<tr>{[‘Fuente’,‘Tipo’,‘u(xi) mm’,’%’].map(h => <th key={h} className="px-4 py-2 text-left text-[10px] font-bold text-slate-500 uppercase tracking-wide">{h}</th>)}</tr>
-</thead>
-<tbody>
-{g.comps.map((c, i) => (
-<tr key={i} className="border-t border-slate-100">
-<td className="px-4 py-2 text-slate-700">{c.name}</td>
-<td className=“px-4 py-2 font-bold” style={{ color: c.type === ‘A’ ? ‘#1d4ed8’ : ‘#0d9488’ }}>{c.type}</td>
-<td className="px-4 py-2 font-mono text-right">{fmt(c.u, 6)}</td>
-<td className="px-4 py-2 text-right">{c.pct.toFixed(1)}%</td>
-</tr>
-))}
-<tr className="bg-blue-50 border-t-2 border-blue-200">
-<td colSpan={2} className="px-4 py-2 font-black text-blue-900">U = {g.k.toFixed(3)} × uc</td>
-<td className="px-4 py-2 font-mono font-black text-right text-blue-700">{fmt(g.U, 6)}</td>
-<td />
-</tr>
-</tbody>
-</table>
-</div>
-{/* §6 */}
-<CertSection title="§6 Trazabilidad">
-<p className="col-span-2 text-sm text-slate-600 leading-relaxed">Las mediciones son trazables a patrones nacionales del CEM (Centro Español de Metrología) mediante cadena documentada: BIPM → CEM → Laboratorio acreditado ENAC → Instrumento de medición.</p>
-<p className="col-span-2 text-sm text-slate-600">Método: EURAMET cg-10. Correcciones aplicadas: térmica (ISO 1:2016) + deformación elástica Hertz. Software: ThreadCal Pro v4.</p>
-</CertSection>
-{/* Signatures */}
-<div className="flex justify-between items-end pt-6 border-t border-slate-200">
-<div className="text-center">
-{cal.signature ? <img src={cal.signature} alt="Firma" className="h-14 mb-2 mx-auto" /> : <div className=“w-36 border-t border-slate-400 mb-2 mx-auto” style={{ marginTop: 40 }} />}
-<div className="font-bold text-sm text-slate-800">{cal.techName || ‘—’}</div>
-<div className="text-xs text-slate-400">Técnico de calibración</div>
-</div>
-<div className="text-center text-xs text-slate-400 space-y-0.5">
-<div className="font-mono">{cal.certNum}</div>
-<div>{fmtDate(cal.date)}</div>
-<div>ThreadCal Pro v4</div>
-<div className="text-[10px]">Válido sólo íntegramente</div>
-</div>
-<div className="text-center">
-<div className=“w-36 border-t border-slate-400 mb-2 mx-auto” style={{ marginTop: 40 }} />
-<div className="font-bold text-sm text-slate-800">Responsable Técnico</div>
-<div className="text-xs text-slate-400">Revisión y aprobación</div>
-</div>
-</div>
-</div>
-</div>
+React.createElement(‘div’, { className: “bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden”     ,}
+/* accent stripe */
+, React.createElement(‘div’, { style: { height: 4, background: ‘linear-gradient(90deg, #2563eb, #0d9488)’ },} )
+, React.createElement(‘div’, { className: “p-8 space-y-5” ,}
+/* header */
+, React.createElement(‘div’, { className: “flex justify-between items-start border-b-2 border-slate-900 pb-5”     ,}
+, React.createElement(‘div’, { className: “flex items-center gap-4”  ,}
+, cfg.logoData && React.createElement(‘img’, { src: cfg.logoData, alt: “Logo”, className: “h-12 object-contain” ,} )
+, React.createElement(‘div’, null
+, React.createElement(‘div’, { className: “font-black text-xl text-slate-900”  ,}, cal.labName || ‘Laboratorio de Metrología’)
+, React.createElement(‘div’, { className: “text-xs text-slate-400 tracking-widest uppercase mt-0.5”    ,}, “Laboratorio Acreditado · ISO/IEC 17025:2017”    )
+)
+)
+, React.createElement(‘div’, { className: “text-right”,}
+, React.createElement(‘div’, { className: “bg-slate-900 text-white text-xs font-black px-3 py-1 rounded tracking-widest”       ,}, “ENAC”)
+, React.createElement(‘div’, { className: “text-[10px] text-slate-400 mt-1.5”  ,}, “EURAMET cg-10 · JCGM 100:2008”    )
+)
+)
+, React.createElement(‘div’, { className: “text-center”,}
+, React.createElement(‘div’, { className: “font-black text-2xl tracking-widest uppercase”   ,}, “Certificado de Calibración”  )
+, React.createElement(‘div’, { className: “font-mono text-slate-500 mt-1”  ,}, “Nº “ , cal.certNum)
+)
+/* §1 */
+, React.createElement(CertSection, { title: “§1 Identificación” ,}
+, React.createElement(KV, { label: “Nº Certificado” , value: cal.certNum,} )
+, React.createElement(KV, { label: “Fecha”, value: fmtDate(cal.date),} )
+, React.createElement(KV, { label: “Cliente”, value: cal.clientName,} )
+, React.createElement(KV, { label: “Referencia equipo” , value: cal.equipRef,} )
+, React.createElement(KV, { label: “Técnico”, value: cal.techName,} )
+)
+/* §2 */
+, React.createElement(CertSection, { title: “§2 Elemento calibrado”  ,}
+, React.createElement(KV, { label: “Rosca”, value: cal.threadName,} )
+, React.createElement(KV, { label: “Dirección”, value: cal.direction === ‘external’ ? ‘Tornillo (externo)’ : ‘Tuerca (interno)’,} )
+, React.createElement(KV, { label: “Clase tolerancia” , value: cal.tolClass || ‘—’,} )
+, React.createElement(KV, { label: “Material”, value: Object.keys(MATERIALS).find(k => MATERIALS[k].alpha === +cal.alpha_th) || ‘—’,} )
+)
+/* §3 */
+, React.createElement(CertSection, { title: “§3 Instrumento” ,}
+, React.createElement(KV, { label: “Banco”, value: machine ? `${machine.brand} ${machine.model}${machine.sn ? ` · SN: ${machine.sn}` : ''}` : ‘—’,} )
+, React.createElement(KV, { label: “U cal banco (k=2)”   , value: machine ? `${machine.uCal} mm` : ‘—’,} )
+, React.createElement(KV, { label: “Hilo W” , value: cal.wireDiam ? `${cal.wireDiam} mm · cert: ${cal.wireCert || '—'}` : ‘—’,} )
+, React.createElement(KV, { label: “Temperatura”, value: `${cal.temp} °C (ref. 20.0 °C — ISO 1:2016)`,} )
+, React.createElement(KV, { label: “Humedad”, value: `${cal.humidity || '—'} %`,} )
+)
+/* §4 RESULT */
+, React.createElement(CertSection, { title: “§4 Resultado” ,}
+, React.createElement(‘div’, { className: “col-span-2 bg-gradient-to-br from-blue-50 to-sky-50 border border-blue-200 rounded-xl p-5 text-center”        ,}
+, React.createElement(‘div’, { className: “text-xs text-slate-400 mb-2 font-mono”   ,}, “Diámetro de paso E”   )
+, React.createElement(‘div’, { className: “text-2xl font-black font-mono text-blue-800”   ,}, “E = (”  , g.mean.toFixed(5), “ ± “  , fmt(g.U), “) mm” )
+, React.createElement(‘div’, { className: “text-xs text-slate-400 mt-2”  ,}, “U = k·uc · k = “      , g.k.toFixed(3), “ · p ≈ 95.45% · νeff = “        , g.nuEff < 1e9 ? g.nuEff.toFixed(1) : ‘∞’)
+)
+, React.createElement(KV, { label: “n lecturas” , value: g.n,} )
+, React.createElement(KV, { label: “Media Ē” , value: `${g.mean.toFixed(7)} mm`, mono: true,} )
+, React.createElement(KV, { label: “Desviación estándar s”  , value: `${g.s.toExponential(3)} mm`, mono: true,} )
+, React.createElement(KV, { label: “Incertidumbre combinada uc”  , value: `${fmt(g.uc, 6)} mm`, mono: true,} )
+)
+/* §5 BUDGET */
+, React.createElement(‘div’, null
+, React.createElement(‘div’, { className: “bg-slate-900 text-white text-[10px] font-black px-3 py-1.5 rounded-sm tracking-widest uppercase inline-block mb-3”          ,}, “§5 Presupuesto GUM — JCGM 100:2008”     )
+, React.createElement(‘table’, { className: “w-full text-xs border border-slate-200 rounded-lg overflow-hidden”     ,}
+, React.createElement(‘thead’, { className: “bg-slate-50”,}
+, React.createElement(‘tr’, null, [‘Fuente’,‘Tipo’,‘u(xi) mm’,’%’].map(h => React.createElement(‘th’, { key: h, className: “px-4 py-2 text-left text-[10px] font-bold text-slate-500 uppercase tracking-wide”       ,}, h)))
+)
+, React.createElement(‘tbody’, null
+, g.comps.map((c, i) => (
+React.createElement(‘tr’, { key: i, className: “border-t border-slate-100” ,}
+, React.createElement(‘td’, { className: “px-4 py-2 text-slate-700”  ,}, c.name)
+, React.createElement(‘td’, { className: “px-4 py-2 font-bold”  , style: { color: c.type === ‘A’ ? ‘#1d4ed8’ : ‘#0d9488’ },}, c.type)
+, React.createElement(‘td’, { className: “px-4 py-2 font-mono text-right”   ,}, fmt(c.u, 6))
+, React.createElement(‘td’, { className: “px-4 py-2 text-right”  ,}, c.pct.toFixed(1), “%”)
+)
+))
+, React.createElement(‘tr’, { className: “bg-blue-50 border-t-2 border-blue-200”  ,}
+, React.createElement(‘td’, { colSpan: 2, className: “px-4 py-2 font-black text-blue-900”   ,}, “U = “  , g.k.toFixed(3), “ × uc”  )
+, React.createElement(‘td’, { className: “px-4 py-2 font-mono font-black text-right text-blue-700”     ,}, fmt(g.U, 6))
+, React.createElement(‘td’, null )
+)
+)
+)
+)
+/* §6 */
+, React.createElement(CertSection, { title: “§6 Trazabilidad” ,}
+, React.createElement(‘p’, { className: “col-span-2 text-sm text-slate-600 leading-relaxed”   ,}, “Las mediciones son trazables a patrones nacionales del CEM (Centro Español de Metrología) mediante cadena documentada: BIPM → CEM → Laboratorio acreditado ENAC → Instrumento de medición.”                          )
+, React.createElement(‘p’, { className: “col-span-2 text-sm text-slate-600”  ,}, “Método: EURAMET cg-10. Correcciones aplicadas: térmica (ISO 1:2016) + deformación elástica Hertz. Software: ThreadCal Pro v4.”               )
+)
+/* Signatures */
+, React.createElement(‘div’, { className: “flex justify-between items-end pt-6 border-t border-slate-200”     ,}
+, React.createElement(‘div’, { className: “text-center”,}
+, cal.signature ? React.createElement(‘img’, { src: cal.signature, alt: “Firma”, className: “h-14 mb-2 mx-auto”  ,} ) : React.createElement(‘div’, { className: “w-36 border-t border-slate-400 mb-2 mx-auto”    , style: { marginTop: 40 },} )
+, React.createElement(‘div’, { className: “font-bold text-sm text-slate-800”  ,}, cal.techName || ‘—’)
+, React.createElement(‘div’, { className: “text-xs text-slate-400” ,}, “Técnico de calibración”  )
+)
+, React.createElement(‘div’, { className: “text-center text-xs text-slate-400 space-y-0.5”   ,}
+, React.createElement(‘div’, { className: “font-mono”,}, cal.certNum)
+, React.createElement(‘div’, null, fmtDate(cal.date))
+, React.createElement(‘div’, null, “ThreadCal Pro v4”  )
+, React.createElement(‘div’, { className: “text-[10px]”,}, “Válido sólo íntegramente”  )
+)
+, React.createElement(‘div’, { className: “text-center”,}
+, React.createElement(‘div’, { className: “w-36 border-t border-slate-400 mb-2 mx-auto”    , style: { marginTop: 40 },} )
+, React.createElement(‘div’, { className: “font-bold text-sm text-slate-800”  ,}, “Responsable Técnico” )
+, React.createElement(‘div’, { className: “text-xs text-slate-400” ,}, “Revisión y aprobación”  )
+)
+)
+)
+)
 );
 }
 
 const CertSection = ({ title, children }) => (
-
-  <div>
-    <div className="bg-slate-900 text-white text-[10px] font-black px-3 py-1.5 rounded-sm tracking-widest uppercase inline-block mb-3">{title}</div>
-    <div className="grid grid-cols-2 gap-x-8 gap-y-1.5">{children}</div>
-  </div>
+React.createElement(‘div’, null
+, React.createElement(‘div’, { className: “bg-slate-900 text-white text-[10px] font-black px-3 py-1.5 rounded-sm tracking-widest uppercase inline-block mb-3”          ,}, title)
+, React.createElement(‘div’, { className: “grid grid-cols-2 gap-x-8 gap-y-1.5”   ,}, children)
+)
 );
 const KV = ({ label, value, mono }) => (
-  <div className="flex gap-3 text-sm border-b border-slate-50 pb-1.5">
-    <span className="text-slate-400 w-44 flex-shrink-0">{label}:</span>
-    <span className={`font-semibold text-slate-800 ${mono ? 'font-mono text-xs' : ''}`}>{value || '—'}</span>
-  </div>
+React.createElement(‘div’, { className: “flex gap-3 text-sm border-b border-slate-50 pb-1.5”     ,}
+, React.createElement(‘span’, { className: “text-slate-400 w-44 flex-shrink-0”  ,}, label, “:”)
+, React.createElement(‘span’, { className: `font-semibold text-slate-800 ${mono ? 'font-mono text-xs' : ''}`,}, value || ‘—’)
+)
 );
 
 // ═══════════════════════════════════════════════════════════
@@ -1339,25 +1336,25 @@ const tabs = [
 { id:‘formulas’, l:‘Fórmulas’, icon:‘📐’ },
 ];
 return (
-<div className="space-y-4">
-<div><h2 className="font-bold text-slate-800 text-lg">Configuración</h2><p className="text-xs text-slate-400 mt-0.5">Bancos, técnicos, hilos, roscas y datos del laboratorio</p></div>
-<div className="flex gap-1.5 border-b border-slate-200 pb-0">
-{tabs.map(t => (
-<button key={t.id} onClick={() => setTab(t.id)}
-className={`flex items-center gap-1.5 px-4 py-2.5 text-sm font-semibold transition-all border-b-2 -mb-px ${tab === t.id ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-500 hover:text-slate-700'}`}>
-<span>{t.icon}</span>{t.l}
-</button>
-))}
-</div>
-<div className="pt-2">
-{tab === ‘lab’ && <LabConfig />}
-{tab === ‘machines’ && <MachinesConfig />}
-{tab === ‘techs’ && <TechsConfig />}
-{tab === ‘threads’ && <ThreadsConfig />}
-{tab === ‘wires’ && <WiresConfig />}
-{tab === ‘formulas’ && <FormulasInfo />}
-</div>
-</div>
+React.createElement(‘div’, { className: “space-y-4”,}
+, React.createElement(‘div’, null, React.createElement(‘h2’, { className: “font-bold text-slate-800 text-lg”  ,}, “Configuración”), React.createElement(‘p’, { className: “text-xs text-slate-400 mt-0.5”  ,}, “Bancos, técnicos, hilos, roscas y datos del laboratorio”       ))
+, React.createElement(‘div’, { className: “flex gap-1.5 border-b border-slate-200 pb-0”    ,}
+, tabs.map(t => (
+React.createElement(‘button’, { key: t.id, onClick: () => setTab(t.id),
+className: `flex items-center gap-1.5 px-4 py-2.5 text-sm font-semibold transition-all border-b-2 -mb-px ${tab === t.id ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-500 hover:text-slate-700'}`,}
+, React.createElement(‘span’, null, t.icon), t.l
+)
+))
+)
+, React.createElement(‘div’, { className: “pt-2”,}
+, tab === ‘lab’ && React.createElement(LabConfig, null )
+, tab === ‘machines’ && React.createElement(MachinesConfig, null )
+, tab === ‘techs’ && React.createElement(TechsConfig, null )
+, tab === ‘threads’ && React.createElement(ThreadsConfig, null )
+, tab === ‘wires’ && React.createElement(WiresConfig, null )
+, tab === ‘formulas’ && React.createElement(FormulasInfo, null )
+)
+)
 );
 }
 
@@ -1367,33 +1364,33 @@ const save = () => { DB.set(‘config’, cfg); alert(‘✅ Configuración guar
 const F = (k,v) => setCfg(c => ({…c,[k]:v}));
 const handleLogo = (e) => { const f=e.target.files[0]; if(!f) return; const r=new FileReader(); r.onload=ev=>F(‘logoData’,ev.target.result); r.readAsDataURL(f); };
 return (
-<div className="max-w-xl space-y-4">
-<Card>
-<Hdg icon="🏛️" title="Datos del laboratorio" sub="Aparecen en todos los certificados" />
-<div className="p-5 space-y-3">
-<Fld label="Nombre del laboratorio"><Inp value={cfg.labName} onChange={e=>F(‘labName’,e.target.value)} placeholder=“Laboratorio de Metrología Dimensional” /></Fld>
-<Fld label="Dirección"><Inp value={cfg.address} onChange={e=>F(‘address’,e.target.value)} /></Fld>
-<Fld label="Nº Acreditación ENAC"><Inp value={cfg.accred} onChange={e=>F(‘accred’,e.target.value)} placeholder=“ENAC-I-XXX/LE-XXX” /></Fld>
-</div>
-</Card>
-<Card>
-<Hdg icon="🖼️" title="Logo" sub="PNG, JPG o SVG — aparece en los certificados" color="teal" />
-<div className="p-5 space-y-3">
-<label className="flex items-center gap-3 p-4 border-2 border-dashed border-slate-200 rounded-xl cursor-pointer hover:border-blue-300 hover:bg-blue-50 transition-all">
-<span className="text-2xl">📁</span>
-<div><div className="font-semibold text-slate-700 text-sm">Cargar logo</div><div className="text-xs text-slate-400">PNG · JPG · SVG · máx. 2MB</div></div>
-<input type="file" accept="image/*" className="hidden" onChange={handleLogo} />
-</label>
-{cfg.logoData && (
-<div className="flex items-center gap-4">
-<img src={cfg.logoData} alt="Logo" className="h-14 object-contain border border-slate-200 rounded-lg p-2 bg-white" />
-<button onClick={() => F(‘logoData’,’’)} className=“text-xs text-red-500 hover:text-red-700”>× Eliminar logo</button>
-</div>
-)}
-</div>
-</Card>
-<div className="flex justify-end"><Btn onClick={save} icon="💾">Guardar configuración</Btn></div>
-</div>
+React.createElement(‘div’, { className: “max-w-xl space-y-4” ,}
+, React.createElement(Card, null
+, React.createElement(Hdg, { icon: “🏛️”, title: “Datos del laboratorio”  , sub: “Aparecen en todos los certificados”    ,} )
+, React.createElement(‘div’, { className: “p-5 space-y-3” ,}
+, React.createElement(Fld, { label: “Nombre del laboratorio”  ,}, React.createElement(Inp, { value: cfg.labName, onChange: e=>F(‘labName’,e.target.value), placeholder: “Laboratorio de Metrología Dimensional”   ,} ))
+, React.createElement(Fld, { label: “Dirección”,}, React.createElement(Inp, { value: cfg.address, onChange: e=>F(‘address’,e.target.value),} ))
+, React.createElement(Fld, { label: “Nº Acreditación ENAC”  ,}, React.createElement(Inp, { value: cfg.accred, onChange: e=>F(‘accred’,e.target.value), placeholder: “ENAC-I-XXX/LE-XXX”,} ))
+)
+)
+, React.createElement(Card, null
+, React.createElement(Hdg, { icon: “🖼️”, title: “Logo”, sub: “PNG, JPG o SVG — aparece en los certificados”        , color: “teal”,} )
+, React.createElement(‘div’, { className: “p-5 space-y-3” ,}
+, React.createElement(‘label’, { className: “flex items-center gap-3 p-4 border-2 border-dashed border-slate-200 rounded-xl cursor-pointer hover:border-blue-300 hover:bg-blue-50 transition-all”           ,}
+, React.createElement(‘span’, { className: “text-2xl”,}, “📁”)
+, React.createElement(‘div’, null, React.createElement(‘div’, { className: “font-semibold text-slate-700 text-sm”  ,}, “Cargar logo” ), React.createElement(‘div’, { className: “text-xs text-slate-400” ,}, “PNG · JPG · SVG · máx. 2MB”       ))
+, React.createElement(‘input’, { type: “file”, accept: “image/*”, className: “hidden”, onChange: handleLogo,} )
+)
+, cfg.logoData && (
+React.createElement(‘div’, { className: “flex items-center gap-4”  ,}
+, React.createElement(‘img’, { src: cfg.logoData, alt: “Logo”, className: “h-14 object-contain border border-slate-200 rounded-lg p-2 bg-white”      ,} )
+, React.createElement(‘button’, { onClick: () => F(‘logoData’,’’), className: “text-xs text-red-500 hover:text-red-700”  ,}, “× Eliminar logo”  )
+)
+)
+)
+)
+, React.createElement(‘div’, { className: “flex justify-end” ,}, React.createElement(Btn, { onClick: save, icon: “💾”,}, “Guardar configuración” ))
+)
 );
 }
 
@@ -1408,38 +1405,38 @@ const save = (m) => { DB.set(‘machines’, m); setMachines(m); };
 const F = (k,v) => setForm(f=>({…f,[k]:v}));
 const submit = () => { save(editing ? machines.map(m=>m.id===editing?form:m) : […machines,form]); setModal(false); };
 return (
-<div className="space-y-4">
-<div className="flex justify-between items-center">
-<div><h3 className="font-bold text-slate-800">Bancos de medición</h3><p className="text-xs text-slate-400">Máquinas reutilizables en calibraciones</p></div>
-<Btn onClick={()=>{setEditing(null);setForm({…blank,id:uid()});setModal(true);}} icon=“➕” size=“sm”>Nuevo banco</Btn>
-</div>
-<Card><Tbl cols={[{k:‘brand’,l:‘Marca’,bold:true},{k:‘model’,l:‘Modelo’,bold:true},{k:‘sn’,l:‘S/N’},{k:‘uCal’,l:‘U(k=2) mm’,mono:true},{k:‘force’,l:‘Fuerza’,mono:true},{k:‘cert’,l:‘Certificado’},{k:‘certExpiry’,l:‘Válido hasta’}]}
-rows={machines.map(m=>({…m,force:`${m.force} ${m.forceUnit}`}))}
-onEdit={row=>{const m=machines.find(x=>x.sn===row.sn&&x.model===row.model)||machines[0];setEditing(m.id);setForm({…m});setModal(true);}}
-onDel={row=>setDel(machines.find(x=>x.model===row.model))} empty=“Sin bancos registrados” /></Card>
-<Modal open={modal} onClose={()=>setModal(false)} title={editing?‘Editar banco’:‘Nuevo banco’} wide>
-<div className="grid grid-cols-2 gap-4">
-<Fld label="Marca"><Inp value={form.brand} onChange={e=>F(‘brand’,e.target.value)} /></Fld>
-<Fld label="Modelo"><Inp value={form.model} onChange={e=>F(‘model’,e.target.value)} /></Fld>
-<Fld label="Nº serie"><Inp value={form.sn} onChange={e=>F(‘sn’,e.target.value)} /></Fld>
-<Fld label="U cal (k=2)" unit="mm"><Inp type=“number” value={form.uCal} onChange={e=>F(‘uCal’,+e.target.value)} step=“0.00001” /></Fld>
-<Fld label="Resolución" unit="mm"><Inp type=“number” value={form.resolution} onChange={e=>F(‘resolution’,+e.target.value)} step=“0.00001” /></Fld>
-<div className="flex gap-2">
-<Fld label="Fuerza"><Inp type=“number” value={form.force} onChange={e=>F(‘force’,+e.target.value)} step=“0.01” /></Fld>
-<Fld label="Unidad"><Sel value={form.forceUnit} onChange={e=>F(‘forceUnit’,e.target.value)} className=”!w-20”><option>cN</option><option>N</option><option>daN</option></Sel></Fld>
-</div>
-<Fld label="Certificado"><Inp value={form.cert} onChange={e=>F(‘cert’,e.target.value)} /></Fld>
-<Fld label="Fecha cal."><Inp type=“date” value={form.certDate} onChange={e=>F(‘certDate’,e.target.value)} /></Fld>
-<Fld label="Válido hasta"><Inp type=“date” value={form.certExpiry} onChange={e=>F(‘certExpiry’,e.target.value)} /></Fld>
-<div className="col-span-2"><Fld label="Notas"><textarea className=“w-full text-sm px-3 py-2 rounded-lg border border-slate-200 bg-slate-50 focus:bg-white focus:border-blue-400 outline-none resize-none h-14” value={form.note} onChange={e=>F(‘note’,e.target.value)} /></Fld></div>
-</div>
-<div className="flex justify-end gap-2 mt-4 pt-4 border-t border-slate-100">
-<Btn variant=“ghost” onClick={()=>setModal(false)}>Cancelar</Btn>
-<Btn onClick={submit} icon="💾">{editing?‘Guardar’:‘Crear’}</Btn>
-</div>
-</Modal>
-<Confirm open={!!del} msg={`¿Eliminar banco "${del?.model}"?`} onOk={()=>{save(machines.filter(m=>m.id!==del.id));setDel(null);}} onCancel={()=>setDel(null)} />
-</div>
+React.createElement(‘div’, { className: “space-y-4”,}
+, React.createElement(‘div’, { className: “flex justify-between items-center”  ,}
+, React.createElement(‘div’, null, React.createElement(‘h3’, { className: “font-bold text-slate-800” ,}, “Bancos de medición”  ), React.createElement(‘p’, { className: “text-xs text-slate-400” ,}, “Máquinas reutilizables en calibraciones”   ))
+, React.createElement(Btn, { onClick: ()=>{setEditing(null);setForm({…blank,id:uid()});setModal(true);}, icon: “➕”, size: “sm”,}, “Nuevo banco” )
+)
+, React.createElement(Card, null, React.createElement(Tbl, { cols: [{k:‘brand’,l:‘Marca’,bold:true},{k:‘model’,l:‘Modelo’,bold:true},{k:‘sn’,l:‘S/N’},{k:‘uCal’,l:‘U(k=2) mm’,mono:true},{k:‘force’,l:‘Fuerza’,mono:true},{k:‘cert’,l:‘Certificado’},{k:‘certExpiry’,l:‘Válido hasta’}],
+rows: machines.map(m=>({…m,force:`${m.force} ${m.forceUnit}`})),
+onEdit: row=>{const m=machines.find(x=>x.sn===row.sn&&x.model===row.model)||machines[0];setEditing(m.id);setForm({…m});setModal(true);},
+onDel: row=>setDel(machines.find(x=>x.model===row.model)), empty: “Sin bancos registrados”  ,} ))
+, React.createElement(Modal, { open: modal, onClose: ()=>setModal(false), title: editing?‘Editar banco’:‘Nuevo banco’, wide: true,}
+, React.createElement(‘div’, { className: “grid grid-cols-2 gap-4”  ,}
+, React.createElement(Fld, { label: “Marca”,}, React.createElement(Inp, { value: form.brand, onChange: e=>F(‘brand’,e.target.value),} ))
+, React.createElement(Fld, { label: “Modelo”,}, React.createElement(Inp, { value: form.model, onChange: e=>F(‘model’,e.target.value),} ))
+, React.createElement(Fld, { label: “Nº serie” ,}, React.createElement(Inp, { value: form.sn, onChange: e=>F(‘sn’,e.target.value),} ))
+, React.createElement(Fld, { label: “U cal (k=2)”  , unit: “mm”,}, React.createElement(Inp, { type: “number”, value: form.uCal, onChange: e=>F(‘uCal’,+e.target.value), step: “0.00001”,} ))
+, React.createElement(Fld, { label: “Resolución”, unit: “mm”,}, React.createElement(Inp, { type: “number”, value: form.resolution, onChange: e=>F(‘resolution’,+e.target.value), step: “0.00001”,} ))
+, React.createElement(‘div’, { className: “flex gap-2” ,}
+, React.createElement(Fld, { label: “Fuerza”,}, React.createElement(Inp, { type: “number”, value: form.force, onChange: e=>F(‘force’,+e.target.value), step: “0.01”,} ))
+, React.createElement(Fld, { label: “Unidad”,}, React.createElement(Sel, { value: form.forceUnit, onChange: e=>F(‘forceUnit’,e.target.value), className: “!w-20”,}, React.createElement(‘option’, null, “cN”), React.createElement(‘option’, null, “N”), React.createElement(‘option’, null, “daN”)))
+)
+, React.createElement(Fld, { label: “Certificado”,}, React.createElement(Inp, { value: form.cert, onChange: e=>F(‘cert’,e.target.value),} ))
+, React.createElement(Fld, { label: “Fecha cal.” ,}, React.createElement(Inp, { type: “date”, value: form.certDate, onChange: e=>F(‘certDate’,e.target.value),} ))
+, React.createElement(Fld, { label: “Válido hasta” ,}, React.createElement(Inp, { type: “date”, value: form.certExpiry, onChange: e=>F(‘certExpiry’,e.target.value),} ))
+, React.createElement(‘div’, { className: “col-span-2”,}, React.createElement(Fld, { label: “Notas”,}, React.createElement(‘textarea’, { className: “w-full text-sm px-3 py-2 rounded-lg border border-slate-200 bg-slate-50 focus:bg-white focus:border-blue-400 outline-none resize-none h-14”            , value: form.note, onChange: e=>F(‘note’,e.target.value),} )))
+)
+, React.createElement(‘div’, { className: “flex justify-end gap-2 mt-4 pt-4 border-t border-slate-100”      ,}
+, React.createElement(Btn, { variant: “ghost”, onClick: ()=>setModal(false),}, “Cancelar”)
+, React.createElement(Btn, { onClick: submit, icon: “💾”,}, editing?‘Guardar’:‘Crear’)
+)
+)
+, React.createElement(Confirm, { open: !!del, msg: `¿Eliminar banco "${_optionalChain([del, 'optionalAccess', _50 => _50.model])}"?`, onOk: ()=>{save(machines.filter(m=>m.id!==del.id));setDel(null);}, onCancel: ()=>setDel(null),} )
+)
 );
 }
 
@@ -1454,28 +1451,28 @@ const save = (t) => { DB.set(‘techs’, t); setTechs(t); };
 const F = (k,v) => setForm(f=>({…f,[k]:v}));
 const submit = () => { save(editing ? techs.map(t=>t.id===editing?form:t) : […techs,form]); setModal(false); };
 return (
-<div className="space-y-4">
-<div className="flex justify-between items-center">
-<div><h3 className="font-bold text-slate-800">Técnicos</h3><p className="text-xs text-slate-400">Personal habilitado para calibraciones</p></div>
-<Btn onClick={()=>{setEditing(null);setForm({…blank,id:uid()});setModal(true);}} icon=“➕” size=“sm”>Nuevo técnico</Btn>
-</div>
-<Card><Tbl cols={[{k:‘code’,l:‘Código’,bold:true},{k:‘name’,l:‘Nombre’,bold:true},{k:‘role’,l:‘Rol’},{k:‘qual’,l:‘Cualificación’},{k:‘email’,l:‘Email’}]}
-rows={techs} onEdit={row=>{setEditing(row.id);setForm({…row});setModal(true);}} onDel={row=>setDel(row)} empty=“Sin técnicos” /></Card>
-<Modal open={modal} onClose={()=>setModal(false)} title={editing?‘Editar técnico’:‘Nuevo técnico’}>
-<div className="grid grid-cols-2 gap-4">
-<Fld label="Código"><Inp value={form.code} onChange={e=>F(‘code’,e.target.value)} placeholder=“OP-001” /></Fld>
-<Fld label="Nombre"><Inp value={form.name} onChange={e=>F(‘name’,e.target.value)} /></Fld>
-<div className="col-span-2"><Fld label="Rol"><Inp value={form.role} onChange={e=>F(‘role’,e.target.value)} /></Fld></div>
-<Fld label="Cualificación"><Inp value={form.qual} onChange={e=>F(‘qual’,e.target.value)} /></Fld>
-<Fld label="Email"><Inp type=“email” value={form.email} onChange={e=>F(‘email’,e.target.value)} /></Fld>
-</div>
-<div className="flex justify-end gap-2 mt-4 pt-4 border-t border-slate-100">
-<Btn variant=“ghost” onClick={()=>setModal(false)}>Cancelar</Btn>
-<Btn onClick={submit} icon="💾">{editing?‘Guardar’:‘Crear’}</Btn>
-</div>
-</Modal>
-<Confirm open={!!del} msg={`¿Eliminar técnico "${del?.name}"?`} onOk={()=>{save(techs.filter(t=>t.id!==del.id));setDel(null);}} onCancel={()=>setDel(null)} />
-</div>
+React.createElement(‘div’, { className: “space-y-4”,}
+, React.createElement(‘div’, { className: “flex justify-between items-center”  ,}
+, React.createElement(‘div’, null, React.createElement(‘h3’, { className: “font-bold text-slate-800” ,}, “Técnicos”), React.createElement(‘p’, { className: “text-xs text-slate-400” ,}, “Personal habilitado para calibraciones”   ))
+, React.createElement(Btn, { onClick: ()=>{setEditing(null);setForm({…blank,id:uid()});setModal(true);}, icon: “➕”, size: “sm”,}, “Nuevo técnico” )
+)
+, React.createElement(Card, null, React.createElement(Tbl, { cols: [{k:‘code’,l:‘Código’,bold:true},{k:‘name’,l:‘Nombre’,bold:true},{k:‘role’,l:‘Rol’},{k:‘qual’,l:‘Cualificación’},{k:‘email’,l:‘Email’}],
+rows: techs, onEdit: row=>{setEditing(row.id);setForm({…row});setModal(true);}, onDel: row=>setDel(row), empty: “Sin técnicos” ,} ))
+, React.createElement(Modal, { open: modal, onClose: ()=>setModal(false), title: editing?‘Editar técnico’:‘Nuevo técnico’,}
+, React.createElement(‘div’, { className: “grid grid-cols-2 gap-4”  ,}
+, React.createElement(Fld, { label: “Código”,}, React.createElement(Inp, { value: form.code, onChange: e=>F(‘code’,e.target.value), placeholder: “OP-001”,} ))
+, React.createElement(Fld, { label: “Nombre”,}, React.createElement(Inp, { value: form.name, onChange: e=>F(‘name’,e.target.value),} ))
+, React.createElement(‘div’, { className: “col-span-2”,}, React.createElement(Fld, { label: “Rol”,}, React.createElement(Inp, { value: form.role, onChange: e=>F(‘role’,e.target.value),} )))
+, React.createElement(Fld, { label: “Cualificación”,}, React.createElement(Inp, { value: form.qual, onChange: e=>F(‘qual’,e.target.value),} ))
+, React.createElement(Fld, { label: “Email”,}, React.createElement(Inp, { type: “email”, value: form.email, onChange: e=>F(‘email’,e.target.value),} ))
+)
+, React.createElement(‘div’, { className: “flex justify-end gap-2 mt-4 pt-4 border-t border-slate-100”      ,}
+, React.createElement(Btn, { variant: “ghost”, onClick: ()=>setModal(false),}, “Cancelar”)
+, React.createElement(Btn, { onClick: submit, icon: “💾”,}, editing?‘Guardar’:‘Crear’)
+)
+)
+, React.createElement(Confirm, { open: !!del, msg: `¿Eliminar técnico "${_optionalChain([del, 'optionalAccess', _51 => _51.name])}"?`, onOk: ()=>{save(techs.filter(t=>t.id!==del.id));setDel(null);}, onCancel: ()=>setDel(null),} )
+)
 );
 }
 
@@ -1498,47 +1495,47 @@ DB.set(‘customThreads’, upd); setCustomThreads(upd); setModal(false);
 };
 const stdColor = { M:‘blue’, UNC:‘teal’, UNF:‘teal’, BSW:‘amber’, BSF:‘amber’, Tr:‘purple’, ACME:‘red’, NPT:‘green’, BSPP:‘green’, BSPT:‘green’, CUSTOM:‘slate’ };
 return (
-<div className="space-y-4">
-<div className="flex items-center justify-between">
-<div><h3 className="font-bold text-slate-800">Base de datos de roscas</h3><p className="text-xs text-slate-400">{THREADS.length} roscas precargadas · {customThreads.length} personalizadas</p></div>
-<Btn onClick={()=>{setForm({…blank,id:uid()});setModal(true);}} icon=“➕” size=“sm”>Añadir rosca</Btn>
-</div>
-<div className="flex gap-3">
-<input className=“flex-1 text-sm px-3 py-2 rounded-lg border border-slate-200 bg-white focus:border-blue-400 outline-none” placeholder=“Buscar rosca…” value={filter} onChange={e=>setFilter(e.target.value)} />
-<Sel value={stdFilter} onChange={e=>setStdFilter(e.target.value)} className=“w-44”>
-<option value="">Todas las normas</option>
-{THREAD_STANDARDS.filter(s=>s.id!==‘CUSTOM’).map(s=><option key={s.id} value={s.id}>{s.label}</option>)}
-</Sel>
-</div>
-<Card>
-<Tbl cols={[
+React.createElement(‘div’, { className: “space-y-4”,}
+, React.createElement(‘div’, { className: “flex items-center justify-between”  ,}
+, React.createElement(‘div’, null, React.createElement(‘h3’, { className: “font-bold text-slate-800” ,}, “Base de datos de roscas”    ), React.createElement(‘p’, { className: “text-xs text-slate-400” ,}, THREADS.length, “ roscas precargadas · “    , customThreads.length, “ personalizadas” ))
+, React.createElement(Btn, { onClick: ()=>{setForm({…blank,id:uid()});setModal(true);}, icon: “➕”, size: “sm”,}, “Añadir rosca” )
+)
+, React.createElement(‘div’, { className: “flex gap-3” ,}
+, React.createElement(‘input’, { className: “flex-1 text-sm px-3 py-2 rounded-lg border border-slate-200 bg-white focus:border-blue-400 outline-none”         , placeholder: “Buscar rosca…” , value: filter, onChange: e=>setFilter(e.target.value),} )
+, React.createElement(Sel, { value: stdFilter, onChange: e=>setStdFilter(e.target.value), className: “w-44”,}
+, React.createElement(‘option’, { value: “”,}, “Todas las normas”  )
+, THREAD_STANDARDS.filter(s=>s.id!==‘CUSTOM’).map(s=>React.createElement(‘option’, { key: s.id, value: s.id,}, s.label))
+)
+)
+, React.createElement(Card, null
+, React.createElement(Tbl, { cols: [
 {k:‘stdB’,l:‘Norma’},{k:‘name’,l:‘Designación’,bold:true},
 {k:‘d’,l:‘D [mm]’,mono:true},{k:‘p’,l:‘p [mm]’,mono:true},{k:‘d2’,l:‘d2 [mm]’,mono:true},
 {k:‘alpha’,l:‘α [°]’,mono:true},{k:‘tolExt’,l:‘Tol.Ext’,mono:true},{k:‘tolInt’,l:‘Tol.Int’,mono:true},
-]} rows={filtered.map(t=>({
+], rows: filtered.map(t=>({
 …t,
-stdB: <Badge color={stdColor[t.std]||‘slate’}>{t.std}</Badge>,
+stdB: React.createElement(Badge, { color: stdColor[t.std]||‘slate’,}, t.std),
 d: (+t.d).toFixed(3), p: (+t.p).toFixed(3), d2: (+t.d2).toFixed(4),
 _raw: t,
-}))} empty=“Sin resultados” />
-</Card>
-<Modal open={modal} onClose={()=>setModal(false)} title=“Nueva rosca personalizada”>
-<div className="grid grid-cols-2 gap-4">
-<Fld label="Designación"><Inp value={form.name} onChange={e=>F(‘name’,e.target.value)} placeholder=“M14×1.5-CUSTOM” /></Fld>
-<Fld label="Norma"><Inp value={form.norm} onChange={e=>F(‘norm’,e.target.value)} placeholder=“ISO / DIN / ASME…” /></Fld>
-<Fld label="D nominal" unit="mm"><Inp type=“number” value={form.d} onChange={e=>F(‘d’,+e.target.value)} step=“0.001” /></Fld>
-<Fld label="Paso p" unit="mm"><Inp type=“number” value={form.p} onChange={e=>F(‘p’,+e.target.value)} step=“0.001” /></Fld>
-<Fld label="d2 (paso)" unit="mm"><Inp type=“number” value={form.d2} onChange={e=>F(‘d2’,+e.target.value)} step=“0.0001” /></Fld>
-<Fld label="d1 (menor)" unit="mm"><Inp type=“number” value={form.d1} onChange={e=>F(‘d1’,+e.target.value)} step=“0.0001” /></Fld>
-<Fld label="Ángulo α" unit="°"><Inp type=“number” value={form.alpha} onChange={e=>F(‘alpha’,+e.target.value)} step=“0.5” /></Fld>
-<Fld label="Tolerancia ext."><Inp value={form.tolExt} onChange={e=>F(‘tolExt’,e.target.value)} /></Fld>
-</div>
-<div className="flex justify-end gap-2 mt-4 pt-4 border-t border-slate-100">
-<Btn variant=“ghost” onClick={()=>setModal(false)}>Cancelar</Btn>
-<Btn onClick={submit} icon="💾">Añadir rosca</Btn>
-</div>
-</Modal>
-</div>
+})), empty: “Sin resultados” ,} )
+)
+, React.createElement(Modal, { open: modal, onClose: ()=>setModal(false), title: “Nueva rosca personalizada”  ,}
+, React.createElement(‘div’, { className: “grid grid-cols-2 gap-4”  ,}
+, React.createElement(Fld, { label: “Designación”,}, React.createElement(Inp, { value: form.name, onChange: e=>F(‘name’,e.target.value), placeholder: “M14×1.5-CUSTOM”,} ))
+, React.createElement(Fld, { label: “Norma”,}, React.createElement(Inp, { value: form.norm, onChange: e=>F(‘norm’,e.target.value), placeholder: “ISO / DIN / ASME…”    ,} ))
+, React.createElement(Fld, { label: “D nominal” , unit: “mm”,}, React.createElement(Inp, { type: “number”, value: form.d, onChange: e=>F(‘d’,+e.target.value), step: “0.001”,} ))
+, React.createElement(Fld, { label: “Paso p” , unit: “mm”,}, React.createElement(Inp, { type: “number”, value: form.p, onChange: e=>F(‘p’,+e.target.value), step: “0.001”,} ))
+, React.createElement(Fld, { label: “d2 (paso)” , unit: “mm”,}, React.createElement(Inp, { type: “number”, value: form.d2, onChange: e=>F(‘d2’,+e.target.value), step: “0.0001”,} ))
+, React.createElement(Fld, { label: “d1 (menor)” , unit: “mm”,}, React.createElement(Inp, { type: “number”, value: form.d1, onChange: e=>F(‘d1’,+e.target.value), step: “0.0001”,} ))
+, React.createElement(Fld, { label: “Ángulo α” , unit: “°”,}, React.createElement(Inp, { type: “number”, value: form.alpha, onChange: e=>F(‘alpha’,+e.target.value), step: “0.5”,} ))
+, React.createElement(Fld, { label: “Tolerancia ext.” ,}, React.createElement(Inp, { value: form.tolExt, onChange: e=>F(‘tolExt’,e.target.value),} ))
+)
+, React.createElement(‘div’, { className: “flex justify-end gap-2 mt-4 pt-4 border-t border-slate-100”      ,}
+, React.createElement(Btn, { variant: “ghost”, onClick: ()=>setModal(false),}, “Cancelar”)
+, React.createElement(Btn, { onClick: submit, icon: “💾”,}, “Añadir rosca” )
+)
+)
+)
 );
 }
 
@@ -1556,38 +1553,38 @@ const upd = editing ? userWires.map(w=>w.id===editing?form:w) : […userWires,fo
 save(upd); setModal(false);
 };
 return (
-<div className="space-y-4">
-<div className="flex items-center justify-between">
-<div><h3 className="font-bold text-slate-800">Hilos de medición</h3><p className="text-xs text-slate-400">{WIRES.length} hilos ISO estándar precargados · {userWires.length} personalizados</p></div>
-<Btn onClick={()=>{setEditing(null);setForm({…blank,id:uid()});setModal(true);}} icon=“➕” size=“sm”>Añadir hilo</Btn>
-</div>
-<Card>
-<Tbl cols={[
+React.createElement(‘div’, { className: “space-y-4”,}
+, React.createElement(‘div’, { className: “flex items-center justify-between”  ,}
+, React.createElement(‘div’, null, React.createElement(‘h3’, { className: “font-bold text-slate-800” ,}, “Hilos de medición”  ), React.createElement(‘p’, { className: “text-xs text-slate-400” ,}, WIRES.length, “ hilos ISO estándar precargados · “      , userWires.length, “ personalizados” ))
+, React.createElement(Btn, { onClick: ()=>{setEditing(null);setForm({…blank,id:uid()});setModal(true);}, icon: “➕”, size: “sm”,}, “Añadir hilo” )
+)
+, React.createElement(Card, null
+, React.createElement(Tbl, { cols: [
 {k:‘code’,l:‘Código’,bold:true},{k:‘diam’,l:‘W [mm]’,mono:true},
 {k:‘uW’,l:‘u(W) k=1’,mono:true},{k:‘cert’,l:‘Certificado’},
 {k:‘pMin’,l:‘p mín’,mono:true},{k:‘pMax’,l:‘p máx’,mono:true},{k:‘note’,l:‘Aplicación’},
-]} rows={allWires.map(w=>({…w,diam:w.diam.toFixed(5)}))}
-onEdit={row=>{const w=userWires.find(x=>x.code===row.code);if(w){setEditing(w.id);setForm({…w});setModal(true);}}}
-onDel={row=>{const w=userWires.find(x=>x.code===row.code);if(w)save(userWires.filter(x=>x.id!==w.id));}}
-empty=“Sin hilos” />
-</Card>
-<Modal open={modal} onClose={()=>setModal(false)} title={editing?‘Editar hilo’:‘Nuevo hilo’} wide>
-<div className="grid grid-cols-3 gap-4">
-<Fld label="Código"><Inp value={form.code} onChange={e=>F(‘code’,e.target.value)} placeholder=“W-0.866” /></Fld>
-<Fld label="Diámetro W" unit="mm"><Inp type=“number” value={form.diam} onChange={e=>F(‘diam’,+e.target.value)} step=“0.00001” /></Fld>
-<Fld label="u(W) k=1" unit="mm"><Inp type=“number” value={form.uW} onChange={e=>F(‘uW’,+e.target.value)} step=“0.00001” /></Fld>
-<Fld label="Certificado"><Inp value={form.cert} onChange={e=>F(‘cert’,e.target.value)} /></Fld>
-<Fld label="Válido hasta"><Inp type=“date” value={form.certExpiry} onChange={e=>F(‘certExpiry’,e.target.value)} /></Fld>
-<Fld label="p mín" unit="mm"><Inp type=“number” value={form.pMin} onChange={e=>F(‘pMin’,+e.target.value)} step=“0.01” /></Fld>
-<Fld label="p máx" unit="mm"><Inp type=“number” value={form.pMax} onChange={e=>F(‘pMax’,+e.target.value)} step=“0.01” /></Fld>
-<div className="col-span-3"><Fld label="Nota / aplicación"><Inp value={form.note} onChange={e=>F(‘note’,e.target.value)} /></Fld></div>
-</div>
-<div className="flex justify-end gap-2 mt-4 pt-4 border-t border-slate-100">
-<Btn variant=“ghost” onClick={()=>setModal(false)}>Cancelar</Btn>
-<Btn onClick={submit} icon="💾">{editing?‘Guardar’:‘Añadir hilo’}</Btn>
-</div>
-</Modal>
-</div>
+], rows: allWires.map(w=>({…w,diam:w.diam.toFixed(5)})),
+onEdit: row=>{const w=userWires.find(x=>x.code===row.code);if(w){setEditing(w.id);setForm({…w});setModal(true);}},
+onDel: row=>{const w=userWires.find(x=>x.code===row.code);if(w)save(userWires.filter(x=>x.id!==w.id));},
+empty: “Sin hilos” ,} )
+)
+, React.createElement(Modal, { open: modal, onClose: ()=>setModal(false), title: editing?‘Editar hilo’:‘Nuevo hilo’, wide: true,}
+, React.createElement(‘div’, { className: “grid grid-cols-3 gap-4”  ,}
+, React.createElement(Fld, { label: “Código”,}, React.createElement(Inp, { value: form.code, onChange: e=>F(‘code’,e.target.value), placeholder: “W-0.866”,} ))
+, React.createElement(Fld, { label: “Diámetro W” , unit: “mm”,}, React.createElement(Inp, { type: “number”, value: form.diam, onChange: e=>F(‘diam’,+e.target.value), step: “0.00001”,} ))
+, React.createElement(Fld, { label: “u(W) k=1” , unit: “mm”,}, React.createElement(Inp, { type: “number”, value: form.uW, onChange: e=>F(‘uW’,+e.target.value), step: “0.00001”,} ))
+, React.createElement(Fld, { label: “Certificado”,}, React.createElement(Inp, { value: form.cert, onChange: e=>F(‘cert’,e.target.value),} ))
+, React.createElement(Fld, { label: “Válido hasta” ,}, React.createElement(Inp, { type: “date”, value: form.certExpiry, onChange: e=>F(‘certExpiry’,e.target.value),} ))
+, React.createElement(Fld, { label: “p mín” , unit: “mm”,}, React.createElement(Inp, { type: “number”, value: form.pMin, onChange: e=>F(‘pMin’,+e.target.value), step: “0.01”,} ))
+, React.createElement(Fld, { label: “p máx” , unit: “mm”,}, React.createElement(Inp, { type: “number”, value: form.pMax, onChange: e=>F(‘pMax’,+e.target.value), step: “0.01”,} ))
+, React.createElement(‘div’, { className: “col-span-3”,}, React.createElement(Fld, { label: “Nota / aplicación”  ,}, React.createElement(Inp, { value: form.note, onChange: e=>F(‘note’,e.target.value),} )))
+)
+, React.createElement(‘div’, { className: “flex justify-end gap-2 mt-4 pt-4 border-t border-slate-100”      ,}
+, React.createElement(Btn, { variant: “ghost”, onClick: ()=>setModal(false),}, “Cancelar”)
+, React.createElement(Btn, { onClick: submit, icon: “💾”,}, editing?‘Guardar’:‘Añadir hilo’)
+)
+)
+)
 );
 }
 
@@ -1625,26 +1622,26 @@ const sections = [
 ]},
 ];
 return (
-<div className="space-y-4 max-w-3xl">
-<div className="bg-emerald-50 border border-emerald-100 rounded-xl p-4 text-sm text-emerald-800">
-<strong>Conformidad normativa:</strong> EURAMET cg-10 · JCGM 100:2008 (GUM) · ISO 1:2016 · ISO/IEC 17025:2017 · JCGM 106:2012
-</div>
-{sections.map(sec => (
-<Card key={sec.title}>
-<Hdg icon="📐" title={sec.title} />
-<div className="divide-y divide-slate-50">
-{sec.items.map((item, i) => (
-<div key={i} className="p-4">
-<div className=“font-mono text-sm rounded-lg px-4 py-3 mb-2 overflow-x-auto whitespace-nowrap” style={{ background:’#0f172a’, color:’#34d399’ }}>
-{item.f}
-</div>
-{item.d && <p className="text-xs text-slate-500">{item.d}</p>}
-</div>
-))}
-</div>
-</Card>
-))}
-</div>
+React.createElement(‘div’, { className: “space-y-4 max-w-3xl” ,}
+, React.createElement(‘div’, { className: “bg-emerald-50 border border-emerald-100 rounded-xl p-4 text-sm text-emerald-800”      ,}
+, React.createElement(‘strong’, null, “Conformidad normativa:” ), “ EURAMET cg-10 · JCGM 100:2008 (GUM) · ISO 1:2016 · ISO/IEC 17025:2017 · JCGM 106:2012”
+)
+, sections.map(sec => (
+React.createElement(Card, { key: sec.title,}
+, React.createElement(Hdg, { icon: “📐”, title: sec.title,} )
+, React.createElement(‘div’, { className: “divide-y divide-slate-50” ,}
+, sec.items.map((item, i) => (
+React.createElement(‘div’, { key: i, className: “p-4”,}
+, React.createElement(‘div’, { className: “font-mono text-sm rounded-lg px-4 py-3 mb-2 overflow-x-auto whitespace-nowrap”       , style: { background:’#0f172a’, color:’#34d399’ },}
+, item.f
+)
+, item.d && React.createElement(‘p’, { className: “text-xs text-slate-500” ,}, item.d)
+)
+))
+)
+)
+))
+)
 );
 }
 
@@ -1661,63 +1658,65 @@ const [section, setSection] = useState(‘clients’);
 const cfg = DB.get(‘config’) || {};
 
 return (
-<div className=“min-h-screen bg-slate-50 flex” style={{ fontFamily: “‘system-ui’, sans-serif” }}>
-{/* SIDEBAR */}
-<aside className="w-52 bg-white border-r border-slate-200 flex flex-col flex-shrink-0 shadow-sm">
-{/* Brand */}
-<div className="px-4 py-5 border-b border-slate-100">
-<div className="flex items-center gap-2.5">
-{cfg.logoData
-? <img src={cfg.logoData} alt="Logo" className="h-8 w-8 object-contain rounded-lg" />
-: <div className=“w-9 h-9 rounded-xl flex items-center justify-center text-white font-black text-sm shadow-sm” style={{ background: ‘linear-gradient(135deg,#2563eb,#0d9488)’ }}>TC</div>
-}
-<div>
-<div className="font-black text-slate-900 text-sm tracking-tight">ThreadCal</div>
-<div className="font-black text-blue-600 text-sm tracking-tight">Pro v4</div>
-</div>
-</div>
-<div className="flex gap-1 mt-2.5 flex-wrap">
-{[‘ISO 17025’,‘EURAMET’,‘GUM’].map(b => (
-<span key={b} className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-blue-50 text-blue-600">{b}</span>
-))}
-</div>
-</div>
-{/* Nav */}
-<nav className="flex-1 py-3 px-2 space-y-0.5">
-{NAV.map(n => (
-<button key={n.id} onClick={() => setSection(n.id)}
-className={`w-full text-left flex items-start gap-2.5 px-3 py-3 rounded-xl transition-all ${section === n.id ? 'bg-blue-50 text-blue-700' : 'text-slate-600 hover:bg-slate-50'}`}>
-<span className="text-lg flex-shrink-0 mt-0.5">{n.icon}</span>
-<div>
-<div className={`text-sm font-bold leading-tight ${section === n.id ? 'text-blue-700' : 'text-slate-700'}`}>{n.label}</div>
-<div className="text-[10px] text-slate-400 mt-0.5 leading-tight">{n.sub}</div>
-</div>
-</button>
-))}
-</nav>
-<div className="px-4 py-3 border-t border-slate-100">
-<div className="text-[10px] text-slate-400 leading-relaxed">
-Datos en memoria de sesión<br />
-<span className="text-amber-500 font-semibold">⚡ Modo demo</span>
-</div>
-</div>
-</aside>
+React.createElement(‘div’, { className: “min-h-screen bg-slate-50 flex”  , style: { fontFamily: “‘system-ui’, sans-serif” },}
+/* SIDEBAR */
+, React.createElement(‘aside’, { className: “w-52 bg-white border-r border-slate-200 flex flex-col flex-shrink-0 shadow-sm”       ,}
+/* Brand */
+, React.createElement(‘div’, { className: “px-4 py-5 border-b border-slate-100”   ,}
+, React.createElement(‘div’, { className: “flex items-center gap-2.5”  ,}
+, cfg.logoData
+? React.createElement(‘img’, { src: cfg.logoData, alt: “Logo”, className: “h-8 w-8 object-contain rounded-lg”   ,} )
+: React.createElement(‘div’, { className: “w-9 h-9 rounded-xl flex items-center justify-center text-white font-black text-sm shadow-sm”         , style: { background: ‘linear-gradient(135deg,#2563eb,#0d9488)’ },}, “TC”)
 
 ```
-  {/* MAIN */}
-  <main className="flex-1 overflow-y-auto min-h-screen">
-    <div className="max-w-6xl mx-auto px-6 py-6">
-      {section === 'clients' && <ClientsSection />}
-      {section === 'config' && <ConfigSection />}
-    </div>
-  </main>
-</div>
+        , React.createElement('div', null
+          , React.createElement('div', { className: "font-black text-slate-900 text-sm tracking-tight"   ,}, "ThreadCal")
+          , React.createElement('div', { className: "font-black text-blue-600 text-sm tracking-tight"   ,}, "Pro v4" )
+        )
+      )
+      , React.createElement('div', { className: "flex gap-1 mt-2.5 flex-wrap"   ,}
+        , ['ISO 17025','EURAMET','GUM'].map(b => (
+          React.createElement('span', { key: b, className: "text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-blue-50 text-blue-600"      ,}, b)
+        ))
+      )
+    )
+    /* Nav */
+    , React.createElement('nav', { className: "flex-1 py-3 px-2 space-y-0.5"   ,}
+      , NAV.map(n => (
+        React.createElement('button', { key: n.id, onClick: () => setSection(n.id),
+          className: `w-full text-left flex items-start gap-2.5 px-3 py-3 rounded-xl transition-all ${section === n.id ? 'bg-blue-50 text-blue-700' : 'text-slate-600 hover:bg-slate-50'}`,}
+          , React.createElement('span', { className: "text-lg flex-shrink-0 mt-0.5"  ,}, n.icon)
+          , React.createElement('div', null
+            , React.createElement('div', { className: `text-sm font-bold leading-tight ${section === n.id ? 'text-blue-700' : 'text-slate-700'}`,}, n.label)
+            , React.createElement('div', { className: "text-[10px] text-slate-400 mt-0.5 leading-tight"   ,}, n.sub)
+          )
+        )
+      ))
+    )
+    , React.createElement('div', { className: "px-4 py-3 border-t border-slate-100"   ,}
+      , React.createElement('div', { className: "text-[10px] text-slate-400 leading-relaxed"  ,}, "Datos guardados localmente"
+            , React.createElement('br', null )
+        , React.createElement('span', { className: "text-amber-500 font-semibold" ,}, "● Persistencia activa"  )
+      )
+    )
+  )
+
+  /* MAIN */
+  , React.createElement('main', { className: "flex-1 overflow-y-auto min-h-screen"  ,}
+    , React.createElement('div', { className: "max-w-6xl mx-auto px-6 py-6"   ,}
+      , section === 'clients' && React.createElement(ClientsSection, null )
+      , section === 'config' && React.createElement(ConfigSection, null )
+    )
+  )
+)
 ```
 
 );
 }
 
-ReactDOM.createRoot(document.getElementById(“root”)).render(React.createElement(AppMain));
+// Mount
+const _root = ReactDOM.createRoot(document.getElementById(‘root’));
+_root.render(React.createElement(AppMain));
 </script>
 
 </body>
