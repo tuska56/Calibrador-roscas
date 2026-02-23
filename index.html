@@ -262,7 +262,7 @@ return p / (2 * Math.cos((alpha / 2) * Math.PI / 180));
 }
 
 function calcGUM(r0, r90, geo, ucal, res, uWire, uForce, uTemp, uAngle, nomD) {
-const all = […r0, …r90];
+const all = [...r0, ...r90];
 if (all.length < 2) return null;
 const n = all.length;
 const mean = all.reduce((a, b) => a + b, 0) / n;
@@ -329,11 +329,11 @@ className: `inline-flex items-center font-semibold rounded-lg transition-all ${C
 };
 
 const Inp = (props) => (
-React.createElement('input', { …props, className: `w-full text-sm px-3 py-2 rounded-lg border border-slate-200 bg-slate-50 focus:bg-white focus:border-blue-400 focus:ring-2 focus:ring-blue-100 outline-none transition-all font-mono placeholder:font-sans placeholder:text-slate-300 ${props.readOnly ? 'text-slate-400 cursor-default' : ''} ${props.className || ''}`,} )
+React.createElement('input', { ...props, className: `w-full text-sm px-3 py-2 rounded-lg border border-slate-200 bg-slate-50 focus:bg-white focus:border-blue-400 focus:ring-2 focus:ring-blue-100 outline-none transition-all font-mono placeholder:font-sans placeholder:text-slate-300 ${props.readOnly ? 'text-slate-400 cursor-default' : ''} ${props.className || ''}`,} )
 );
 
-const Sel = ({ children, …props }) => (
-React.createElement('select', { …props, className: `w-full text-sm px-3 py-2 rounded-lg border border-slate-200 bg-slate-50 focus:bg-white focus:border-blue-400 focus:ring-2 focus:ring-blue-100 outline-none transition-all cursor-pointer ${props.className || ''}`,}
+const Sel = ({ children, ...props }) => (
+React.createElement('select', { ...props, className: `w-full text-sm px-3 py-2 rounded-lg border border-slate-200 bg-slate-50 focus:bg-white focus:border-blue-400 focus:ring-2 focus:ring-blue-100 outline-none transition-all cursor-pointer ${props.className || ''}`,}
 , children
 )
 );
@@ -459,20 +459,20 @@ const [cForm, setCForm] = useState(blankC);
 const [eForm, setEForm] = useState(blankE);
 
 const saveClients = (c) => { DB.set('clients', c); setClients(c); };
-const FC = (k, v) => setCForm(f => ({ …f, [k]: v }));
-const FE = (k, v) => setEForm(f => ({ …f, [k]: v }));
+const FC = (k, v) => setCForm(f => ({ ...f, [k]: v }));
+const FE = (k, v) => setEForm(f => ({ ...f, [k]: v }));
 
 const submitC = () => {
-const upd = editingC ? clients.map(c => c.id === editingC ? { …cForm, equipments: c.equipments } : c) : […clients, { …cForm, equipments: [] }];
+const upd = editingC ? clients.map(c => c.id === editingC ? { ...cForm, equipments: c.equipments } : c) : [...clients, { ...cForm, equipments: [] }];
 saveClients(upd); setCModal(false);
 if (_optionalChain([activeClient, 'optionalAccess', _15 => _15.id]) === editingC) setActiveClient(upd.find(c => c.id === editingC));
 };
 const submitE = () => {
 const cl = clients.find(c => c.id === activeClient.id);
-const eqs = editingE ? cl.equipments.map(e => e.id === editingE ? eForm : e) : […(cl.equipments || []), eForm];
-const upd = clients.map(c => c.id === cl.id ? { …cl, equipments: eqs } : c);
+const eqs = editingE ? cl.equipments.map(e => e.id === editingE ? eForm : e) : [...(cl.equipments || []), eForm];
+const upd = clients.map(c => c.id === cl.id ? { ...cl, equipments: eqs } : c);
 saveClients(upd);
-setActiveClient({ …cl, equipments: eqs });
+setActiveClient({ ...cl, equipments: eqs });
 setEModal(false);
 };
 const delClient = (c) => setDelConfirm({ type: 'client', item: c });
@@ -484,8 +484,8 @@ if (_optionalChain([activeClient, 'optionalAccess', _16 => _16.id]) === delConfi
 } else {
 const cl = clients.find(c => c.id === activeClient.id);
 const eqs = cl.equipments.filter(e => e.id !== delConfirm.item.id);
-const upd = clients.map(c => c.id === cl.id ? { …cl, equipments: eqs } : c);
-saveClients(upd); setActiveClient({ …cl, equipments: eqs });
+const upd = clients.map(c => c.id === cl.id ? { ...cl, equipments: eqs } : c);
+saveClients(upd); setActiveClient({ ...cl, equipments: eqs });
 }
 setDelConfirm(null);
 };
@@ -532,7 +532,7 @@ React.createElement(Tbl, { cols: [
 { k: 'techName', l: 'Técnico' },
 { k: 'statusB', l: 'Estado' },
 ], rows: cals.map(c => ({
-…c,
+...c,
 date: fmtDate(c.date),
 result: c.gum ? `${c.gum.mean.toFixed(5)} ± ${fmt(c.gum.U)}` : '—',
 statusB: React.createElement(Badge, { color: c.status === 'ISSUED' ? 'green' : 'amber',}, c.status),
@@ -543,7 +543,7 @@ onEdit: row => { setActiveCal(row._raw); setView('newcal'); },
 onDel: row => {
 const cals = (DB.get('calibrations') || []).filter(c => c.certNum !== row._raw.certNum);
 DB.set('calibrations', cals);
-setActiveEquip({ …activeEquip }); // force re-render trick
+setActiveEquip({ ...activeEquip }); // force re-render trick
 },}
 )
 )
@@ -564,15 +564,15 @@ React.createElement('div', { className: "space-y-4",}
 , React.createElement(Hdg, { icon: "🏭", title: activeClient.name, sub: `${activeClient.code} · ${activeClient.address || 'Sin dirección'}`, color: "blue",
 right:
 React.createElement('div', { className: "flex gap-2" ,}
-, React.createElement(Btn, { size: "sm", variant: "ghost", onClick: () => { setEditingC(activeClient.id); setCForm({ …activeClient }); setCModal(true); }, icon: "✏️",}, "Editar cliente" )
-, React.createElement(Btn, { size: "sm", onClick: () => { setEditingE(null); setEForm({ …blankE, id: uid() }); setEModal(true); }, icon: "➕",}, "Añadir equipo" )
+, React.createElement(Btn, { size: "sm", variant: "ghost", onClick: () => { setEditingC(activeClient.id); setCForm({ ...activeClient }); setCModal(true); }, icon: "✏️",}, "Editar cliente" )
+, React.createElement(Btn, { size: "sm", onClick: () => { setEditingE(null); setEForm({ ...blankE, id: uid() }); setEModal(true); }, icon: "➕",}, "Añadir equipo" )
 )
 ,} )
 , (activeClient.equipments || []).length === 0 ? (
 React.createElement('div', { className: "flex flex-col items-center py-12 gap-3"    ,}
 , React.createElement('div', { className: "text-4xl",}, "🔩")
 , React.createElement('div', { className: "text-slate-400",}, "Sin equipos registrados"  )
-, React.createElement(Btn, { onClick: () => { setEditingE(null); setEForm({ …blankE, id: uid() }); setEModal(true); }, icon: "➕",}, "Añadir primer equipo"  )
+, React.createElement(Btn, { onClick: () => { setEditingE(null); setEForm({ ...blankE, id: uid() }); setEModal(true); }, icon: "➕",}, "Añadir primer equipo"  )
 )
 ) : (
 React.createElement(Tbl, { cols: [
@@ -582,12 +582,12 @@ React.createElement(Tbl, { cols: [
 { k: 'material', l: 'Material' },
 { k: 'ncals', l: 'Calibraciones', mono: true },
 ], rows: (activeClient.equipments || []).map(e => ({
-…e,
+...e,
 ncals: getCals(e.id).length || '0',
 _raw: e,
 })),
 onView: row => { setActiveEquip(row._raw); setView('calibration'); },
-onEdit: row => { setEditingE(row._raw.id); setEForm({ …row._raw }); setEModal(true); },
+onEdit: row => { setEditingE(row._raw.id); setEForm({ ...row._raw }); setEModal(true); },
 onDel: row => delEquip(row._raw),}
 )
 )
@@ -623,14 +623,14 @@ React.createElement('div', { className: "space-y-4",}
 , React.createElement('h2', { className: "font-bold text-slate-800 text-lg"  ,}, "Clientes")
 , React.createElement('p', { className: "text-xs text-slate-400 mt-0.5"  ,}, "Selecciona un cliente para ver sus equipos y calibraciones"        )
 )
-, React.createElement(Btn, { onClick: () => { setEditingC(null); setCForm({ …blankC, id: uid() }); setCModal(true); }, icon: "➕",}, "Nuevo cliente" )
+, React.createElement(Btn, { onClick: () => { setEditingC(null); setCForm({ ...blankC, id: uid() }); setCModal(true); }, icon: "➕",}, "Nuevo cliente" )
 )
 , React.createElement('div', { className: "grid grid-cols-1 gap-3"  ,}
 , clients.length === 0 && (
 React.createElement(Card, { className: "flex flex-col items-center py-16 gap-3"    ,}
 , React.createElement('div', { className: "text-5xl",}, "🏭")
 , React.createElement('div', { className: "text-slate-400 font-medium" ,}, "Sin clientes — añade el primero"     )
-, React.createElement(Btn, { onClick: () => { setEditingC(null); setCForm({ …blankC, id: uid() }); setCModal(true); }, icon: "➕",}, "Añadir cliente" )
+, React.createElement(Btn, { onClick: () => { setEditingC(null); setCForm({ ...blankC, id: uid() }); setCModal(true); }, icon: "➕",}, "Añadir cliente" )
 )
 )
 , clients.map(cl => {
@@ -653,7 +653,7 @@ React.createElement(Card, { key: cl.id,}
 )
 )
 , React.createElement('div', { className: "flex items-center gap-2"  ,}
-, React.createElement(Btn, { size: "sm", variant: "ghost", onClick: () => { setEditingC(cl.id); setCForm({ …cl }); setCModal(true); }, icon: "✏️",}, "Editar")
+, React.createElement(Btn, { size: "sm", variant: "ghost", onClick: () => { setEditingC(cl.id); setCForm({ ...cl }); setCModal(true); }, icon: "✏️",}, "Editar")
 , React.createElement(Btn, { size: "sm", variant: "danger", onClick: () => delClient(cl), icon: "🗑",}, "Eliminar")
 , React.createElement(Btn, { size: "sm", onClick: () => { setActiveClient(cl); setView('equipment'); }, icon: "→",}, "Ver equipos" )
 )
@@ -706,7 +706,7 @@ labName: cfg.labName || 'Laboratorio de Metrología',
 };
 const [s, setS] = useState(init);
 const [step, setStep] = useState(0);
-const sv = (k, v) => setS(p => ({ …p, [k]: v }));
+const sv = (k, v) => setS(p => ({ ...p, [k]: v }));
 
 const machine = machines.find(m => m.id === s.machineId);
 const tech = techs.find(t => t.id === s.techId);
@@ -751,7 +751,7 @@ return g;
 
 const doSave = (gum) => {
 const cal = {
-…s, gum: gum || s.gum, status: 'ISSUED',
+...s, gum: gum || s.gum, status: 'ISSUED',
 threadName: _optionalChain([thread, 'optionalAccess', _35 => _35.name]) || s.threadName,
 techName: _optionalChain([tech, 'optionalAccess', _36 => _36.name]) || _optionalChain([tech, 'optionalAccess', _37 => _37.code]) || '—',
 savedAt: new Date().toISOString(),
@@ -1040,7 +1040,7 @@ className: `flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full tex
                   return (
                     React.createElement('div', { key: i, className: "grid grid-cols-4 gap-1.5 items-center"   ,}
                       , React.createElement('span', { className: "text-xs font-bold text-slate-300 text-right"   ,}, i + 1)
-                      , React.createElement(Inp, { type: "number", step: "0.00001", placeholder: "M_raw…", value: v,
+                      , React.createElement(Inp, { type: "number", step: "0.00001", placeholder: "M_raw...", value: v,
                         onChange: e => { const a = [...s[key]]; a[i] = e.target.value; sv(key, a); },} )
                       , React.createElement('div', { className: `font-mono text-[11px] px-2 py-1.5 rounded-lg text-right border ${res ? 'bg-teal-50 border-teal-100 text-teal-700' : 'bg-slate-50 border-slate-100 text-slate-300'}`,}, res ? res.M_c.toFixed(5) : '—')
                       , React.createElement('div', { className: "flex gap-1" ,}
@@ -1359,7 +1359,7 @@ className: `flex items-center gap-1.5 px-4 py-2.5 text-sm font-semibold transiti
 function LabConfig() {
 const [cfg, setCfg] = useState(() => DB.get('config') || { labName:'', address:'', accred:'', logoData:'' });
 const save = () => { DB.set('config', cfg); alert('✅ Configuración guardada'); };
-const F = (k,v) => setCfg(c => ({…c,[k]:v}));
+const F = (k,v) => setCfg(c => ({...c,[k]:v}));
 const handleLogo = (e) => { const f=e.target.files[0]; if(!f) return; const r=new FileReader(); r.onload=ev=>F('logoData',ev.target.result); r.readAsDataURL(f); };
 return (
 React.createElement('div', { className: "max-w-xl space-y-4" ,}
@@ -1400,17 +1400,17 @@ const [del, setDel] = useState(null);
 const blank = { id:uid(), brand:'', model:'', sn:'', uCal:0.0006, resolution:0.0001, force:4, forceUnit:'cN', cert:'', certDate:'', certExpiry:'', note:'' };
 const [form, setForm] = useState(blank);
 const save = (m) => { DB.set('machines', m); setMachines(m); };
-const F = (k,v) => setForm(f=>({…f,[k]:v}));
-const submit = () => { save(editing ? machines.map(m=>m.id===editing?form:m) : […machines,form]); setModal(false); };
+const F = (k,v) => setForm(f=>({...f,[k]:v}));
+const submit = () => { save(editing ? machines.map(m=>m.id===editing?form:m) : [...machines,form]); setModal(false); };
 return (
 React.createElement('div', { className: "space-y-4",}
 , React.createElement('div', { className: "flex justify-between items-center"  ,}
 , React.createElement('div', null, React.createElement('h3', { className: "font-bold text-slate-800" ,}, "Bancos de medición"  ), React.createElement('p', { className: "text-xs text-slate-400" ,}, "Máquinas reutilizables en calibraciones"   ))
-, React.createElement(Btn, { onClick: ()=>{setEditing(null);setForm({…blank,id:uid()});setModal(true);}, icon: "➕", size: "sm",}, "Nuevo banco" )
+, React.createElement(Btn, { onClick: ()=>{setEditing(null);setForm({...blank,id:uid()});setModal(true);}, icon: "➕", size: "sm",}, "Nuevo banco" )
 )
 , React.createElement(Card, null, React.createElement(Tbl, { cols: [{k:'brand',l:'Marca',bold:true},{k:'model',l:'Modelo',bold:true},{k:'sn',l:'S/N'},{k:'uCal',l:'U(k=2) mm',mono:true},{k:'force',l:'Fuerza',mono:true},{k:'cert',l:'Certificado'},{k:'certExpiry',l:'Válido hasta'}],
-rows: machines.map(m=>({…m,force:`${m.force} ${m.forceUnit}`})),
-onEdit: row=>{const m=machines.find(x=>x.sn===row.sn&&x.model===row.model)||machines[0];setEditing(m.id);setForm({…m});setModal(true);},
+rows: machines.map(m=>({...m,force:`${m.force} ${m.forceUnit}`})),
+onEdit: row=>{const m=machines.find(x=>x.sn===row.sn&&x.model===row.model)||machines[0];setEditing(m.id);setForm({...m});setModal(true);},
 onDel: row=>setDel(machines.find(x=>x.model===row.model)), empty: "Sin bancos registrados"  ,} ))
 , React.createElement(Modal, { open: modal, onClose: ()=>setModal(false), title: editing?'Editar banco':'Nuevo banco', wide: true,}
 , React.createElement('div', { className: "grid grid-cols-2 gap-4"  ,}
@@ -1446,16 +1446,16 @@ const [del, setDel] = useState(null);
 const blank = { id:uid(), code:'', name:'', role:'Técnico de calibración', email:'', qual:'' };
 const [form, setForm] = useState(blank);
 const save = (t) => { DB.set('techs', t); setTechs(t); };
-const F = (k,v) => setForm(f=>({…f,[k]:v}));
-const submit = () => { save(editing ? techs.map(t=>t.id===editing?form:t) : […techs,form]); setModal(false); };
+const F = (k,v) => setForm(f=>({...f,[k]:v}));
+const submit = () => { save(editing ? techs.map(t=>t.id===editing?form:t) : [...techs,form]); setModal(false); };
 return (
 React.createElement('div', { className: "space-y-4",}
 , React.createElement('div', { className: "flex justify-between items-center"  ,}
 , React.createElement('div', null, React.createElement('h3', { className: "font-bold text-slate-800" ,}, "Técnicos"), React.createElement('p', { className: "text-xs text-slate-400" ,}, "Personal habilitado para calibraciones"   ))
-, React.createElement(Btn, { onClick: ()=>{setEditing(null);setForm({…blank,id:uid()});setModal(true);}, icon: "➕", size: "sm",}, "Nuevo técnico" )
+, React.createElement(Btn, { onClick: ()=>{setEditing(null);setForm({...blank,id:uid()});setModal(true);}, icon: "➕", size: "sm",}, "Nuevo técnico" )
 )
 , React.createElement(Card, null, React.createElement(Tbl, { cols: [{k:'code',l:'Código',bold:true},{k:'name',l:'Nombre',bold:true},{k:'role',l:'Rol'},{k:'qual',l:'Cualificación'},{k:'email',l:'Email'}],
-rows: techs, onEdit: row=>{setEditing(row.id);setForm({…row});setModal(true);}, onDel: row=>setDel(row), empty: "Sin técnicos" ,} ))
+rows: techs, onEdit: row=>{setEditing(row.id);setForm({...row});setModal(true);}, onDel: row=>setDel(row), empty: "Sin técnicos" ,} ))
 , React.createElement(Modal, { open: modal, onClose: ()=>setModal(false), title: editing?'Editar técnico':'Nuevo técnico',}
 , React.createElement('div', { className: "grid grid-cols-2 gap-4"  ,}
 , React.createElement(Fld, { label: "Código",}, React.createElement(Inp, { value: form.code, onChange: e=>F('code',e.target.value), placeholder: "OP-001",} ))
@@ -1481,14 +1481,14 @@ const [modal, setModal] = useState(false);
 const [customThreads, setCustomThreads] = useState(() => DB.get('customThreads') || []);
 const blank = { id:uid(), std:'CUSTOM', name:'', d:'', p:'', d2:'', d1:'', alpha:60, tolExt:'', tolInt:'', norm:'' };
 const [form, setForm] = useState(blank);
-const F = (k,v) => setForm(f=>({…f,[k]:v}));
-const allThreads = […THREADS, …customThreads];
+const F = (k,v) => setForm(f=>({...f,[k]:v}));
+const allThreads = [...THREADS, ...customThreads];
 const filtered = allThreads.filter(t =>
 (!stdFilter || t.std === stdFilter) &&
 (!filter || t.name.toLowerCase().includes(filter.toLowerCase()))
 );
 const submit = () => {
-const upd = […customThreads, form];
+const upd = [...customThreads, form];
 DB.set('customThreads', upd); setCustomThreads(upd); setModal(false);
 };
 const stdColor = { M:'blue', UNC:'teal', UNF:'teal', BSW:'amber', BSF:'amber', Tr:'purple', ACME:'red', NPT:'green', BSPP:'green', BSPT:'green', CUSTOM:'slate' };
@@ -1496,10 +1496,10 @@ return (
 React.createElement('div', { className: "space-y-4",}
 , React.createElement('div', { className: "flex items-center justify-between"  ,}
 , React.createElement('div', null, React.createElement('h3', { className: "font-bold text-slate-800" ,}, "Base de datos de roscas"    ), React.createElement('p', { className: "text-xs text-slate-400" ,}, THREADS.length, " roscas precargadas · "    , customThreads.length, " personalizadas" ))
-, React.createElement(Btn, { onClick: ()=>{setForm({…blank,id:uid()});setModal(true);}, icon: "➕", size: "sm",}, "Añadir rosca" )
+, React.createElement(Btn, { onClick: ()=>{setForm({...blank,id:uid()});setModal(true);}, icon: "➕", size: "sm",}, "Añadir rosca" )
 )
 , React.createElement('div', { className: "flex gap-3" ,}
-, React.createElement('input', { className: "flex-1 text-sm px-3 py-2 rounded-lg border border-slate-200 bg-white focus:border-blue-400 outline-none"         , placeholder: "Buscar rosca…" , value: filter, onChange: e=>setFilter(e.target.value),} )
+, React.createElement('input', { className: "flex-1 text-sm px-3 py-2 rounded-lg border border-slate-200 bg-white focus:border-blue-400 outline-none"         , placeholder: "Buscar rosca..." , value: filter, onChange: e=>setFilter(e.target.value),} )
 , React.createElement(Sel, { value: stdFilter, onChange: e=>setStdFilter(e.target.value), className: "w-44",}
 , React.createElement('option', { value: "",}, "Todas las normas"  )
 , THREAD_STANDARDS.filter(s=>s.id!=='CUSTOM').map(s=>React.createElement('option', { key: s.id, value: s.id,}, s.label))
@@ -1511,7 +1511,7 @@ React.createElement('div', { className: "space-y-4",}
 {k:'d',l:'D [mm]',mono:true},{k:'p',l:'p [mm]',mono:true},{k:'d2',l:'d2 [mm]',mono:true},
 {k:'alpha',l:'α [°]',mono:true},{k:'tolExt',l:'Tol.Ext',mono:true},{k:'tolInt',l:'Tol.Int',mono:true},
 ], rows: filtered.map(t=>({
-…t,
+...t,
 stdB: React.createElement(Badge, { color: stdColor[t.std]||'slate',}, t.std),
 d: (+t.d).toFixed(3), p: (+t.p).toFixed(3), d2: (+t.d2).toFixed(4),
 _raw: t,
@@ -1520,7 +1520,7 @@ _raw: t,
 , React.createElement(Modal, { open: modal, onClose: ()=>setModal(false), title: "Nueva rosca personalizada"  ,}
 , React.createElement('div', { className: "grid grid-cols-2 gap-4"  ,}
 , React.createElement(Fld, { label: "Designación",}, React.createElement(Inp, { value: form.name, onChange: e=>F('name',e.target.value), placeholder: "M14×1.5-CUSTOM",} ))
-, React.createElement(Fld, { label: "Norma",}, React.createElement(Inp, { value: form.norm, onChange: e=>F('norm',e.target.value), placeholder: "ISO / DIN / ASME…"    ,} ))
+, React.createElement(Fld, { label: "Norma",}, React.createElement(Inp, { value: form.norm, onChange: e=>F('norm',e.target.value), placeholder: "ISO / DIN / ASME..."    ,} ))
 , React.createElement(Fld, { label: "D nominal" , unit: "mm",}, React.createElement(Inp, { type: "number", value: form.d, onChange: e=>F('d',+e.target.value), step: "0.001",} ))
 , React.createElement(Fld, { label: "Paso p" , unit: "mm",}, React.createElement(Inp, { type: "number", value: form.p, onChange: e=>F('p',+e.target.value), step: "0.001",} ))
 , React.createElement(Fld, { label: "d2 (paso)" , unit: "mm",}, React.createElement(Inp, { type: "number", value: form.d2, onChange: e=>F('d2',+e.target.value), step: "0.0001",} ))
@@ -1543,26 +1543,26 @@ const [modal, setModal] = useState(false);
 const [editing, setEditing] = useState(null);
 const blank = { id:uid(), code:'', diam:'', uW:0.0002, cert:'', certExpiry:'', pMin:'', pMax:'', note:'' };
 const [form, setForm] = useState(blank);
-const allWires = […WIRES, …userWires];
+const allWires = [...WIRES, ...userWires];
 const save = (w) => { DB.set('userWires', w); setUserWires(w); };
-const F = (k,v) => setForm(f=>({…f,[k]:v}));
+const F = (k,v) => setForm(f=>({...f,[k]:v}));
 const submit = () => {
-const upd = editing ? userWires.map(w=>w.id===editing?form:w) : […userWires,form];
+const upd = editing ? userWires.map(w=>w.id===editing?form:w) : [...userWires,form];
 save(upd); setModal(false);
 };
 return (
 React.createElement('div', { className: "space-y-4",}
 , React.createElement('div', { className: "flex items-center justify-between"  ,}
 , React.createElement('div', null, React.createElement('h3', { className: "font-bold text-slate-800" ,}, "Hilos de medición"  ), React.createElement('p', { className: "text-xs text-slate-400" ,}, WIRES.length, " hilos ISO estándar precargados · "      , userWires.length, " personalizados" ))
-, React.createElement(Btn, { onClick: ()=>{setEditing(null);setForm({…blank,id:uid()});setModal(true);}, icon: "➕", size: "sm",}, "Añadir hilo" )
+, React.createElement(Btn, { onClick: ()=>{setEditing(null);setForm({...blank,id:uid()});setModal(true);}, icon: "➕", size: "sm",}, "Añadir hilo" )
 )
 , React.createElement(Card, null
 , React.createElement(Tbl, { cols: [
 {k:'code',l:'Código',bold:true},{k:'diam',l:'W [mm]',mono:true},
 {k:'uW',l:'u(W) k=1',mono:true},{k:'cert',l:'Certificado'},
 {k:'pMin',l:'p mín',mono:true},{k:'pMax',l:'p máx',mono:true},{k:'note',l:'Aplicación'},
-], rows: allWires.map(w=>({…w,diam:w.diam.toFixed(5)})),
-onEdit: row=>{const w=userWires.find(x=>x.code===row.code);if(w){setEditing(w.id);setForm({…w});setModal(true);}},
+], rows: allWires.map(w=>({...w,diam:w.diam.toFixed(5)})),
+onEdit: row=>{const w=userWires.find(x=>x.code===row.code);if(w){setEditing(w.id);setForm({...w});setModal(true);}},
 onDel: row=>{const w=userWires.find(x=>x.code===row.code);if(w)save(userWires.filter(x=>x.id!==w.id));},
 empty: "Sin hilos" ,} )
 )
