@@ -801,7 +801,6 @@ className: `flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full tex
 ))
 )
 
-
   /* ── STEP 0: PROYECTO ── */
   , step === 0 && (
     React.createElement('div', { className: "grid grid-cols-2 gap-4"  ,}
@@ -1161,7 +1160,7 @@ className: `flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full tex
   /* ── STEP 5: CERT PREVIEW ── */
   , step === 5 && React.createElement(CertPreview, { cal: { ...s, techName: _optionalChain([tech, 'optionalAccess', _48 => _48.name]) || '—', threadName: _optionalChain([thread, 'optionalAccess', _49 => _49.name]) || '—' }, onBack: () => setStep(4),} )
 )
-
+```
 
 );
 }
@@ -1379,8 +1378,8 @@ React.createElement(‘div’, { className: “max-w-xl space-y-4” ,}
 , React.createElement(‘label’, { className: “flex items-center gap-3 p-4 border-2 border-dashed border-slate-200 rounded-xl cursor-pointer hover:border-blue-300 hover:bg-blue-50 transition-all”           ,}
 , React.createElement(‘span’, { className: “text-2xl”,}, “📁”)
 , React.createElement(‘div’, null, React.createElement(‘div’, { className: “font-semibold text-slate-700 text-sm”  ,}, “Cargar logo” ), React.createElement(‘div’, { className: “text-xs text-slate-400” ,}, “PNG · JPG · SVG · máx. 2MB”       ))
-, React.createElement(‘input’, { type: “file”, accept: “image/*”, className: “hidden”, onChange: handleLogo,} )
-)
+, React.createElement('input', { type: "file", accept: "image/*", className: "hidden", onChange: handleLogo,} )
+          )
 , cfg.logoData && (
 React.createElement(‘div’, { className: “flex items-center gap-4”  ,}
 , React.createElement(‘img’, { src: cfg.logoData, alt: “Logo”, className: “h-14 object-contain border border-slate-200 rounded-lg p-2 bg-white”      ,} )
@@ -1668,6 +1667,7 @@ React.createElement(‘div’, { className: “min-h-screen bg-slate-50 flex” 
 ? React.createElement(‘img’, { src: cfg.logoData, alt: “Logo”, className: “h-8 w-8 object-contain rounded-lg”   ,} )
 : React.createElement(‘div’, { className: “w-9 h-9 rounded-xl flex items-center justify-center text-white font-black text-sm shadow-sm”         , style: { background: ‘linear-gradient(135deg,#2563eb,#0d9488)’ },}, “TC”)
 
+```
         , React.createElement('div', null
           , React.createElement('div', { className: "font-black text-slate-900 text-sm tracking-tight"   ,}, "ThreadCal")
           , React.createElement('div', { className: "font-black text-blue-600 text-sm tracking-tight"   ,}, "Pro v4" )
@@ -1708,6 +1708,7 @@ React.createElement(‘div’, { className: “min-h-screen bg-slate-50 flex” 
     )
   )
 )
+```
 
 );
 }
