@@ -36,207 +36,207 @@ const { useState, useEffect, useRef, useCallback } = React;
 // STORAGE
 // ═══════════════════════════════════════════════════════════
 const DB = {
-get: (k) => { try { const v = localStorage.getItem(“tc4_”+k); return v ? JSON.parse(v) : null; } catch(e) { return null; } },
-set: (k, v) => { try { localStorage.setItem(“tc4_”+k, JSON.stringify(v)); } catch(e) {} },
-del: (k) => { try { localStorage.removeItem(“tc4_”+k); } catch(e) {} },
+get: (k) => { try { const v = localStorage.getItem("tc4"+k); return v ? JSON.parse(v) : null; } catch(e) { return null; } },
+set: (k, v) => { try { localStorage.setItem("tc4_”+k, JSON.stringify(v)); } catch(e) {} },
+del: (k) => { try { localStorage.removeItem("tc4_”+k); } catch(e) {} },
 };
 const uid = () => Math.random().toString(36).slice(2, 9) + Date.now().toString(36).slice(-4);
 const today = () => new Date().toISOString().slice(0, 10);
-const fmtDate = (d) => d ? new Date(d + ‘T12:00:00’).toLocaleDateString(‘es-ES’, { day: ‘2-digit’, month: ‘2-digit’, year: ‘numeric’ }) : ‘—’;
-const fmt = (v, dec = 5) => (v == null || isNaN(v)) ? ‘—’ : Math.abs(v) < 0.001 && v !== 0 ? v.toExponential(3) : (+v).toFixed(dec);
+const fmtDate = (d) => d ? new Date(d + 'T12:00:00’).toLocaleDateString('es-ES’, { day: '2-digit’, month: '2-digit’, year: 'numeric’ }) : '—’;
+const fmt = (v, dec = 5) => (v == null || isNaN(v)) ? '—’ : Math.abs(v) < 0.001 && v !== 0 ? v.toExponential(3) : (+v).toFixed(dec);
 
 // ═══════════════════════════════════════════════════════════
 // THREAD DATABASE — full ISO/ASME coverage
 // ═══════════════════════════════════════════════════════════
 const THREAD_STANDARDS = [
-{ id: ‘M’, label: ‘Métrica ISO’, norm: ‘ISO 68-1 / ISO 724 / ISO 965’, alpha: 60, tolExt: ‘6g’, tolInt: ‘6H’ },
-{ id: ‘UNC’, label: ‘UNC’, norm: ‘ASME B1.1’, alpha: 60, tolExt: ‘2A’, tolInt: ‘2B’ },
-{ id: ‘UNF’, label: ‘UNF’, norm: ‘ASME B1.1’, alpha: 60, tolExt: ‘2A’, tolInt: ‘2B’ },
-{ id: ‘BSW’, label: ‘Whitworth BSW’, norm: ‘BS 84’, alpha: 55, tolExt: ‘medium’, tolInt: ‘medium’ },
-{ id: ‘BSF’, label: ‘Whitworth BSF’, norm: ‘BS 84’, alpha: 55, tolExt: ‘medium’, tolInt: ‘medium’ },
-{ id: ‘Tr’, label: ‘Trapezoidal ISO’, norm: ‘ISO 2903’, alpha: 30, tolExt: ‘7e’, tolInt: ‘7H’ },
-{ id: ‘ACME’, label: ‘ACME’, norm: ‘ASME B1.5’, alpha: 29, tolExt: ‘2G’, tolInt: ‘2G’ },
-{ id: ‘NPT’, label: ‘Pipe NPT’, norm: ‘ASME B1.20.1’, alpha: 60, tolExt: ‘L1’, tolInt: ‘L1’ },
-{ id: ‘BSPP’, label: ‘BSP Cilíndrica’, norm: ‘ISO 228-1’, alpha: 55, tolExt: ‘A’, tolInt: ‘B’ },
-{ id: ‘CUSTOM’, label: ‘Personalizada’, norm: ‘—’, alpha: 60, tolExt: ‘—’, tolInt: ‘—’ },
+{ id: 'M’, label: 'Métrica ISO’, norm: 'ISO 68-1 / ISO 724 / ISO 965’, alpha: 60, tolExt: '6g’, tolInt: '6H’ },
+{ id: 'UNC’, label: 'UNC’, norm: 'ASME B1.1’, alpha: 60, tolExt: '2A’, tolInt: '2B’ },
+{ id: 'UNF’, label: 'UNF’, norm: 'ASME B1.1’, alpha: 60, tolExt: '2A’, tolInt: '2B’ },
+{ id: 'BSW’, label: 'Whitworth BSW’, norm: 'BS 84’, alpha: 55, tolExt: 'medium’, tolInt: 'medium’ },
+{ id: 'BSF’, label: 'Whitworth BSF’, norm: 'BS 84’, alpha: 55, tolExt: 'medium’, tolInt: 'medium’ },
+{ id: 'Tr’, label: 'Trapezoidal ISO’, norm: 'ISO 2903’, alpha: 30, tolExt: '7e’, tolInt: '7H’ },
+{ id: 'ACME’, label: 'ACME’, norm: 'ASME B1.5’, alpha: 29, tolExt: '2G’, tolInt: '2G’ },
+{ id: 'NPT’, label: 'Pipe NPT’, norm: 'ASME B1.20.1’, alpha: 60, tolExt: 'L1’, tolInt: 'L1’ },
+{ id: 'BSPP’, label: 'BSP Cilíndrica’, norm: 'ISO 228-1’, alpha: 55, tolExt: 'A’, tolInt: 'B’ },
+{ id: 'CUSTOM’, label: 'Personalizada’, norm: '—’, alpha: 60, tolExt: '—’, tolInt: '—’ },
 ];
 
 const RAW_THREADS = [
 // ── MÉTRICA ISO ──────────────────────────────────────────
-{ s:‘M’, n:‘M1’,       d:1,    p:0.25, d2:0.8376, d1:0.7294 },
-{ s:‘M’, n:‘M1.2’,     d:1.2,  p:0.25, d2:1.0376, d1:0.9294 },
-{ s:‘M’, n:‘M1.6’,     d:1.6,  p:0.35, d2:1.3726, d1:1.2210 },
-{ s:‘M’, n:‘M2’,       d:2,    p:0.4,  d2:1.7402, d1:1.5670 },
-{ s:‘M’, n:‘M2.5’,     d:2.5,  p:0.45, d2:2.2077, d1:2.0133 },
-{ s:‘M’, n:‘M3’,       d:3,    p:0.5,  d2:2.6752, d1:2.4596 },
-{ s:‘M’, n:‘M4’,       d:4,    p:0.7,  d2:3.5452, d1:3.2423 },
-{ s:‘M’, n:‘M5’,       d:5,    p:0.8,  d2:4.4801, d1:4.1335 },
-{ s:‘M’, n:‘M6’,       d:6,    p:1.0,  d2:5.3500, d1:4.9170 },
-{ s:‘M’, n:‘M8’,       d:8,    p:1.25, d2:7.1880, d1:6.6470 },
-{ s:‘M’, n:‘M8×1’,     d:8,    p:1.0,  d2:7.3500, d1:6.9170, f:1 },
-{ s:‘M’, n:‘M10’,      d:10,   p:1.5,  d2:9.0260, d1:8.3760 },
-{ s:‘M’, n:‘M10×1.25’, d:10,   p:1.25, d2:9.1880, d1:8.6470, f:1 },
-{ s:‘M’, n:‘M10×1’,    d:10,   p:1.0,  d2:9.3500, d1:8.9170, f:1 },
-{ s:‘M’, n:‘M12’,      d:12,   p:1.75, d2:10.863, d1:10.106 },
-{ s:‘M’, n:‘M12×1.5’,  d:12,   p:1.5,  d2:11.026, d1:10.376, f:1 },
-{ s:‘M’, n:‘M12×1.25’, d:12,   p:1.25, d2:11.188, d1:10.647, f:1 },
-{ s:‘M’, n:‘M14’,      d:14,   p:2.0,  d2:12.701, d1:11.835 },
-{ s:‘M’, n:‘M14×1.5’,  d:14,   p:1.5,  d2:13.026, d1:12.376, f:1 },
-{ s:‘M’, n:‘M16’,      d:16,   p:2.0,  d2:14.701, d1:13.835 },
-{ s:‘M’, n:‘M16×1.5’,  d:16,   p:1.5,  d2:15.026, d1:14.376, f:1 },
-{ s:‘M’, n:‘M18’,      d:18,   p:2.5,  d2:16.376, d1:15.294 },
-{ s:‘M’, n:‘M18×1.5’,  d:18,   p:1.5,  d2:17.026, d1:16.376, f:1 },
-{ s:‘M’, n:‘M20’,      d:20,   p:2.5,  d2:18.376, d1:17.294 },
-{ s:‘M’, n:‘M20×1.5’,  d:20,   p:1.5,  d2:19.026, d1:18.376, f:1 },
-{ s:‘M’, n:‘M22’,      d:22,   p:2.5,  d2:20.376, d1:19.294 },
-{ s:‘M’, n:‘M24’,      d:24,   p:3.0,  d2:22.051, d1:20.752 },
-{ s:‘M’, n:‘M24×2’,    d:24,   p:2.0,  d2:22.701, d1:21.835, f:1 },
-{ s:‘M’, n:‘M27’,      d:27,   p:3.0,  d2:25.051, d1:23.752 },
-{ s:‘M’, n:‘M30’,      d:30,   p:3.5,  d2:27.727, d1:26.211 },
-{ s:‘M’, n:‘M30×2’,    d:30,   p:2.0,  d2:28.701, d1:27.835, f:1 },
-{ s:‘M’, n:‘M33’,      d:33,   p:3.5,  d2:30.727, d1:29.211 },
-{ s:‘M’, n:‘M36’,      d:36,   p:4.0,  d2:33.402, d1:31.670 },
-{ s:‘M’, n:‘M39’,      d:39,   p:4.0,  d2:36.402, d1:34.670 },
-{ s:‘M’, n:‘M42’,      d:42,   p:4.5,  d2:39.077, d1:37.129 },
-{ s:‘M’, n:‘M45’,      d:45,   p:4.5,  d2:42.077, d1:40.129 },
-{ s:‘M’, n:‘M48’,      d:48,   p:5.0,  d2:44.752, d1:42.587 },
-{ s:‘M’, n:‘M52’,      d:52,   p:5.0,  d2:48.752, d1:46.587 },
-{ s:‘M’, n:‘M56’,      d:56,   p:5.5,  d2:52.428, d1:50.046 },
-{ s:‘M’, n:‘M60’,      d:60,   p:5.5,  d2:56.428, d1:54.046 },
-{ s:‘M’, n:‘M64’,      d:64,   p:6.0,  d2:60.103, d1:57.505 },
-{ s:‘M’, n:‘M68’,      d:68,   p:6.0,  d2:64.103, d1:61.505 },
-{ s:‘M’, n:‘M72’,      d:72,   p:6.0,  d2:68.103, d1:65.505 },
-{ s:‘M’, n:‘M80’,      d:80,   p:6.0,  d2:76.103, d1:73.505 },
-{ s:‘M’, n:‘M90’,      d:90,   p:6.0,  d2:86.103, d1:83.505 },
-{ s:‘M’, n:‘M100’,     d:100,  p:6.0,  d2:96.103, d1:93.505 },
+{ s:'M’, n:'M1’,       d:1,    p:0.25, d2:0.8376, d1:0.7294 },
+{ s:'M’, n:'M1.2’,     d:1.2,  p:0.25, d2:1.0376, d1:0.9294 },
+{ s:'M’, n:'M1.6’,     d:1.6,  p:0.35, d2:1.3726, d1:1.2210 },
+{ s:'M’, n:'M2’,       d:2,    p:0.4,  d2:1.7402, d1:1.5670 },
+{ s:'M’, n:'M2.5’,     d:2.5,  p:0.45, d2:2.2077, d1:2.0133 },
+{ s:'M’, n:'M3’,       d:3,    p:0.5,  d2:2.6752, d1:2.4596 },
+{ s:'M’, n:'M4’,       d:4,    p:0.7,  d2:3.5452, d1:3.2423 },
+{ s:'M’, n:'M5’,       d:5,    p:0.8,  d2:4.4801, d1:4.1335 },
+{ s:'M’, n:'M6’,       d:6,    p:1.0,  d2:5.3500, d1:4.9170 },
+{ s:'M’, n:'M8’,       d:8,    p:1.25, d2:7.1880, d1:6.6470 },
+{ s:'M’, n:'M8×1’,     d:8,    p:1.0,  d2:7.3500, d1:6.9170, f:1 },
+{ s:'M’, n:'M10’,      d:10,   p:1.5,  d2:9.0260, d1:8.3760 },
+{ s:'M’, n:'M10×1.25’, d:10,   p:1.25, d2:9.1880, d1:8.6470, f:1 },
+{ s:'M’, n:'M10×1’,    d:10,   p:1.0,  d2:9.3500, d1:8.9170, f:1 },
+{ s:'M’, n:'M12’,      d:12,   p:1.75, d2:10.863, d1:10.106 },
+{ s:'M’, n:'M12×1.5’,  d:12,   p:1.5,  d2:11.026, d1:10.376, f:1 },
+{ s:'M’, n:'M12×1.25’, d:12,   p:1.25, d2:11.188, d1:10.647, f:1 },
+{ s:'M’, n:'M14’,      d:14,   p:2.0,  d2:12.701, d1:11.835 },
+{ s:'M’, n:'M14×1.5’,  d:14,   p:1.5,  d2:13.026, d1:12.376, f:1 },
+{ s:'M’, n:'M16’,      d:16,   p:2.0,  d2:14.701, d1:13.835 },
+{ s:'M’, n:'M16×1.5’,  d:16,   p:1.5,  d2:15.026, d1:14.376, f:1 },
+{ s:'M’, n:'M18’,      d:18,   p:2.5,  d2:16.376, d1:15.294 },
+{ s:'M’, n:'M18×1.5’,  d:18,   p:1.5,  d2:17.026, d1:16.376, f:1 },
+{ s:'M’, n:'M20’,      d:20,   p:2.5,  d2:18.376, d1:17.294 },
+{ s:'M’, n:'M20×1.5’,  d:20,   p:1.5,  d2:19.026, d1:18.376, f:1 },
+{ s:'M’, n:'M22’,      d:22,   p:2.5,  d2:20.376, d1:19.294 },
+{ s:'M’, n:'M24’,      d:24,   p:3.0,  d2:22.051, d1:20.752 },
+{ s:'M’, n:'M24×2’,    d:24,   p:2.0,  d2:22.701, d1:21.835, f:1 },
+{ s:'M’, n:'M27’,      d:27,   p:3.0,  d2:25.051, d1:23.752 },
+{ s:'M’, n:'M30’,      d:30,   p:3.5,  d2:27.727, d1:26.211 },
+{ s:'M’, n:'M30×2’,    d:30,   p:2.0,  d2:28.701, d1:27.835, f:1 },
+{ s:'M’, n:'M33’,      d:33,   p:3.5,  d2:30.727, d1:29.211 },
+{ s:'M’, n:'M36’,      d:36,   p:4.0,  d2:33.402, d1:31.670 },
+{ s:'M’, n:'M39’,      d:39,   p:4.0,  d2:36.402, d1:34.670 },
+{ s:'M’, n:'M42’,      d:42,   p:4.5,  d2:39.077, d1:37.129 },
+{ s:'M’, n:'M45’,      d:45,   p:4.5,  d2:42.077, d1:40.129 },
+{ s:'M’, n:'M48’,      d:48,   p:5.0,  d2:44.752, d1:42.587 },
+{ s:'M’, n:'M52’,      d:52,   p:5.0,  d2:48.752, d1:46.587 },
+{ s:'M’, n:'M56’,      d:56,   p:5.5,  d2:52.428, d1:50.046 },
+{ s:'M’, n:'M60’,      d:60,   p:5.5,  d2:56.428, d1:54.046 },
+{ s:'M’, n:'M64’,      d:64,   p:6.0,  d2:60.103, d1:57.505 },
+{ s:'M’, n:'M68’,      d:68,   p:6.0,  d2:64.103, d1:61.505 },
+{ s:'M’, n:'M72’,      d:72,   p:6.0,  d2:68.103, d1:65.505 },
+{ s:'M’, n:'M80’,      d:80,   p:6.0,  d2:76.103, d1:73.505 },
+{ s:'M’, n:'M90’,      d:90,   p:6.0,  d2:86.103, d1:83.505 },
+{ s:'M’, n:'M100’,     d:100,  p:6.0,  d2:96.103, d1:93.505 },
 // ── UNC ─────────────────────────────────────────────────
-{ s:‘UNC’, n:’#4-40 UNC’,   d:2.845,  p:0.635,  d2:2.433,  d1:2.094 },
-{ s:‘UNC’, n:’#6-32 UNC’,   d:3.505,  p:0.7938, d2:2.990,  d1:2.567 },
-{ s:‘UNC’, n:’#8-32 UNC’,   d:4.166,  p:0.7938, d2:3.650,  d1:3.227 },
-{ s:‘UNC’, n:’#10-24 UNC’,  d:4.826,  p:1.058,  d2:4.138,  d1:3.571 },
-{ s:‘UNC’, n:‘1/4-20 UNC’,  d:6.350,  p:1.270,  d2:5.486,  d1:4.780 },
-{ s:‘UNC’, n:‘5/16-18 UNC’, d:7.938,  p:1.411,  d2:6.931,  d1:6.096 },
-{ s:‘UNC’, n:‘3/8-16 UNC’,  d:9.525,  p:1.5875, d2:8.376,  d1:7.353 },
-{ s:‘UNC’, n:‘7/16-14 UNC’, d:11.113, p:1.814,  d2:9.803,  d1:8.611 },
-{ s:‘UNC’, n:‘1/2-13 UNC’,  d:12.700, p:1.954,  d2:11.228, d1:9.858 },
-{ s:‘UNC’, n:‘9/16-12 UNC’, d:14.288, p:2.117,  d2:12.649, d1:11.090 },
-{ s:‘UNC’, n:‘5/8-11 UNC’,  d:15.875, p:2.309,  d2:14.036, d1:12.256 },
-{ s:‘UNC’, n:‘3/4-10 UNC’,  d:19.050, p:2.540,  d2:16.990, d1:14.891 },
-{ s:‘UNC’, n:‘7/8-9 UNC’,   d:22.225, p:2.822,  d2:19.862, d1:17.474 },
-{ s:‘UNC’, n:‘1”-8 UNC’,    d:25.400, p:3.175,  d2:22.860, d1:20.043 },
-{ s:‘UNC’, n:‘1 1/4-7 UNC’, d:31.750, p:3.629,  d2:28.854, d1:25.692 },
-{ s:‘UNC’, n:‘1 1/2-6 UNC’, d:38.100, p:4.233,  d2:34.590, d1:30.783 },
+{ s:'UNC’, n:’#4-40 UNC’,   d:2.845,  p:0.635,  d2:2.433,  d1:2.094 },
+{ s:'UNC’, n:’#6-32 UNC’,   d:3.505,  p:0.7938, d2:2.990,  d1:2.567 },
+{ s:'UNC’, n:’#8-32 UNC’,   d:4.166,  p:0.7938, d2:3.650,  d1:3.227 },
+{ s:'UNC’, n:’#10-24 UNC’,  d:4.826,  p:1.058,  d2:4.138,  d1:3.571 },
+{ s:'UNC’, n:'1/4-20 UNC’,  d:6.350,  p:1.270,  d2:5.486,  d1:4.780 },
+{ s:'UNC’, n:'5/16-18 UNC’, d:7.938,  p:1.411,  d2:6.931,  d1:6.096 },
+{ s:'UNC’, n:'3/8-16 UNC’,  d:9.525,  p:1.5875, d2:8.376,  d1:7.353 },
+{ s:'UNC’, n:'7/16-14 UNC’, d:11.113, p:1.814,  d2:9.803,  d1:8.611 },
+{ s:'UNC’, n:'1/2-13 UNC’,  d:12.700, p:1.954,  d2:11.228, d1:9.858 },
+{ s:'UNC’, n:'9/16-12 UNC’, d:14.288, p:2.117,  d2:12.649, d1:11.090 },
+{ s:'UNC’, n:'5/8-11 UNC’,  d:15.875, p:2.309,  d2:14.036, d1:12.256 },
+{ s:'UNC’, n:'3/4-10 UNC’,  d:19.050, p:2.540,  d2:16.990, d1:14.891 },
+{ s:'UNC’, n:'7/8-9 UNC’,   d:22.225, p:2.822,  d2:19.862, d1:17.474 },
+{ s:'UNC’, n:'1”-8 UNC’,    d:25.400, p:3.175,  d2:22.860, d1:20.043 },
+{ s:'UNC’, n:'1 1/4-7 UNC’, d:31.750, p:3.629,  d2:28.854, d1:25.692 },
+{ s:'UNC’, n:'1 1/2-6 UNC’, d:38.100, p:4.233,  d2:34.590, d1:30.783 },
 // ── UNF ─────────────────────────────────────────────────
-{ s:‘UNF’, n:’#6-40 UNF’,   d:3.505,  p:0.635,  d2:3.094,  d1:2.754 },
-{ s:‘UNF’, n:’#8-36 UNF’,   d:4.166,  p:0.7056, d2:3.708,  d1:3.327 },
-{ s:‘UNF’, n:’#10-32 UNF’,  d:4.826,  p:0.7938, d2:4.311,  d1:3.886 },
-{ s:‘UNF’, n:‘1/4-28 UNF’,  d:6.350,  p:0.9071, d2:5.690,  d1:5.158 },
-{ s:‘UNF’, n:‘5/16-24 UNF’, d:7.938,  p:1.058,  d2:7.250,  d1:6.629 },
-{ s:‘UNF’, n:‘3/8-24 UNF’,  d:9.525,  p:1.058,  d2:8.838,  d1:8.217 },
-{ s:‘UNF’, n:‘7/16-20 UNF’, d:11.113, p:1.270,  d2:10.249, d1:9.543 },
-{ s:‘UNF’, n:‘1/2-20 UNF’,  d:12.700, p:1.270,  d2:11.836, d1:11.130 },
-{ s:‘UNF’, n:‘5/8-18 UNF’,  d:15.875, p:1.411,  d2:14.868, d1:14.033 },
-{ s:‘UNF’, n:‘3/4-16 UNF’,  d:19.050, p:1.5875, d2:17.900, d1:16.877 },
-{ s:‘UNF’, n:‘7/8-14 UNF’,  d:22.225, p:1.814,  d2:20.910, d1:19.713 },
-{ s:‘UNF’, n:‘1”-12 UNF’,   d:25.400, p:2.117,  d2:23.761, d1:22.202 },
+{ s:'UNF’, n:’#6-40 UNF’,   d:3.505,  p:0.635,  d2:3.094,  d1:2.754 },
+{ s:'UNF’, n:’#8-36 UNF’,   d:4.166,  p:0.7056, d2:3.708,  d1:3.327 },
+{ s:'UNF’, n:’#10-32 UNF’,  d:4.826,  p:0.7938, d2:4.311,  d1:3.886 },
+{ s:'UNF’, n:'1/4-28 UNF’,  d:6.350,  p:0.9071, d2:5.690,  d1:5.158 },
+{ s:'UNF’, n:'5/16-24 UNF’, d:7.938,  p:1.058,  d2:7.250,  d1:6.629 },
+{ s:'UNF’, n:'3/8-24 UNF’,  d:9.525,  p:1.058,  d2:8.838,  d1:8.217 },
+{ s:'UNF’, n:'7/16-20 UNF’, d:11.113, p:1.270,  d2:10.249, d1:9.543 },
+{ s:'UNF’, n:'1/2-20 UNF’,  d:12.700, p:1.270,  d2:11.836, d1:11.130 },
+{ s:'UNF’, n:'5/8-18 UNF’,  d:15.875, p:1.411,  d2:14.868, d1:14.033 },
+{ s:'UNF’, n:'3/4-16 UNF’,  d:19.050, p:1.5875, d2:17.900, d1:16.877 },
+{ s:'UNF’, n:'7/8-14 UNF’,  d:22.225, p:1.814,  d2:20.910, d1:19.713 },
+{ s:'UNF’, n:'1”-12 UNF’,   d:25.400, p:2.117,  d2:23.761, d1:22.202 },
 // ── BSW ─────────────────────────────────────────────────
-{ s:‘BSW’, n:‘1/8” BSW’,    d:3.175,  p:0.635,  d2:2.764,  d1:2.424 },
-{ s:‘BSW’, n:‘3/16” BSW’,   d:4.763,  p:1.058,  d2:4.075,  d1:3.454 },
-{ s:‘BSW’, n:‘1/4” BSW’,    d:6.350,  p:1.270,  d2:5.486,  d1:4.780 },
-{ s:‘BSW’, n:‘5/16” BSW’,   d:7.938,  p:1.411,  d2:6.931,  d1:6.096 },
-{ s:‘BSW’, n:‘3/8” BSW’,    d:9.525,  p:1.588,  d2:8.376,  d1:7.353 },
-{ s:‘BSW’, n:‘1/2” BSW’,    d:12.700, p:2.117,  d2:11.345, d1:10.103 },
-{ s:‘BSW’, n:‘5/8” BSW’,    d:15.875, p:2.309,  d2:14.328, d1:12.975 },
-{ s:‘BSW’, n:‘3/4” BSW’,    d:19.050, p:2.540,  d2:17.424, d1:15.912 },
-{ s:‘BSW’, n:‘1” BSW’,      d:25.400, p:3.175,  d2:23.367, d1:21.464 },
-{ s:‘BSW’, n:‘1 1/4” BSW’,  d:31.750, p:3.629,  d2:29.428, d1:27.234 },
-{ s:‘BSW’, n:‘1 1/2” BSW’,  d:38.100, p:4.233,  d2:35.592, d1:33.166 },
+{ s:'BSW’, n:'1/8” BSW’,    d:3.175,  p:0.635,  d2:2.764,  d1:2.424 },
+{ s:'BSW’, n:'3/16” BSW’,   d:4.763,  p:1.058,  d2:4.075,  d1:3.454 },
+{ s:'BSW’, n:'1/4” BSW’,    d:6.350,  p:1.270,  d2:5.486,  d1:4.780 },
+{ s:'BSW’, n:'5/16” BSW’,   d:7.938,  p:1.411,  d2:6.931,  d1:6.096 },
+{ s:'BSW’, n:'3/8” BSW’,    d:9.525,  p:1.588,  d2:8.376,  d1:7.353 },
+{ s:'BSW’, n:'1/2” BSW’,    d:12.700, p:2.117,  d2:11.345, d1:10.103 },
+{ s:'BSW’, n:'5/8” BSW’,    d:15.875, p:2.309,  d2:14.328, d1:12.975 },
+{ s:'BSW’, n:'3/4” BSW’,    d:19.050, p:2.540,  d2:17.424, d1:15.912 },
+{ s:'BSW’, n:'1” BSW’,      d:25.400, p:3.175,  d2:23.367, d1:21.464 },
+{ s:'BSW’, n:'1 1/4” BSW’,  d:31.750, p:3.629,  d2:29.428, d1:27.234 },
+{ s:'BSW’, n:'1 1/2” BSW’,  d:38.100, p:4.233,  d2:35.592, d1:33.166 },
 // ── Trapezoidal ──────────────────────────────────────────
-{ s:‘Tr’, n:‘Tr10×2’,   d:10,  p:2,  d2:9.0,   d1:7.5 },
-{ s:‘Tr’, n:‘Tr12×3’,   d:12,  p:3,  d2:10.5,  d1:8.5 },
-{ s:‘Tr’, n:‘Tr16×4’,   d:16,  p:4,  d2:14.0,  d1:11.5 },
-{ s:‘Tr’, n:‘Tr20×4’,   d:20,  p:4,  d2:18.0,  d1:15.5 },
-{ s:‘Tr’, n:‘Tr22×5’,   d:22,  p:5,  d2:19.5,  d1:16.5 },
-{ s:‘Tr’, n:‘Tr24×5’,   d:24,  p:5,  d2:21.5,  d1:18.5 },
-{ s:‘Tr’, n:‘Tr28×5’,   d:28,  p:5,  d2:25.5,  d1:22.5 },
-{ s:‘Tr’, n:‘Tr30×6’,   d:30,  p:6,  d2:27.0,  d1:23.5 },
-{ s:‘Tr’, n:‘Tr36×6’,   d:36,  p:6,  d2:33.0,  d1:29.5 },
-{ s:‘Tr’, n:‘Tr40×7’,   d:40,  p:7,  d2:36.5,  d1:32.5 },
-{ s:‘Tr’, n:‘Tr48×8’,   d:48,  p:8,  d2:44.0,  d1:39.5 },
-{ s:‘Tr’, n:‘Tr60×9’,   d:60,  p:9,  d2:55.5,  d1:50.5 },
-{ s:‘Tr’, n:‘Tr80×10’,  d:80,  p:10, d2:75.0,  d1:69.0 },
+{ s:'Tr’, n:'Tr10×2’,   d:10,  p:2,  d2:9.0,   d1:7.5 },
+{ s:'Tr’, n:'Tr12×3’,   d:12,  p:3,  d2:10.5,  d1:8.5 },
+{ s:'Tr’, n:'Tr16×4’,   d:16,  p:4,  d2:14.0,  d1:11.5 },
+{ s:'Tr’, n:'Tr20×4’,   d:20,  p:4,  d2:18.0,  d1:15.5 },
+{ s:'Tr’, n:'Tr22×5’,   d:22,  p:5,  d2:19.5,  d1:16.5 },
+{ s:'Tr’, n:'Tr24×5’,   d:24,  p:5,  d2:21.5,  d1:18.5 },
+{ s:'Tr’, n:'Tr28×5’,   d:28,  p:5,  d2:25.5,  d1:22.5 },
+{ s:'Tr’, n:'Tr30×6’,   d:30,  p:6,  d2:27.0,  d1:23.5 },
+{ s:'Tr’, n:'Tr36×6’,   d:36,  p:6,  d2:33.0,  d1:29.5 },
+{ s:'Tr’, n:'Tr40×7’,   d:40,  p:7,  d2:36.5,  d1:32.5 },
+{ s:'Tr’, n:'Tr48×8’,   d:48,  p:8,  d2:44.0,  d1:39.5 },
+{ s:'Tr’, n:'Tr60×9’,   d:60,  p:9,  d2:55.5,  d1:50.5 },
+{ s:'Tr’, n:'Tr80×10’,  d:80,  p:10, d2:75.0,  d1:69.0 },
 // ── ACME ─────────────────────────────────────────────────
-{ s:‘ACME’, n:‘1/2-10 ACME’,  d:12.700, p:2.540, d2:11.430, d1:10.160 },
-{ s:‘ACME’, n:‘5/8-8 ACME’,   d:15.875, p:3.175, d2:14.288, d1:12.700 },
-{ s:‘ACME’, n:‘3/4-6 ACME’,   d:19.050, p:4.233, d2:16.933, d1:14.817 },
-{ s:‘ACME’, n:‘1”-5 ACME’,    d:25.400, p:5.080, d2:22.860, d1:20.320 },
-{ s:‘ACME’, n:‘1 1/4-5 ACME’, d:31.750, p:5.080, d2:29.210, d1:26.670 },
-{ s:‘ACME’, n:‘1 1/2-4 ACME’, d:38.100, p:6.350, d2:34.925, d1:31.750 },
+{ s:'ACME’, n:'1/2-10 ACME’,  d:12.700, p:2.540, d2:11.430, d1:10.160 },
+{ s:'ACME’, n:'5/8-8 ACME’,   d:15.875, p:3.175, d2:14.288, d1:12.700 },
+{ s:'ACME’, n:'3/4-6 ACME’,   d:19.050, p:4.233, d2:16.933, d1:14.817 },
+{ s:'ACME’, n:'1”-5 ACME’,    d:25.400, p:5.080, d2:22.860, d1:20.320 },
+{ s:'ACME’, n:'1 1/4-5 ACME’, d:31.750, p:5.080, d2:29.210, d1:26.670 },
+{ s:'ACME’, n:'1 1/2-4 ACME’, d:38.100, p:6.350, d2:34.925, d1:31.750 },
 // ── BSP ──────────────────────────────────────────────────
-{ s:‘BSPP’, n:‘G 1/8” BSP’,  d:9.728,  p:0.907, d2:9.147,  d1:8.566 },
-{ s:‘BSPP’, n:‘G 1/4” BSP’,  d:13.157, p:1.337, d2:12.301, d1:11.445 },
-{ s:‘BSPP’, n:‘G 3/8” BSP’,  d:16.662, p:1.337, d2:15.806, d1:14.950 },
-{ s:‘BSPP’, n:‘G 1/2” BSP’,  d:20.955, p:1.814, d2:19.793, d1:18.631 },
-{ s:‘BSPP’, n:‘G 3/4” BSP’,  d:26.441, p:1.814, d2:25.279, d1:24.117 },
-{ s:‘BSPP’, n:‘G 1” BSP’,    d:33.249, p:2.309, d2:31.770, d1:30.291 },
-{ s:‘BSPP’, n:‘G 1 1/2” BSP’,d:47.803, p:2.309, d2:46.324, d1:44.845 },
-{ s:‘BSPP’, n:‘G 2” BSP’,    d:59.614, p:2.309, d2:58.135, d1:56.656 },
+{ s:'BSPP’, n:'G 1/8” BSP’,  d:9.728,  p:0.907, d2:9.147,  d1:8.566 },
+{ s:'BSPP’, n:'G 1/4” BSP’,  d:13.157, p:1.337, d2:12.301, d1:11.445 },
+{ s:'BSPP’, n:'G 3/8” BSP’,  d:16.662, p:1.337, d2:15.806, d1:14.950 },
+{ s:'BSPP’, n:'G 1/2” BSP’,  d:20.955, p:1.814, d2:19.793, d1:18.631 },
+{ s:'BSPP’, n:'G 3/4” BSP’,  d:26.441, p:1.814, d2:25.279, d1:24.117 },
+{ s:'BSPP’, n:'G 1” BSP’,    d:33.249, p:2.309, d2:31.770, d1:30.291 },
+{ s:'BSPP’, n:'G 1 1/2” BSP’,d:47.803, p:2.309, d2:46.324, d1:44.845 },
+{ s:'BSPP’, n:'G 2” BSP’,    d:59.614, p:2.309, d2:58.135, d1:56.656 },
 // ── NPT ──────────────────────────────────────────────────
-{ s:‘NPT’, n:‘1/8” NPT’,  d:10.287, p:0.941, d2:9.489,  d1:8.128 },
-{ s:‘NPT’, n:‘1/4” NPT’,  d:13.716, p:1.411, d2:12.487, d1:10.879 },
-{ s:‘NPT’, n:‘3/8” NPT’,  d:17.145, p:1.411, d2:15.916, d1:14.308 },
-{ s:‘NPT’, n:‘1/2” NPT’,  d:21.336, p:1.814, d2:19.772, d1:17.980 },
-{ s:‘NPT’, n:‘3/4” NPT’,  d:26.670, p:1.814, d2:25.106, d1:23.314 },
-{ s:‘NPT’, n:‘1” NPT’,    d:33.401, p:2.209, d2:31.461, d1:29.187 },
-{ s:‘NPT’, n:‘1 1/2” NPT’,d:48.260, p:2.209, d2:46.320, d1:44.046 },
-{ s:‘NPT’, n:‘2” NPT’,    d:60.325, p:2.209, d2:58.385, d1:56.111 },
+{ s:'NPT’, n:'1/8” NPT’,  d:10.287, p:0.941, d2:9.489,  d1:8.128 },
+{ s:'NPT’, n:'1/4” NPT’,  d:13.716, p:1.411, d2:12.487, d1:10.879 },
+{ s:'NPT’, n:'3/8” NPT’,  d:17.145, p:1.411, d2:15.916, d1:14.308 },
+{ s:'NPT’, n:'1/2” NPT’,  d:21.336, p:1.814, d2:19.772, d1:17.980 },
+{ s:'NPT’, n:'3/4” NPT’,  d:26.670, p:1.814, d2:25.106, d1:23.314 },
+{ s:'NPT’, n:'1” NPT’,    d:33.401, p:2.209, d2:31.461, d1:29.187 },
+{ s:'NPT’, n:'1 1/2” NPT’,d:48.260, p:2.209, d2:46.320, d1:44.046 },
+{ s:'NPT’, n:'2” NPT’,    d:60.325, p:2.209, d2:58.385, d1:56.111 },
 ];
 
 const THREADS = RAW_THREADS.map(t => ({
-id: `${t.s}_${t.n}`.replace(/[\s”/.]/g, ‘_’),
+id: `${t.s}_${t.n}`.replace(/[\s”/.]/g, '_’),
 std: t.s, name: t.n, d: t.d, p: t.p, d2: t.d2, d1: t.d1, fine: !!t.f,
-alpha: _optionalChain([THREAD_STANDARDS, ‘access’, _ => _.find, ‘call’, _2 => _2(s => s.id === t.s), ‘optionalAccess’, _3 => _3.alpha]) || 60,
-tolExt: _optionalChain([THREAD_STANDARDS, ‘access’, _4 => _4.find, ‘call’, _5 => _5(s => s.id === t.s), ‘optionalAccess’, _6 => _6.tolExt]) || ‘—’,
-tolInt: _optionalChain([THREAD_STANDARDS, ‘access’, _7 => _7.find, ‘call’, _8 => _8(s => s.id === t.s), ‘optionalAccess’, _9 => _9.tolInt]) || ‘—’,
-norm: _optionalChain([THREAD_STANDARDS, ‘access’, _10 => _10.find, ‘call’, _11 => _11(s => s.id === t.s), ‘optionalAccess’, _12 => _12.norm]) || ‘—’,
+alpha: _optionalChain([THREAD_STANDARDS, 'access’, _ => _.find, 'call’, _2 => _2(s => s.id === t.s), 'optionalAccess’, _3 => _3.alpha]) || 60,
+tolExt: _optionalChain([THREAD_STANDARDS, 'access’, _4 => _4.find, 'call’, _5 => _5(s => s.id === t.s), 'optionalAccess’, _6 => _6.tolExt]) || '—’,
+tolInt: _optionalChain([THREAD_STANDARDS, 'access’, _7 => _7.find, 'call’, _8 => _8(s => s.id === t.s), 'optionalAccess’, _9 => _9.tolInt]) || '—’,
+norm: _optionalChain([THREAD_STANDARDS, 'access’, _10 => _10.find, 'call’, _11 => _11(s => s.id === t.s), 'optionalAccess’, _12 => _12.norm]) || '—’,
 }));
 
 const WIRES = [
-{ id:‘w01’, code:‘W-0.144’, diam:0.14434, uW:0.0002, pMin:0.20, pMax:0.30 },
-{ id:‘w02’, code:‘W-0.202’, diam:0.20207, uW:0.0002, pMin:0.30, pMax:0.45 },
-{ id:‘w03’, code:‘W-0.260’, diam:0.25981, uW:0.0002, pMin:0.40, pMax:0.55 },
-{ id:‘w04’, code:‘W-0.289’, diam:0.28868, uW:0.0002, pMin:0.45, pMax:0.60 },
-{ id:‘w05’, code:‘W-0.360’, diam:0.36084, uW:0.0002, pMin:0.55, pMax:0.75 },
-{ id:‘w06’, code:‘W-0.433’, diam:0.43301, uW:0.0002, pMin:0.70, pMax:0.90 },
-{ id:‘w07’, code:‘W-0.577’, diam:0.57735, uW:0.0002, pMin:0.90, pMax:1.10 },
-{ id:‘w08’, code:‘W-0.722’, diam:0.72169, uW:0.0002, pMin:1.10, pMax:1.40 },
-{ id:‘w09’, code:‘W-0.866’, diam:0.86603, uW:0.00015,pMin:1.30, pMax:1.80 },
-{ id:‘w10’, code:‘W-1.010’, diam:1.01036, uW:0.0002, pMin:1.60, pMax:2.10 },
-{ id:‘w11’, code:‘W-1.155’, diam:1.15470, uW:0.0002, pMin:1.80, pMax:2.30 },
-{ id:‘w12’, code:‘W-1.299’, diam:1.29904, uW:0.0002, pMin:2.10, pMax:2.70 },
-{ id:‘w13’, code:‘W-1.443’, diam:1.44338, uW:0.0002, pMin:2.30, pMax:3.10 },
-{ id:‘w14’, code:‘W-1.732’, diam:1.73205, uW:0.0003, pMin:2.90, pMax:3.80 },
-{ id:‘w15’, code:‘W-2.021’, diam:2.02073, uW:0.0003, pMin:3.30, pMax:4.20 },
-{ id:‘w16’, code:‘W-2.309’, diam:2.30940, uW:0.0003, pMin:3.80, pMax:4.80 },
-{ id:‘w17’, code:‘W-2.887’, diam:2.88675, uW:0.0004, pMin:4.80, pMax:6.00 },
-{ id:‘w18’, code:‘W-3.464’, diam:3.46410, uW:0.0004, pMin:5.80, pMax:7.00 },
+{ id:'w01’, code:'W-0.144’, diam:0.14434, uW:0.0002, pMin:0.20, pMax:0.30 },
+{ id:'w02’, code:'W-0.202’, diam:0.20207, uW:0.0002, pMin:0.30, pMax:0.45 },
+{ id:'w03’, code:'W-0.260’, diam:0.25981, uW:0.0002, pMin:0.40, pMax:0.55 },
+{ id:'w04’, code:'W-0.289’, diam:0.28868, uW:0.0002, pMin:0.45, pMax:0.60 },
+{ id:'w05’, code:'W-0.360’, diam:0.36084, uW:0.0002, pMin:0.55, pMax:0.75 },
+{ id:'w06’, code:'W-0.433’, diam:0.43301, uW:0.0002, pMin:0.70, pMax:0.90 },
+{ id:'w07’, code:'W-0.577’, diam:0.57735, uW:0.0002, pMin:0.90, pMax:1.10 },
+{ id:'w08’, code:'W-0.722’, diam:0.72169, uW:0.0002, pMin:1.10, pMax:1.40 },
+{ id:'w09’, code:'W-0.866’, diam:0.86603, uW:0.00015,pMin:1.30, pMax:1.80 },
+{ id:'w10’, code:'W-1.010’, diam:1.01036, uW:0.0002, pMin:1.60, pMax:2.10 },
+{ id:'w11’, code:'W-1.155’, diam:1.15470, uW:0.0002, pMin:1.80, pMax:2.30 },
+{ id:'w12’, code:'W-1.299’, diam:1.29904, uW:0.0002, pMin:2.10, pMax:2.70 },
+{ id:'w13’, code:'W-1.443’, diam:1.44338, uW:0.0002, pMin:2.30, pMax:3.10 },
+{ id:'w14’, code:'W-1.732’, diam:1.73205, uW:0.0003, pMin:2.90, pMax:3.80 },
+{ id:'w15’, code:'W-2.021’, diam:2.02073, uW:0.0003, pMin:3.30, pMax:4.20 },
+{ id:'w16’, code:'W-2.309’, diam:2.30940, uW:0.0003, pMin:3.80, pMax:4.80 },
+{ id:'w17’, code:'W-2.887’, diam:2.88675, uW:0.0004, pMin:4.80, pMax:6.00 },
+{ id:'w18’, code:'W-3.464’, diam:3.46410, uW:0.0004, pMin:5.80, pMax:7.00 },
 ];
 
 const MATERIALS = {
-‘Acero al carbono’:  { alpha: 11.5, e: 210, nu: 0.30 },
-‘Acero inoxidable’:  { alpha: 16.0, e: 193, nu: 0.28 },
-‘Acero herramienta’: { alpha: 10.5, e: 205, nu: 0.29 },
-‘Titanio Ti-6Al-4V’: { alpha: 8.6,  e: 114, nu: 0.34 },
-‘Aluminio 6061’:     { alpha: 23.6, e: 69,  nu: 0.33 },
-‘Latón’:             { alpha: 20.5, e: 100, nu: 0.34 },
-‘Hierro fundido’:    { alpha: 11.7, e: 150, nu: 0.26 },
+'Acero al carbono’:  { alpha: 11.5, e: 210, nu: 0.30 },
+'Acero inoxidable’:  { alpha: 16.0, e: 193, nu: 0.28 },
+'Acero herramienta’: { alpha: 10.5, e: 205, nu: 0.29 },
+'Titanio Ti-6Al-4V’: { alpha: 8.6,  e: 114, nu: 0.34 },
+'Aluminio 6061’:     { alpha: 23.6, e: 69,  nu: 0.33 },
+'Latón’:             { alpha: 20.5, e: 100, nu: 0.34 },
+'Hierro fundido’:    { alpha: 11.7, e: 150, nu: 0.26 },
 };
 
 const MACHINE_SEED = [
-{ id:‘mach01’, brand:‘Mahr’, model:‘Mahr 828 PC’, sn:’’, uCal:0.0006, resolution:0.0001, force:4, forceUnit:‘cN’, cert:’’, certExpiry:’’ },
-{ id:‘mach02’, brand:‘Mahr’, model:‘MaraMeter 844 N’, sn:’’, uCal:0.001, resolution:0.0001, force:4, forceUnit:‘cN’, cert:’’, certExpiry:’’ },
-{ id:‘mach03’, brand:‘Tesa’, model:‘TESA-IMICRO’, sn:’’, uCal:0.0008, resolution:0.0001, force:3, forceUnit:‘N’, cert:’’, certExpiry:’’ },
-{ id:‘mach04’, brand:‘Mitutoyo’, model:‘526-101’, sn:’’, uCal:0.001, resolution:0.0001, force:5, forceUnit:‘N’, cert:’’, certExpiry:’’ },
+{ id:'mach01’, brand:'Mahr’, model:'Mahr 828 PC’, sn:’’, uCal:0.0006, resolution:0.0001, force:4, forceUnit:'cN’, cert:’’, certExpiry:’’ },
+{ id:'mach02’, brand:'Mahr’, model:'MaraMeter 844 N’, sn:’’, uCal:0.001, resolution:0.0001, force:4, forceUnit:'cN’, cert:’’, certExpiry:’’ },
+{ id:'mach03’, brand:'Tesa’, model:'TESA-IMICRO’, sn:’’, uCal:0.0008, resolution:0.0001, force:3, forceUnit:'N’, cert:’’, certExpiry:’’ },
+{ id:'mach04’, brand:'Mitutoyo’, model:'526-101’, sn:’’, uCal:0.001, resolution:0.0001, force:5, forceUnit:'N’, cert:’’, certExpiry:’’ },
 ];
 
 // ═══════════════════════════════════════════════════════════
@@ -287,14 +287,14 @@ const uB5 = uTemp * Math.abs(Lc * alpha_th);
 const uaR = (uAngle * Math.PI / 180) / Math.sqrt(3);
 const uB6 = uaR * Math.abs(p / (2 * Math.sin(aH) ** 2) * 0.5);
 const comps = [
-{ name: ‘Repetibilidad’, sym: ‘u_A1’, type: ‘A’, u: uA1, dof: dA1 },
-{ name: ‘Variación planos’, sym: ‘u_A2’, type: ‘A’, u: uA2, dof: dA2 },
-{ name: ‘Calibración banco’, sym: ‘u_B1’, type: ‘B’, u: uB1, dof: Infinity },
-{ name: ‘Resolución encoder’, sym: ‘u_B2’, type: ‘B’, u: uB2, dof: Infinity },
-{ name: ‘Diámetro hilo W’, sym: ‘u_B3’, type: ‘B’, u: uB3, dof: Infinity },
-{ name: ‘Fuerza → Hertz’, sym: ‘u_B4’, type: ‘B’, u: uB4, dof: Infinity },
-{ name: ‘Temperatura’, sym: ‘u_B5’, type: ‘B’, u: uB5, dof: Infinity },
-{ name: ‘Ángulo flanco’, sym: ‘u_B6’, type: ‘B’, u: uB6, dof: Infinity },
+{ name: 'Repetibilidad’, sym: 'u_A1’, type: 'A’, u: uA1, dof: dA1 },
+{ name: 'Variación planos’, sym: 'u_A2’, type: 'A’, u: uA2, dof: dA2 },
+{ name: 'Calibración banco’, sym: 'u_B1’, type: 'B’, u: uB1, dof: Infinity },
+{ name: 'Resolución encoder’, sym: 'u_B2’, type: 'B’, u: uB2, dof: Infinity },
+{ name: 'Diámetro hilo W’, sym: 'u_B3’, type: 'B’, u: uB3, dof: Infinity },
+{ name: 'Fuerza → Hertz’, sym: 'u_B4’, type: 'B’, u: uB4, dof: Infinity },
+{ name: 'Temperatura’, sym: 'u_B5’, type: 'B’, u: uB5, dof: Infinity },
+{ name: 'Ángulo flanco’, sym: 'u_B6’, type: 'B’, u: uB6, dof: Infinity },
 ];
 const ucSq = comps.reduce((s, c) => s + c.u ** 2, 0);
 const uc = Math.sqrt(ucSq);
@@ -310,62 +310,62 @@ return { mean, s, n, comps, uc, nuEff, k, U: k * uc, r0, r90, all };
 // UI PRIMITIVES
 // ═══════════════════════════════════════════════════════════
 const C = {
-primary: ‘bg-blue-600 hover:bg-blue-700 text-white shadow-sm’,
-ghost:   ‘bg-white hover:bg-slate-50 text-slate-700 border border-slate-200’,
-danger:  ‘bg-red-50 hover:bg-red-100 text-red-600 border border-red-200’,
-success: ‘bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm’,
-teal:    ‘bg-teal-600 hover:bg-teal-700 text-white shadow-sm’,
-amber:   ‘bg-amber-500 hover:bg-amber-600 text-white shadow-sm’,
+primary: 'bg-blue-600 hover:bg-blue-700 text-white shadow-sm’,
+ghost:   'bg-white hover:bg-slate-50 text-slate-700 border border-slate-200’,
+danger:  'bg-red-50 hover:bg-red-100 text-red-600 border border-red-200’,
+success: 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm’,
+teal:    'bg-teal-600 hover:bg-teal-700 text-white shadow-sm’,
+amber:   'bg-amber-500 hover:bg-amber-600 text-white shadow-sm’,
 };
 
-const Btn = ({ children, variant=‘primary’, size=‘md’, onClick, disabled, className=’’, icon }) => {
-const s = { sm:‘text-xs px-3 py-1.5 gap-1.5’, md:‘text-sm px-4 py-2 gap-2’, lg:‘text-sm px-5 py-2.5 gap-2’ }[size];
+const Btn = ({ children, variant='primary’, size='md’, onClick, disabled, className=’’, icon }) => {
+const s = { sm:'text-xs px-3 py-1.5 gap-1.5’, md:'text-sm px-4 py-2 gap-2’, lg:'text-sm px-5 py-2.5 gap-2’ }[size];
 return (
-React.createElement(‘button’, { onClick: onClick, disabled: disabled,
+React.createElement('button’, { onClick: onClick, disabled: disabled,
 className: `inline-flex items-center font-semibold rounded-lg transition-all ${C[variant]} ${s} ${disabled ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer'} ${className}`,}
-, icon && React.createElement(‘span’, { className: “flex-shrink-0”,}, icon), children
+, icon && React.createElement('span’, { className: "flex-shrink-0”,}, icon), children
 )
 );
 };
 
 const Inp = (props) => (
-React.createElement(‘input’, { …props, className: `w-full text-sm px-3 py-2 rounded-lg border border-slate-200 bg-slate-50 focus:bg-white focus:border-blue-400 focus:ring-2 focus:ring-blue-100 outline-none transition-all font-mono placeholder:font-sans placeholder:text-slate-300 ${props.readOnly ? 'text-slate-400 cursor-default' : ''} ${props.className || ''}`,} )
+React.createElement('input’, { …props, className: `w-full text-sm px-3 py-2 rounded-lg border border-slate-200 bg-slate-50 focus:bg-white focus:border-blue-400 focus:ring-2 focus:ring-blue-100 outline-none transition-all font-mono placeholder:font-sans placeholder:text-slate-300 ${props.readOnly ? 'text-slate-400 cursor-default' : ''} ${props.className || ''}`,} )
 );
 
 const Sel = ({ children, …props }) => (
-React.createElement(‘select’, { …props, className: `w-full text-sm px-3 py-2 rounded-lg border border-slate-200 bg-slate-50 focus:bg-white focus:border-blue-400 focus:ring-2 focus:ring-blue-100 outline-none transition-all cursor-pointer ${props.className || ''}`,}
+React.createElement('select’, { …props, className: `w-full text-sm px-3 py-2 rounded-lg border border-slate-200 bg-slate-50 focus:bg-white focus:border-blue-400 focus:ring-2 focus:ring-blue-100 outline-none transition-all cursor-pointer ${props.className || ''}`,}
 , children
 )
 );
 
 const Fld = ({ label, unit, children, hint }) => (
-React.createElement(‘div’, { className: “space-y-1.5”,}
-, React.createElement(‘label’, { className: “block text-[11px] font-bold text-slate-400 uppercase tracking-wider”     ,}
-, label, unit && React.createElement(‘span’, { className: “ml-1 font-normal normal-case tracking-normal text-slate-300”    ,}, “[”, unit, “]”)
+React.createElement('div’, { className: "space-y-1.5”,}
+, React.createElement('label’, { className: "block text-[11px] font-bold text-slate-400 uppercase tracking-wider”     ,}
+, label, unit && React.createElement('span’, { className: "ml-1 font-normal normal-case tracking-normal text-slate-300”    ,}, "[”, unit, "]”)
 )
 , children
-, hint && React.createElement(‘p’, { className: “text-[11px] text-slate-400” ,}, hint)
+, hint && React.createElement('p’, { className: "text-[11px] text-slate-400” ,}, hint)
 )
 );
 
-const Card = ({ children, className = ‘’ }) => (
-React.createElement(‘div’, { className: `bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden ${className}`,}, children)
+const Card = ({ children, className = '’ }) => (
+React.createElement('div’, { className: `bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden ${className}`,}, children)
 );
 
-const Hdg = ({ icon, title, sub, right, color = ‘blue’ }) => {
-const col = { blue:‘bg-blue-600’, teal:‘bg-teal-600’, amber:‘bg-amber-500’, green:‘bg-emerald-600’, purple:‘bg-purple-600’, slate:‘bg-slate-600’, red:‘bg-red-500’ }[color];
+const Hdg = ({ icon, title, sub, right, color = 'blue’ }) => {
+const col = { blue:'bg-blue-600’, teal:'bg-teal-600’, amber:'bg-amber-500’, green:'bg-emerald-600’, purple:'bg-purple-600’, slate:'bg-slate-600’, red:'bg-red-500’ }[color];
 return (
-React.createElement(‘div’, { className: “flex items-center justify-between px-5 py-4 border-b border-slate-100”      ,}
-, React.createElement(‘div’, { className: “flex items-center gap-3”  ,}
-, React.createElement(‘div’, { className: `w-7 h-7 rounded-lg flex items-center justify-center text-white flex-shrink-0 ${col}`,}
-, React.createElement(‘span’, { className: “text-xs”,}, icon)
+React.createElement('div’, { className: "flex items-center justify-between px-5 py-4 border-b border-slate-100”      ,}
+, React.createElement('div’, { className: "flex items-center gap-3”  ,}
+, React.createElement('div’, { className: `w-7 h-7 rounded-lg flex items-center justify-center text-white flex-shrink-0 ${col}`,}
+, React.createElement('span’, { className: "text-xs”,}, icon)
 )
-, React.createElement(‘div’, null
-, React.createElement(‘div’, { className: “font-bold text-slate-800 text-sm leading-tight”   ,}, title)
-, sub && React.createElement(‘div’, { className: “text-[11px] text-slate-400 leading-tight mt-0.5”   ,}, sub)
+, React.createElement('div’, null
+, React.createElement('div’, { className: "font-bold text-slate-800 text-sm leading-tight”   ,}, title)
+, sub && React.createElement('div’, { className: "text-[11px] text-slate-400 leading-tight mt-0.5”   ,}, sub)
 )
 )
-, right && React.createElement(‘div’, { className: “flex items-center gap-2”  ,}, right)
+, right && React.createElement('div’, { className: "flex items-center gap-2”  ,}, right)
 )
 );
 };
@@ -373,62 +373,62 @@ React.createElement(‘div’, { className: “flex items-center justify-between
 const Modal = ({ open, onClose, title, children, wide }) => {
 if (!open) return null;
 return (
-React.createElement(‘div’, { className: “fixed inset-0 z-50 flex items-center justify-center p-4”      , style: { background: ‘rgba(15,23,42,0.5)’, backdropFilter: ‘blur(4px)’ },}
-, React.createElement(‘div’, { className: `bg-white rounded-2xl shadow-2xl w-full max-h-[90vh] overflow-y-auto ${wide ? 'max-w-3xl' : 'max-w-lg'}`,}
-, React.createElement(‘div’, { className: “flex items-center justify-between px-6 py-4 border-b border-slate-100 sticky top-0 bg-white z-10”          ,}
-, React.createElement(‘h2’, { className: “font-bold text-slate-800 text-base”  ,}, title)
-, React.createElement(‘button’, { onClick: onClose, className: “w-7 h-7 flex items-center justify-center rounded-full text-slate-400 hover:bg-slate-100 transition-colors text-lg leading-none”          ,}, “×”)
+React.createElement('div’, { className: "fixed inset-0 z-50 flex items-center justify-center p-4”      , style: { background: 'rgba(15,23,42,0.5)’, backdropFilter: 'blur(4px)’ },}
+, React.createElement('div’, { className: `bg-white rounded-2xl shadow-2xl w-full max-h-[90vh] overflow-y-auto ${wide ? 'max-w-3xl' : 'max-w-lg'}`,}
+, React.createElement('div’, { className: "flex items-center justify-between px-6 py-4 border-b border-slate-100 sticky top-0 bg-white z-10”          ,}
+, React.createElement('h2’, { className: "font-bold text-slate-800 text-base”  ,}, title)
+, React.createElement('button’, { onClick: onClose, className: "w-7 h-7 flex items-center justify-center rounded-full text-slate-400 hover:bg-slate-100 transition-colors text-lg leading-none”          ,}, "×”)
 )
-, React.createElement(‘div’, { className: “p-6”,}, children)
+, React.createElement('div’, { className: "p-6”,}, children)
 )
 )
 );
 };
 
 const Confirm = ({ open, msg, onOk, onCancel }) => (
-React.createElement(Modal, { open: open, onClose: onCancel, title: “Confirmar”,}
-, React.createElement(‘p’, { className: “text-slate-600 mb-5 text-sm”  ,}, msg)
-, React.createElement(‘div’, { className: “flex justify-end gap-2”  ,}
-, React.createElement(Btn, { variant: “ghost”, onClick: onCancel,}, “Cancelar”)
-, React.createElement(Btn, { variant: “danger”, onClick: onOk,}, “Eliminar”)
+React.createElement(Modal, { open: open, onClose: onCancel, title: "Confirmar”,}
+, React.createElement('p’, { className: "text-slate-600 mb-5 text-sm”  ,}, msg)
+, React.createElement('div’, { className: "flex justify-end gap-2”  ,}
+, React.createElement(Btn, { variant: "ghost”, onClick: onCancel,}, "Cancelar”)
+, React.createElement(Btn, { variant: "danger”, onClick: onOk,}, "Eliminar”)
 )
 )
 );
 
-const Badge = ({ children, color = ‘blue’ }) => {
-const c = { blue:‘bg-blue-100 text-blue-700’, teal:‘bg-teal-100 text-teal-700’, amber:‘bg-amber-100 text-amber-700’, green:‘bg-emerald-100 text-emerald-700’, red:‘bg-red-100 text-red-700’, purple:‘bg-purple-100 text-purple-700’, slate:‘bg-slate-100 text-slate-600’ }[color];
-return React.createElement(‘span’, { className: `inline-flex text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wide ${c}`,}, children);
+const Badge = ({ children, color = 'blue’ }) => {
+const c = { blue:'bg-blue-100 text-blue-700’, teal:'bg-teal-100 text-teal-700’, amber:'bg-amber-100 text-amber-700’, green:'bg-emerald-100 text-emerald-700’, red:'bg-red-100 text-red-700’, purple:'bg-purple-100 text-purple-700’, slate:'bg-slate-100 text-slate-600’ }[color];
+return React.createElement('span’, { className: `inline-flex text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wide ${c}`,}, children);
 };
 
 // ═══════════════════════════════════════════════════════════
 // TABLE COMPONENT
 // ═══════════════════════════════════════════════════════════
-function Tbl({ cols, rows, onEdit, onDel, onView, empty = ‘Sin registros’ }) {
+function Tbl({ cols, rows, onEdit, onDel, onView, empty = 'Sin registros’ }) {
 return (
-React.createElement(‘div’, { className: “overflow-x-auto”,}
-, React.createElement(‘table’, { className: “w-full text-sm min-w-full”  ,}
-, React.createElement(‘thead’, null
-, React.createElement(‘tr’, { className: “border-b border-slate-100” ,}
-, cols.map(c => React.createElement(‘th’, { key: c.k, className: “text-left text-[10px] font-bold text-slate-400 uppercase tracking-wider px-4 py-3”       ,}, c.l))
-, React.createElement(‘th’, { className: “px-4 py-3 text-right text-[10px] font-bold text-slate-400 uppercase tracking-wider”       ,}, “Acciones”)
+React.createElement('div’, { className: "overflow-x-auto”,}
+, React.createElement('table’, { className: "w-full text-sm min-w-full”  ,}
+, React.createElement('thead’, null
+, React.createElement('tr’, { className: "border-b border-slate-100” ,}
+, cols.map(c => React.createElement('th’, { key: c.k, className: "text-left text-[10px] font-bold text-slate-400 uppercase tracking-wider px-4 py-3”       ,}, c.l))
+, React.createElement('th’, { className: "px-4 py-3 text-right text-[10px] font-bold text-slate-400 uppercase tracking-wider”       ,}, "Acciones”)
 )
 )
-, React.createElement(‘tbody’, null
+, React.createElement('tbody’, null
 , rows.length === 0 && (
-React.createElement(‘tr’, null, React.createElement(‘td’, { colSpan: cols.length + 1, className: “text-center text-slate-300 py-10 text-sm”   ,}, empty))
+React.createElement('tr’, null, React.createElement('td’, { colSpan: cols.length + 1, className: "text-center text-slate-300 py-10 text-sm”   ,}, empty))
 )
 , rows.map((row, i) => (
-React.createElement(‘tr’, { key: i, className: “border-b border-slate-50 hover:bg-slate-50/80 transition-colors”   ,}
+React.createElement('tr’, { key: i, className: "border-b border-slate-50 hover:bg-slate-50/80 transition-colors”   ,}
 , cols.map(c => (
-React.createElement(‘td’, { key: c.k, className: `px-4 py-3 ${c.mono ? 'font-mono text-xs' : ''} ${c.bold ? 'font-semibold text-slate-800' : 'text-slate-500'} ${c.max ? 'max-w-[180px] truncate' : ''}`,}
-, _nullishCoalesce(_nullishCoalesce(_optionalChain([row, ‘access’, _13 => _13._raw, ‘optionalAccess’, _14 => _14[c.k]]), () => ( row[c.k])), () => ( ‘—’))
+React.createElement('td’, { key: c.k, className: `px-4 py-3 ${c.mono ? 'font-mono text-xs' : ''} ${c.bold ? 'font-semibold text-slate-800' : 'text-slate-500'} ${c.max ? 'max-w-[180px] truncate' : ''}`,}
+, _nullishCoalesce(_nullishCoalesce(_optionalChain([row, 'access’, _13 => _13._raw, 'optionalAccess’, _14 => _14[c.k]]), () => ( row[c.k])), () => ( '—’))
 )
 ))
-, React.createElement(‘td’, { className: “px-4 py-3” ,}
-, React.createElement(‘div’, { className: “flex items-center justify-end gap-1”   ,}
-, onView && React.createElement(‘button’, { onClick: () => onView(row), className: “w-7 h-7 rounded-lg flex items-center justify-center text-slate-300 hover:bg-blue-50 hover:text-blue-600 transition-colors text-sm”          ,}, “👁”)
-, onEdit && React.createElement(‘button’, { onClick: () => onEdit(row), className: “w-7 h-7 rounded-lg flex items-center justify-center text-slate-300 hover:bg-blue-50 hover:text-blue-600 transition-colors text-sm”          ,}, “✏️”)
-, onDel && React.createElement(‘button’, { onClick: () => onDel(row), className: “w-7 h-7 rounded-lg flex items-center justify-center text-slate-300 hover:bg-red-50 hover:text-red-500 transition-colors text-sm”          ,}, “🗑”)
+, React.createElement('td’, { className: "px-4 py-3” ,}
+, React.createElement('div’, { className: "flex items-center justify-end gap-1”   ,}
+, onView && React.createElement('button’, { onClick: () => onView(row), className: "w-7 h-7 rounded-lg flex items-center justify-center text-slate-300 hover:bg-blue-50 hover:text-blue-600 transition-colors text-sm”          ,}, "👁”)
+, onEdit && React.createElement('button’, { onClick: () => onEdit(row), className: "w-7 h-7 rounded-lg flex items-center justify-center text-slate-300 hover:bg-blue-50 hover:text-blue-600 transition-colors text-sm”          ,}, "✏️”)
+, onDel && React.createElement('button’, { onClick: () => onDel(row), className: "w-7 h-7 rounded-lg flex items-center justify-center text-slate-300 hover:bg-red-50 hover:text-red-500 transition-colors text-sm”          ,}, "🗑”)
 )
 )
 )
@@ -443,8 +443,8 @@ React.createElement(‘td’, { key: c.k, className: `px-4 py-3 ${c.mono ? 'font
 // CLIENTS → EQUIPOS → CALIBRACIONES
 // ═══════════════════════════════════════════════════════════
 function ClientsSection() {
-const [clients, setClients] = useState(() => DB.get(‘clients’) || []);
-const [view, setView] = useState(‘list’); // list | equipment | calibration | newcal | viewcal
+const [clients, setClients] = useState(() => DB.get('clients’) || []);
+const [view, setView] = useState('list’); // list | equipment | calibration | newcal | viewcal
 const [activeClient, setActiveClient] = useState(null);
 const [activeEquip, setActiveEquip] = useState(null);
 const [activeCal, setActiveCal] = useState(null);
@@ -453,19 +453,19 @@ const [eModal, setEModal] = useState(false);
 const [editingC, setEditingC] = useState(null);
 const [editingE, setEditingE] = useState(null);
 const [delConfirm, setDelConfirm] = useState(null);
-const blankC = { id: uid(), code: ‘’, name: ‘’, address: ‘’, contact: ‘’, email: ‘’, phone: ‘’, equipments: [] };
-const blankE = { id: uid(), ref: ‘’, desc: ‘’, serial: ‘’, material: ‘Acero al carbono’, notes: ‘’ };
+const blankC = { id: uid(), code: '’, name: '’, address: '’, contact: '’, email: '’, phone: '’, equipments: [] };
+const blankE = { id: uid(), ref: '’, desc: '’, serial: '’, material: 'Acero al carbono’, notes: '’ };
 const [cForm, setCForm] = useState(blankC);
 const [eForm, setEForm] = useState(blankE);
 
-const saveClients = (c) => { DB.set(‘clients’, c); setClients(c); };
+const saveClients = (c) => { DB.set('clients’, c); setClients(c); };
 const FC = (k, v) => setCForm(f => ({ …f, [k]: v }));
 const FE = (k, v) => setEForm(f => ({ …f, [k]: v }));
 
 const submitC = () => {
 const upd = editingC ? clients.map(c => c.id === editingC ? { …cForm, equipments: c.equipments } : c) : […clients, { …cForm, equipments: [] }];
 saveClients(upd); setCModal(false);
-if (_optionalChain([activeClient, ‘optionalAccess’, _15 => _15.id]) === editingC) setActiveClient(upd.find(c => c.id === editingC));
+if (_optionalChain([activeClient, 'optionalAccess’, _15 => _15.id]) === editingC) setActiveClient(upd.find(c => c.id === editingC));
 };
 const submitE = () => {
 const cl = clients.find(c => c.id === activeClient.id);
@@ -475,12 +475,12 @@ saveClients(upd);
 setActiveClient({ …cl, equipments: eqs });
 setEModal(false);
 };
-const delClient = (c) => setDelConfirm({ type: ‘client’, item: c });
-const delEquip = (e) => setDelConfirm({ type: ‘equip’, item: e });
+const delClient = (c) => setDelConfirm({ type: 'client’, item: c });
+const delEquip = (e) => setDelConfirm({ type: 'equip’, item: e });
 const confirmDel = () => {
-if (delConfirm.type === ‘client’) {
+if (delConfirm.type === 'client’) {
 saveClients(clients.filter(c => c.id !== delConfirm.item.id));
-if (_optionalChain([activeClient, ‘optionalAccess’, _16 => _16.id]) === delConfirm.item.id) { setView(‘list’); setActiveClient(null); }
+if (_optionalChain([activeClient, 'optionalAccess’, _16 => _16.id]) === delConfirm.item.id) { setView('list’); setActiveClient(null); }
 } else {
 const cl = clients.find(c => c.id === activeClient.id);
 const eqs = cl.equipments.filter(e => e.id !== delConfirm.item.id);
@@ -490,124 +490,124 @@ saveClients(upd); setActiveClient({ …cl, equipments: eqs });
 setDelConfirm(null);
 };
 
-const getCals = (equipId) => (DB.get(‘calibrations’) || []).filter(c => c.equipId === equipId);
+const getCals = (equipId) => (DB.get('calibrations’) || []).filter(c => c.equipId === equipId);
 
-if (view === ‘newcal’) {
+if (view === 'newcal’) {
 return React.createElement(NewCalibration, { equip: activeEquip, client: activeClient,
-onSaved: (cal) => { setActiveCal(cal); setView(‘viewcal’); },
-onCancel: () => setView(‘calibration’), existing: null,} );
+onSaved: (cal) => { setActiveCal(cal); setView('viewcal’); },
+onCancel: () => setView('calibration’), existing: null,} );
 }
-if (view === ‘viewcal’ && activeCal) {
-return React.createElement(CalView, { cal: activeCal, onBack: () => setView(‘calibration’),
-onRecal: () => { setView(‘newcal’); },
-onEdit: () => setView(‘newcal’),} );
+if (view === 'viewcal’ && activeCal) {
+return React.createElement(CalView, { cal: activeCal, onBack: () => setView('calibration’),
+onRecal: () => { setView('newcal’); },
+onEdit: () => setView('newcal’),} );
 }
-if (view === ‘calibration’ && activeEquip) {
+if (view === 'calibration’ && activeEquip) {
 const cals = getCals(activeEquip.id);
 return (
-React.createElement(‘div’, { className: “space-y-4”,}
+React.createElement('div’, { className: "space-y-4”,}
 /* breadcrumb */
-, React.createElement(‘div’, { className: “flex items-center gap-2 text-sm”   ,}
-, React.createElement(‘button’, { onClick: () => setView(‘list’), className: “text-blue-600 hover:underline font-medium”  ,}, activeClient.name)
-, React.createElement(‘span’, { className: “text-slate-300”,}, “/”)
-, React.createElement(‘button’, { onClick: () => setView(‘equipment’), className: “text-blue-600 hover:underline font-medium”  ,}, activeEquip.ref)
-, React.createElement(‘span’, { className: “text-slate-300”,}, “/”)
-, React.createElement(‘span’, { className: “text-slate-600 font-semibold” ,}, “Calibraciones”)
+, React.createElement('div’, { className: "flex items-center gap-2 text-sm”   ,}
+, React.createElement('button’, { onClick: () => setView('list’), className: "text-blue-600 hover:underline font-medium”  ,}, activeClient.name)
+, React.createElement('span’, { className: "text-slate-300”,}, "/”)
+, React.createElement('button’, { onClick: () => setView('equipment’), className: "text-blue-600 hover:underline font-medium”  ,}, activeEquip.ref)
+, React.createElement('span’, { className: "text-slate-300”,}, "/”)
+, React.createElement('span’, { className: "text-slate-600 font-semibold” ,}, "Calibraciones”)
 )
 , React.createElement(Card, null
-, React.createElement(Hdg, { icon: “📋”, title: `Equipo: ${activeEquip.ref}`, sub: `${activeEquip.desc} · ${activeEquip.serial || 'sin S/N'} · ${activeEquip.material}`, color: “teal”,
-right: React.createElement(Btn, { onClick: () => setView(‘newcal’), icon: “➕”, size: “sm”,}, “Nueva calibración” ),} )
+, React.createElement(Hdg, { icon: "📋”, title: `Equipo: ${activeEquip.ref}`, sub: `${activeEquip.desc} · ${activeEquip.serial || 'sin S/N'} · ${activeEquip.material}`, color: "teal”,
+right: React.createElement(Btn, { onClick: () => setView('newcal’), icon: "➕”, size: "sm”,}, "Nueva calibración” ),} )
 , cals.length === 0 ? (
-React.createElement(‘div’, { className: “flex flex-col items-center justify-center py-14 gap-3”     ,}
-, React.createElement(‘div’, { className: “text-5xl”,}, “📏”)
-, React.createElement(‘div’, { className: “text-slate-400 font-medium” ,}, “Sin calibraciones para este equipo”    )
-, React.createElement(Btn, { onClick: () => setView(‘newcal’), icon: “➕”,}, “Primera calibración” )
+React.createElement('div’, { className: "flex flex-col items-center justify-center py-14 gap-3”     ,}
+, React.createElement('div’, { className: "text-5xl”,}, "📏”)
+, React.createElement('div’, { className: "text-slate-400 font-medium” ,}, "Sin calibraciones para este equipo”    )
+, React.createElement(Btn, { onClick: () => setView('newcal’), icon: "➕”,}, "Primera calibración” )
 )
 ) : (
 React.createElement(Tbl, { cols: [
-{ k: ‘certNum’, l: ‘Certificado’, bold: true, mono: true },
-{ k: ‘date’, l: ‘Fecha’ },
-{ k: ‘threadName’, l: ‘Rosca’ },
-{ k: ‘result’, l: ‘E ± U [mm]’, mono: true },
-{ k: ‘techName’, l: ‘Técnico’ },
-{ k: ‘statusB’, l: ‘Estado’ },
+{ k: 'certNum’, l: 'Certificado’, bold: true, mono: true },
+{ k: 'date’, l: 'Fecha’ },
+{ k: 'threadName’, l: 'Rosca’ },
+{ k: 'result’, l: 'E ± U [mm]’, mono: true },
+{ k: 'techName’, l: 'Técnico’ },
+{ k: 'statusB’, l: 'Estado’ },
 ], rows: cals.map(c => ({
 …c,
 date: fmtDate(c.date),
-result: c.gum ? `${c.gum.mean.toFixed(5)} ± ${fmt(c.gum.U)}` : ‘—’,
-statusB: React.createElement(Badge, { color: c.status === ‘ISSUED’ ? ‘green’ : ‘amber’,}, c.status),
+result: c.gum ? `${c.gum.mean.toFixed(5)} ± ${fmt(c.gum.U)}` : '—’,
+statusB: React.createElement(Badge, { color: c.status === 'ISSUED’ ? 'green’ : 'amber’,}, c.status),
 _raw: c,
 })),
-onView: row => { setActiveCal(row._raw); setView(‘viewcal’); },
-onEdit: row => { setActiveCal(row._raw); setView(‘newcal’); },
+onView: row => { setActiveCal(row._raw); setView('viewcal’); },
+onEdit: row => { setActiveCal(row._raw); setView('newcal’); },
 onDel: row => {
-const cals = (DB.get(‘calibrations’) || []).filter(c => c.certNum !== row._raw.certNum);
-DB.set(‘calibrations’, cals);
+const cals = (DB.get('calibrations’) || []).filter(c => c.certNum !== row._raw.certNum);
+DB.set('calibrations’, cals);
 setActiveEquip({ …activeEquip }); // force re-render trick
 },}
 )
 )
 )
-, React.createElement(Confirm, { open: !!delConfirm, msg: “¿Eliminar este registro?”  , onOk: confirmDel, onCancel: () => setDelConfirm(null),} )
+, React.createElement(Confirm, { open: !!delConfirm, msg: "¿Eliminar este registro?”  , onOk: confirmDel, onCancel: () => setDelConfirm(null),} )
 )
 );
 }
-if (view === ‘equipment’ && activeClient) {
+if (view === 'equipment’ && activeClient) {
 return (
-React.createElement(‘div’, { className: “space-y-4”,}
-, React.createElement(‘div’, { className: “flex items-center gap-2 text-sm”   ,}
-, React.createElement(‘button’, { onClick: () => setView(‘list’), className: “text-blue-600 hover:underline font-medium”  ,}, activeClient.name)
-, React.createElement(‘span’, { className: “text-slate-300”,}, “/”)
-, React.createElement(‘span’, { className: “text-slate-600 font-semibold” ,}, “Equipos”)
+React.createElement('div’, { className: "space-y-4”,}
+, React.createElement('div’, { className: "flex items-center gap-2 text-sm”   ,}
+, React.createElement('button’, { onClick: () => setView('list’), className: "text-blue-600 hover:underline font-medium”  ,}, activeClient.name)
+, React.createElement('span’, { className: "text-slate-300”,}, "/”)
+, React.createElement('span’, { className: "text-slate-600 font-semibold” ,}, "Equipos”)
 )
 , React.createElement(Card, null
-, React.createElement(Hdg, { icon: “🏭”, title: activeClient.name, sub: `${activeClient.code} · ${activeClient.address || 'Sin dirección'}`, color: “blue”,
+, React.createElement(Hdg, { icon: "🏭”, title: activeClient.name, sub: `${activeClient.code} · ${activeClient.address || 'Sin dirección'}`, color: "blue”,
 right:
-React.createElement(‘div’, { className: “flex gap-2” ,}
-, React.createElement(Btn, { size: “sm”, variant: “ghost”, onClick: () => { setEditingC(activeClient.id); setCForm({ …activeClient }); setCModal(true); }, icon: “✏️”,}, “Editar cliente” )
-, React.createElement(Btn, { size: “sm”, onClick: () => { setEditingE(null); setEForm({ …blankE, id: uid() }); setEModal(true); }, icon: “➕”,}, “Añadir equipo” )
+React.createElement('div’, { className: "flex gap-2” ,}
+, React.createElement(Btn, { size: "sm”, variant: "ghost”, onClick: () => { setEditingC(activeClient.id); setCForm({ …activeClient }); setCModal(true); }, icon: "✏️”,}, "Editar cliente” )
+, React.createElement(Btn, { size: "sm”, onClick: () => { setEditingE(null); setEForm({ …blankE, id: uid() }); setEModal(true); }, icon: "➕”,}, "Añadir equipo” )
 )
 ,} )
 , (activeClient.equipments || []).length === 0 ? (
-React.createElement(‘div’, { className: “flex flex-col items-center py-12 gap-3”    ,}
-, React.createElement(‘div’, { className: “text-4xl”,}, “🔩”)
-, React.createElement(‘div’, { className: “text-slate-400”,}, “Sin equipos registrados”  )
-, React.createElement(Btn, { onClick: () => { setEditingE(null); setEForm({ …blankE, id: uid() }); setEModal(true); }, icon: “➕”,}, “Añadir primer equipo”  )
+React.createElement('div’, { className: "flex flex-col items-center py-12 gap-3”    ,}
+, React.createElement('div’, { className: "text-4xl”,}, "🔩”)
+, React.createElement('div’, { className: "text-slate-400”,}, "Sin equipos registrados”  )
+, React.createElement(Btn, { onClick: () => { setEditingE(null); setEForm({ …blankE, id: uid() }); setEModal(true); }, icon: "➕”,}, "Añadir primer equipo”  )
 )
 ) : (
 React.createElement(Tbl, { cols: [
-{ k: ‘ref’, l: ‘Referencia’, bold: true },
-{ k: ‘desc’, l: ‘Descripción’, max: true },
-{ k: ‘serial’, l: ‘Nº Serie’ },
-{ k: ‘material’, l: ‘Material’ },
-{ k: ‘ncals’, l: ‘Calibraciones’, mono: true },
+{ k: 'ref’, l: 'Referencia’, bold: true },
+{ k: 'desc’, l: 'Descripción’, max: true },
+{ k: 'serial’, l: 'Nº Serie’ },
+{ k: 'material’, l: 'Material’ },
+{ k: 'ncals’, l: 'Calibraciones’, mono: true },
 ], rows: (activeClient.equipments || []).map(e => ({
 …e,
-ncals: getCals(e.id).length || ‘0’,
+ncals: getCals(e.id).length || '0’,
 _raw: e,
 })),
-onView: row => { setActiveEquip(row._raw); setView(‘calibration’); },
+onView: row => { setActiveEquip(row._raw); setView('calibration’); },
 onEdit: row => { setEditingE(row._raw.id); setEForm({ …row._raw }); setEModal(true); },
 onDel: row => delEquip(row._raw),}
 )
 )
 )
 /* Equipment modal */
-, React.createElement(Modal, { open: eModal, onClose: () => setEModal(false), title: editingE ? ‘Editar equipo’ : ‘Nuevo equipo’,}
-, React.createElement(‘div’, { className: “grid grid-cols-2 gap-4”  ,}
-, React.createElement(Fld, { label: “Referencia”, required: true,}, React.createElement(Inp, { value: eForm.ref, onChange: e => FE(‘ref’, e.target.value), placeholder: “EQ-001”,} ))
-, React.createElement(Fld, { label: “Nº de serie”  ,}, React.createElement(Inp, { value: eForm.serial, onChange: e => FE(‘serial’, e.target.value),} ))
-, React.createElement(‘div’, { className: “col-span-2”,}, React.createElement(Fld, { label: “Descripción”,}, React.createElement(Inp, { value: eForm.desc, onChange: e => FE(‘desc’, e.target.value), placeholder: “Tornillo M14×1.5 lote 2025-A”   ,} )))
-, React.createElement(‘div’, { className: “col-span-2”,}, React.createElement(Fld, { label: “Material”,}
-, React.createElement(Sel, { value: eForm.material, onChange: e => FE(‘material’, e.target.value),}
-, Object.keys(MATERIALS).map(m => React.createElement(‘option’, { key: m,}, m))
+, React.createElement(Modal, { open: eModal, onClose: () => setEModal(false), title: editingE ? 'Editar equipo’ : 'Nuevo equipo’,}
+, React.createElement('div’, { className: "grid grid-cols-2 gap-4”  ,}
+, React.createElement(Fld, { label: "Referencia”, required: true,}, React.createElement(Inp, { value: eForm.ref, onChange: e => FE('ref’, e.target.value), placeholder: "EQ-001”,} ))
+, React.createElement(Fld, { label: "Nº de serie”  ,}, React.createElement(Inp, { value: eForm.serial, onChange: e => FE('serial’, e.target.value),} ))
+, React.createElement('div’, { className: "col-span-2”,}, React.createElement(Fld, { label: "Descripción”,}, React.createElement(Inp, { value: eForm.desc, onChange: e => FE('desc’, e.target.value), placeholder: "Tornillo M14×1.5 lote 2025-A”   ,} )))
+, React.createElement('div’, { className: "col-span-2”,}, React.createElement(Fld, { label: "Material”,}
+, React.createElement(Sel, { value: eForm.material, onChange: e => FE('material’, e.target.value),}
+, Object.keys(MATERIALS).map(m => React.createElement('option’, { key: m,}, m))
 )
 ))
-, React.createElement(‘div’, { className: “col-span-2”,}, React.createElement(Fld, { label: “Notas”,}, React.createElement(‘textarea’, { className: “w-full text-sm px-3 py-2 rounded-lg border border-slate-200 bg-slate-50 focus:bg-white focus:border-blue-400 outline-none resize-none h-16”            , value: eForm.notes, onChange: e => FE(‘notes’, e.target.value),} )))
+, React.createElement('div’, { className: "col-span-2”,}, React.createElement(Fld, { label: "Notas”,}, React.createElement('textarea’, { className: "w-full text-sm px-3 py-2 rounded-lg border border-slate-200 bg-slate-50 focus:bg-white focus:border-blue-400 outline-none resize-none h-16”            , value: eForm.notes, onChange: e => FE('notes’, e.target.value),} )))
 )
-, React.createElement(‘div’, { className: “flex justify-end gap-2 mt-5 pt-4 border-t border-slate-100”      ,}
-, React.createElement(Btn, { variant: “ghost”, onClick: () => setEModal(false),}, “Cancelar”)
-, React.createElement(Btn, { onClick: submitE, icon: “💾”,}, editingE ? ‘Guardar cambios’ : ‘Crear equipo’)
+, React.createElement('div’, { className: "flex justify-end gap-2 mt-5 pt-4 border-t border-slate-100”      ,}
+, React.createElement(Btn, { variant: "ghost”, onClick: () => setEModal(false),}, "Cancelar”)
+, React.createElement(Btn, { onClick: submitE, icon: "💾”,}, editingE ? 'Guardar cambios’ : 'Crear equipo’)
 )
 )
 , React.createElement(Confirm, { open: !!delConfirm, msg: `¿Eliminar "${_optionalChain([delConfirm, 'optionalAccess', _17 => _17.item, 'optionalAccess', _18 => _18.ref]) || _optionalChain([delConfirm, 'optionalAccess', _19 => _19.item, 'optionalAccess', _20 => _20.name])}"?`, onOk: confirmDel, onCancel: () => setDelConfirm(null),} )
@@ -617,45 +617,45 @@ onDel: row => delEquip(row._raw),}
 
 // ── CLIENT LIST ──
 return (
-React.createElement(‘div’, { className: “space-y-4”,}
-, React.createElement(‘div’, { className: “flex items-center justify-between”  ,}
-, React.createElement(‘div’, null
-, React.createElement(‘h2’, { className: “font-bold text-slate-800 text-lg”  ,}, “Clientes”)
-, React.createElement(‘p’, { className: “text-xs text-slate-400 mt-0.5”  ,}, “Selecciona un cliente para ver sus equipos y calibraciones”        )
+React.createElement('div’, { className: "space-y-4”,}
+, React.createElement('div’, { className: "flex items-center justify-between”  ,}
+, React.createElement('div’, null
+, React.createElement('h2’, { className: "font-bold text-slate-800 text-lg”  ,}, "Clientes”)
+, React.createElement('p’, { className: "text-xs text-slate-400 mt-0.5”  ,}, "Selecciona un cliente para ver sus equipos y calibraciones”        )
 )
-, React.createElement(Btn, { onClick: () => { setEditingC(null); setCForm({ …blankC, id: uid() }); setCModal(true); }, icon: “➕”,}, “Nuevo cliente” )
+, React.createElement(Btn, { onClick: () => { setEditingC(null); setCForm({ …blankC, id: uid() }); setCModal(true); }, icon: "➕”,}, "Nuevo cliente” )
 )
-, React.createElement(‘div’, { className: “grid grid-cols-1 gap-3”  ,}
+, React.createElement('div’, { className: "grid grid-cols-1 gap-3”  ,}
 , clients.length === 0 && (
-React.createElement(Card, { className: “flex flex-col items-center py-16 gap-3”    ,}
-, React.createElement(‘div’, { className: “text-5xl”,}, “🏭”)
-, React.createElement(‘div’, { className: “text-slate-400 font-medium” ,}, “Sin clientes — añade el primero”     )
-, React.createElement(Btn, { onClick: () => { setEditingC(null); setCForm({ …blankC, id: uid() }); setCModal(true); }, icon: “➕”,}, “Añadir cliente” )
+React.createElement(Card, { className: "flex flex-col items-center py-16 gap-3”    ,}
+, React.createElement('div’, { className: "text-5xl”,}, "🏭”)
+, React.createElement('div’, { className: "text-slate-400 font-medium” ,}, "Sin clientes — añade el primero”     )
+, React.createElement(Btn, { onClick: () => { setEditingC(null); setCForm({ …blankC, id: uid() }); setCModal(true); }, icon: "➕”,}, "Añadir cliente” )
 )
 )
 , clients.map(cl => {
 const totalCals = (cl.equipments || []).reduce((a, e) => a + getCals(e.id).length, 0);
 return (
 React.createElement(Card, { key: cl.id,}
-, React.createElement(‘div’, { className: “flex items-center p-5 gap-4”   ,}
-, React.createElement(‘div’, { className: “w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center text-white font-bold text-lg flex-shrink-0 shadow-sm shadow-blue-200”              ,}
+, React.createElement('div’, { className: "flex items-center p-5 gap-4”   ,}
+, React.createElement('div’, { className: "w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center text-white font-bold text-lg flex-shrink-0 shadow-sm shadow-blue-200”              ,}
 , cl.name.charAt(0).toUpperCase()
 )
-, React.createElement(‘div’, { className: “flex-1 min-w-0” ,}
-, React.createElement(‘div’, { className: “flex items-center gap-2”  ,}
-, React.createElement(‘span’, { className: “font-bold text-slate-800” ,}, cl.name)
-, cl.code && React.createElement(Badge, { color: “slate”,}, cl.code)
+, React.createElement('div’, { className: "flex-1 min-w-0” ,}
+, React.createElement('div’, { className: "flex items-center gap-2”  ,}
+, React.createElement('span’, { className: "font-bold text-slate-800” ,}, cl.name)
+, cl.code && React.createElement(Badge, { color: "slate”,}, cl.code)
 )
-, React.createElement(‘div’, { className: “text-xs text-slate-400 mt-0.5 truncate”   ,}, cl.address || cl.email || cl.contact || ‘Sin datos de contacto’)
-, React.createElement(‘div’, { className: “flex items-center gap-3 mt-2”   ,}
-, React.createElement(‘span’, { className: “text-xs text-slate-400” ,}, “🔩 “ , (cl.equipments || []).length, “ equipos” )
-, React.createElement(‘span’, { className: “text-xs text-slate-400” ,}, “📋 “ , totalCals, “ calibraciones” )
+, React.createElement('div’, { className: "text-xs text-slate-400 mt-0.5 truncate”   ,}, cl.address || cl.email || cl.contact || 'Sin datos de contacto’)
+, React.createElement('div’, { className: "flex items-center gap-3 mt-2”   ,}
+, React.createElement('span’, { className: "text-xs text-slate-400” ,}, "🔩 " , (cl.equipments || []).length, " equipos” )
+, React.createElement('span’, { className: "text-xs text-slate-400” ,}, "📋 " , totalCals, " calibraciones” )
 )
 )
-, React.createElement(‘div’, { className: “flex items-center gap-2”  ,}
-, React.createElement(Btn, { size: “sm”, variant: “ghost”, onClick: () => { setEditingC(cl.id); setCForm({ …cl }); setCModal(true); }, icon: “✏️”,}, “Editar”)
-, React.createElement(Btn, { size: “sm”, variant: “danger”, onClick: () => delClient(cl), icon: “🗑”,}, “Eliminar”)
-, React.createElement(Btn, { size: “sm”, onClick: () => { setActiveClient(cl); setView(‘equipment’); }, icon: “→”,}, “Ver equipos” )
+, React.createElement('div’, { className: "flex items-center gap-2”  ,}
+, React.createElement(Btn, { size: "sm”, variant: "ghost”, onClick: () => { setEditingC(cl.id); setCForm({ …cl }); setCModal(true); }, icon: "✏️”,}, "Editar”)
+, React.createElement(Btn, { size: "sm”, variant: "danger”, onClick: () => delClient(cl), icon: "🗑”,}, "Eliminar”)
+, React.createElement(Btn, { size: "sm”, onClick: () => { setActiveClient(cl); setView('equipment’); }, icon: "→”,}, "Ver equipos” )
 )
 )
 )
@@ -663,18 +663,18 @@ React.createElement(Card, { key: cl.id,}
 })
 )
 /* Client modal */
-, React.createElement(Modal, { open: cModal, onClose: () => setCModal(false), title: editingC ? ‘Editar cliente’ : ‘Nuevo cliente’,}
-, React.createElement(‘div’, { className: “grid grid-cols-2 gap-4”  ,}
-, React.createElement(Fld, { label: “Código”,}, React.createElement(Inp, { value: cForm.code, onChange: e => FC(‘code’, e.target.value), placeholder: “CLI-001”,} ))
-, React.createElement(Fld, { label: “Nombre”, required: true,}, React.createElement(Inp, { value: cForm.name, onChange: e => FC(‘name’, e.target.value),} ))
-, React.createElement(‘div’, { className: “col-span-2”,}, React.createElement(Fld, { label: “Dirección”,}, React.createElement(Inp, { value: cForm.address, onChange: e => FC(‘address’, e.target.value),} )))
-, React.createElement(Fld, { label: “Contacto”,}, React.createElement(Inp, { value: cForm.contact, onChange: e => FC(‘contact’, e.target.value),} ))
-, React.createElement(Fld, { label: “Email”,}, React.createElement(Inp, { type: “email”, value: cForm.email, onChange: e => FC(‘email’, e.target.value),} ))
-, React.createElement(‘div’, { className: “col-span-2”,}, React.createElement(Fld, { label: “Teléfono”,}, React.createElement(Inp, { value: cForm.phone, onChange: e => FC(‘phone’, e.target.value),} )))
+, React.createElement(Modal, { open: cModal, onClose: () => setCModal(false), title: editingC ? 'Editar cliente’ : 'Nuevo cliente’,}
+, React.createElement('div’, { className: "grid grid-cols-2 gap-4”  ,}
+, React.createElement(Fld, { label: "Código”,}, React.createElement(Inp, { value: cForm.code, onChange: e => FC('code’, e.target.value), placeholder: "CLI-001”,} ))
+, React.createElement(Fld, { label: "Nombre”, required: true,}, React.createElement(Inp, { value: cForm.name, onChange: e => FC('name’, e.target.value),} ))
+, React.createElement('div’, { className: "col-span-2”,}, React.createElement(Fld, { label: "Dirección”,}, React.createElement(Inp, { value: cForm.address, onChange: e => FC('address’, e.target.value),} )))
+, React.createElement(Fld, { label: "Contacto”,}, React.createElement(Inp, { value: cForm.contact, onChange: e => FC('contact’, e.target.value),} ))
+, React.createElement(Fld, { label: "Email”,}, React.createElement(Inp, { type: "email”, value: cForm.email, onChange: e => FC('email’, e.target.value),} ))
+, React.createElement('div’, { className: "col-span-2”,}, React.createElement(Fld, { label: "Teléfono”,}, React.createElement(Inp, { value: cForm.phone, onChange: e => FC('phone’, e.target.value),} )))
 )
-, React.createElement(‘div’, { className: “flex justify-end gap-2 mt-5 pt-4 border-t border-slate-100”      ,}
-, React.createElement(Btn, { variant: “ghost”, onClick: () => setCModal(false),}, “Cancelar”)
-, React.createElement(Btn, { onClick: submitC, icon: “💾”,}, editingC ? ‘Guardar’ : ‘Crear cliente’)
+, React.createElement('div’, { className: "flex justify-end gap-2 mt-5 pt-4 border-t border-slate-100”      ,}
+, React.createElement(Btn, { variant: "ghost”, onClick: () => setCModal(false),}, "Cancelar”)
+, React.createElement(Btn, { onClick: submitC, icon: "💾”,}, editingC ? 'Guardar’ : 'Crear cliente’)
 )
 )
 , React.createElement(Confirm, { open: !!delConfirm, msg: `¿Eliminar cliente "${_optionalChain([delConfirm, 'optionalAccess', _21 => _21.item, 'optionalAccess', _22 => _22.name])}"? Se perderán todos sus equipos.`, onOk: confirmDel, onCancel: () => setDelConfirm(null),} )
@@ -686,23 +686,23 @@ React.createElement(Card, { key: cl.id,}
 // NEW CALIBRATION WIZARD
 // ═══════════════════════════════════════════════════════════
 function NewCalibration({ equip, client, onSaved, onCancel, existing }) {
-const cfg = DB.get(‘config’) || {};
-const machines = DB.get(‘machines’) || MACHINE_SEED;
-const techs = DB.get(‘techs’) || [];
+const cfg = DB.get('config’) || {};
+const machines = DB.get('machines’) || MACHINE_SEED;
+const techs = DB.get('techs’) || [];
 
 const init = existing || {
 certNum: `CAL-${new Date().getFullYear()}-${String(Math.floor(Math.random() * 9000) + 1000)}`,
-date: today(), machineId: ‘’, techId: ‘’,
-threadId: ‘’, threadName: ‘’, tolClass: ‘’, direction: ‘external’,
-tolMin: ‘’, tolMax: ‘’,
-wireId: ‘’, wireDiam: ‘’, uWire: 0.00015, wireCert: ‘’,
+date: today(), machineId: '’, techId: '’,
+threadId: '’, threadName: '’, tolClass: '’, direction: 'external’,
+tolMin: '’, tolMax: '’,
+wireId: '’, wireDiam: '’, uWire: 0.00015, wireCert: '’,
 temp: 20.0, humidity: 48, uTemp: 0.1, uForce: 0.002, uAngle: 0.1,
 alpha_th: 11.5, e_mod: 210, nu: 0.30,
-readings0: [’’, ‘’, ‘’], readings90: [’’, ‘’, ‘’],
-signature: ‘’, status: ‘DRAFT’, gum: null,
-equipId: _optionalChain([equip, ‘optionalAccess’, _23 => _23.id]), clientId: _optionalChain([client, ‘optionalAccess’, _24 => _24.id]),
-clientName: _optionalChain([client, ‘optionalAccess’, _25 => _25.name]), equipRef: _optionalChain([equip, ‘optionalAccess’, _26 => _26.ref]),
-labName: cfg.labName || ‘Laboratorio de Metrología’,
+readings0: [’’, '’, '’], readings90: [’’, '’, '’],
+signature: '’, status: 'DRAFT’, gum: null,
+equipId: _optionalChain([equip, 'optionalAccess’, _23 => _23.id]), clientId: _optionalChain([client, 'optionalAccess’, _24 => _24.id]),
+clientName: _optionalChain([client, 'optionalAccess’, _25 => _25.name]), equipRef: _optionalChain([equip, 'optionalAccess’, _26 => _26.ref]),
+labName: cfg.labName || 'Laboratorio de Metrología’,
 };
 const [s, setS] = useState(init);
 const [step, setStep] = useState(0);
@@ -715,51 +715,51 @@ const wire = WIRES.find(w => w.id === s.wireId);
 
 useEffect(() => {
 if (thread) {
-sv(‘threadName’, thread.name);
-sv(‘tolClass’, s.direction === ‘external’ ? thread.tolExt : thread.tolInt);
+sv('threadName’, thread.name);
+sv('tolClass’, s.direction === 'external’ ? thread.tolExt : thread.tolInt);
 // auto best-wire suggestion
 }
 }, [s.threadId, s.direction]);
 
 useEffect(() => {
-if (wire) { sv(‘wireDiam’, wire.diam); sv(‘uWire’, wire.uW); }
+if (wire) { sv('wireDiam’, wire.diam); sv('uWire’, wire.uW); }
 }, [s.wireId]);
 
 useEffect(() => {
-const mat = MATERIALS[_optionalChain([equip, ‘optionalAccess’, _27 => _27.material])];
-if (mat) { sv(‘alpha_th’, mat.alpha); sv(‘e_mod’, mat.e); sv(‘nu’, mat.nu); }
+const mat = MATERIALS[_optionalChain([equip, 'optionalAccess’, _27 => _27.material])];
+if (mat) { sv('alpha_th’, mat.alpha); sv('e_mod’, mat.e); sv('nu’, mat.nu); }
 }, []);
 
 const geo = {
-W: +s.wireDiam || 0.866, alpha: _optionalChain([thread, ‘optionalAccess’, _28 => _28.alpha]) || 60, p: _optionalChain([thread, ‘optionalAccess’, _29 => _29.p]) || 1.5,
-T: +s.temp, F: machine ? (machine.forceUnit === ‘cN’ ? machine.force / 100 : +machine.force) : 0.04,
+W: +s.wireDiam || 0.866, alpha: _optionalChain([thread, 'optionalAccess’, _28 => _28.alpha]) || 60, p: _optionalChain([thread, 'optionalAccess’, _29 => _29.p]) || 1.5,
+T: +s.temp, F: machine ? (machine.forceUnit === 'cN’ ? machine.force / 100 : +machine.force) : 0.04,
 alpha_th: +s.alpha_th * 1e-6, E_mod: +s.e_mod * 1e9, nu: +s.nu,
 };
 
 const bw = thread ? bestWire(thread.p, thread.alpha) : 0;
 const getE = (v) => { const r = +v; if (!v || isNaN(r)) return null; return calcE(r, geo); };
-const r0vals = s.readings0.map(v => _optionalChain([getE, ‘call’, _30 => _30(v), ‘optionalAccess’, _31 => _31.E])).filter(v => v != null);
-const r90vals = s.readings90.map(v => _optionalChain([getE, ‘call’, _32 => _32(v), ‘optionalAccess’, _33 => _33.E])).filter(v => v != null);
+const r0vals = s.readings0.map(v => _optionalChain([getE, 'call’, _30 => _30(v), 'optionalAccess’, _31 => _31.E])).filter(v => v != null);
+const r90vals = s.readings90.map(v => _optionalChain([getE, 'call’, _32 => _32(v), 'optionalAccess’, _33 => _33.E])).filter(v => v != null);
 
 const runGUM = () => {
 const ucal = machine ? +machine.uCal : 0.0006;
 const res = machine ? +machine.resolution : 0.0001;
-const g = calcGUM(r0vals, r90vals, geo, ucal, res, +s.uWire, +s.uForce, +s.uTemp, +s.uAngle, _optionalChain([thread, ‘optionalAccess’, _34 => _34.d]));
-if (g) sv(‘gum’, g);
+const g = calcGUM(r0vals, r90vals, geo, ucal, res, +s.uWire, +s.uForce, +s.uTemp, +s.uAngle, _optionalChain([thread, 'optionalAccess’, _34 => _34.d]));
+if (g) sv('gum’, g);
 return g;
 };
 
 const doSave = (gum) => {
 const cal = {
-…s, gum: gum || s.gum, status: ‘ISSUED’,
-threadName: _optionalChain([thread, ‘optionalAccess’, _35 => _35.name]) || s.threadName,
-techName: _optionalChain([tech, ‘optionalAccess’, _36 => _36.name]) || _optionalChain([tech, ‘optionalAccess’, _37 => _37.code]) || ‘—’,
+…s, gum: gum || s.gum, status: 'ISSUED’,
+threadName: _optionalChain([thread, 'optionalAccess’, _35 => _35.name]) || s.threadName,
+techName: _optionalChain([tech, 'optionalAccess’, _36 => _36.name]) || _optionalChain([tech, 'optionalAccess’, _37 => _37.code]) || '—’,
 savedAt: new Date().toISOString(),
 };
-const cals = DB.get(‘calibrations’) || [];
+const cals = DB.get('calibrations’) || [];
 const idx = cals.findIndex(c => c.certNum === cal.certNum);
 if (idx >= 0) cals[idx] = cal; else cals.unshift(cal);
-DB.set(‘calibrations’, cals);
+DB.set('calibrations’, cals);
 onSaved(cal);
 };
 
@@ -767,35 +767,35 @@ const canvasRef = useRef(null);
 const [drawing, setDrawing] = useState(false);
 const startDraw = (e) => {
 setDrawing(true);
-const c = canvasRef.current, r = c.getBoundingClientRect(), ctx = c.getContext(‘2d’);
+const c = canvasRef.current, r = c.getBoundingClientRect(), ctx = c.getContext('2d’);
 ctx.beginPath(); ctx.moveTo(e.clientX - r.left, e.clientY - r.top);
 };
 const draw = (e) => {
 if (!drawing) return;
-const c = canvasRef.current, r = c.getBoundingClientRect(), ctx = c.getContext(‘2d’);
-ctx.lineWidth = 2; ctx.lineCap = ‘round’; ctx.strokeStyle = ‘#1e293b’;
+const c = canvasRef.current, r = c.getBoundingClientRect(), ctx = c.getContext('2d’);
+ctx.lineWidth = 2; ctx.lineCap = 'round’; ctx.strokeStyle = '#1e293b’;
 ctx.lineTo(e.clientX - r.left, e.clientY - r.top); ctx.stroke();
 };
-const endDraw = () => { setDrawing(false); sv(‘signature’, _optionalChain([canvasRef, ‘access’, _38 => _38.current, ‘optionalAccess’, _39 => _39.toDataURL, ‘call’, _40 => _40()])); };
+const endDraw = () => { setDrawing(false); sv('signature’, _optionalChain([canvasRef, 'access’, _38 => _38.current, 'optionalAccess’, _39 => _39.toDataURL, 'call’, _40 => _40()])); };
 
-const STEPS = [‘Proyecto’, ‘Rosca’, ‘Hilo & Cond.’, ‘Mediciones’, ‘Resultado’, ‘Certificado’];
+const STEPS = ['Proyecto’, 'Rosca’, 'Hilo & Cond.’, 'Mediciones’, 'Resultado’, 'Certificado’];
 
 return (
-React.createElement(‘div’, { className: “space-y-4 max-w-4xl mx-auto”  ,}
+React.createElement('div’, { className: "space-y-4 max-w-4xl mx-auto”  ,}
 /* Header */
-, React.createElement(‘div’, { className: “flex items-center gap-3”  ,}
-, React.createElement(‘button’, { onClick: onCancel, className: “w-8 h-8 flex items-center justify-center rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-50 transition-colors”          ,}, “←”)
-, React.createElement(‘div’, null
-, React.createElement(‘h2’, { className: “font-bold text-slate-800” ,}, existing ? ‘Editar / Recalibrar’ : ‘Nueva calibración’)
-, React.createElement(‘p’, { className: “text-xs text-slate-400 font-mono”  ,}, _optionalChain([client, ‘optionalAccess’, _41 => _41.name]), “ → “  , _optionalChain([equip, ‘optionalAccess’, _42 => _42.ref]), “ · “  , s.certNum)
+, React.createElement('div’, { className: "flex items-center gap-3”  ,}
+, React.createElement('button’, { onClick: onCancel, className: "w-8 h-8 flex items-center justify-center rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-50 transition-colors”          ,}, "←”)
+, React.createElement('div’, null
+, React.createElement('h2’, { className: "font-bold text-slate-800” ,}, existing ? 'Editar / Recalibrar’ : 'Nueva calibración’)
+, React.createElement('p’, { className: "text-xs text-slate-400 font-mono”  ,}, _optionalChain([client, 'optionalAccess’, _41 => _41.name]), " → "  , _optionalChain([equip, 'optionalAccess’, _42 => _42.ref]), " · "  , s.certNum)
 )
 )
 /* Step pills */
-, React.createElement(‘div’, { className: “flex gap-1.5 overflow-x-auto pb-1”   ,}
+, React.createElement('div’, { className: "flex gap-1.5 overflow-x-auto pb-1”   ,}
 , STEPS.map((name, i) => (
-React.createElement(‘button’, { key: i, onClick: () => setStep(i),
+React.createElement('button’, { key: i, onClick: () => setStep(i),
 className: `flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-all ${step === i ? 'bg-blue-600 text-white' : i < step ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'}`,}
-, i < step ? ‘✓’ : React.createElement(‘span’, { className: “w-3.5 h-3.5 rounded-full bg-current/20 flex items-center justify-center text-[9px]”       ,}, i + 1)
+, i < step ? '✓’ : React.createElement('span’, { className: "w-3.5 h-3.5 rounded-full bg-current/20 flex items-center justify-center text-[9px]”       ,}, i + 1)
 , name
 )
 ))
@@ -1169,18 +1169,18 @@ className: `flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full tex
 // ═══════════════════════════════════════════════════════════
 function CalView({ cal, onBack, onRecal }) {
 return (
-React.createElement(‘div’, { className: “space-y-4”,}
-, React.createElement(‘div’, { className: “flex items-center gap-3”  ,}
-, React.createElement(‘button’, { onClick: onBack, className: “w-8 h-8 flex items-center justify-center rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-50 transition-colors”          ,}, “←”)
-, React.createElement(‘div’, null
-, React.createElement(‘h2’, { className: “font-bold text-slate-800” ,}, “Calibración “ , cal.certNum)
-, React.createElement(‘div’, { className: “flex items-center gap-2 mt-0.5”   ,}
-, React.createElement(‘span’, { className: “text-xs text-slate-400” ,}, cal.clientName, “ → “  , cal.equipRef, “ · “  , fmtDate(cal.date))
-, React.createElement(Badge, { color: cal.status === ‘ISSUED’ ? ‘green’ : ‘amber’,}, cal.status)
+React.createElement('div’, { className: "space-y-4”,}
+, React.createElement('div’, { className: "flex items-center gap-3”  ,}
+, React.createElement('button’, { onClick: onBack, className: "w-8 h-8 flex items-center justify-center rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-50 transition-colors”          ,}, "←”)
+, React.createElement('div’, null
+, React.createElement('h2’, { className: "font-bold text-slate-800” ,}, "Calibración " , cal.certNum)
+, React.createElement('div’, { className: "flex items-center gap-2 mt-0.5”   ,}
+, React.createElement('span’, { className: "text-xs text-slate-400” ,}, cal.clientName, " → "  , cal.equipRef, " · "  , fmtDate(cal.date))
+, React.createElement(Badge, { color: cal.status === 'ISSUED’ ? 'green’ : 'amber’,}, cal.status)
 )
 )
-, React.createElement(‘div’, { className: “ml-auto flex gap-2”  ,}
-, React.createElement(Btn, { size: “sm”, variant: “amber”, onClick: onRecal, icon: “🔄”,}, “Recalibrar”)
+, React.createElement('div’, { className: "ml-auto flex gap-2”  ,}
+, React.createElement(Btn, { size: "sm”, variant: "amber”, onClick: onRecal, icon: "🔄”,}, "Recalibrar”)
 )
 )
 , React.createElement(CertPreview, { cal: cal, onBack: onBack,} )
@@ -1190,116 +1190,116 @@ React.createElement(‘div’, { className: “space-y-4”,}
 
 function CertPreview({ cal, onBack }) {
 const g = cal.gum;
-const machines = DB.get(‘machines’) || MACHINE_SEED;
+const machines = DB.get('machines’) || MACHINE_SEED;
 const machine = machines.find(m => m.id === cal.machineId);
-const cfg = DB.get(‘config’) || {};
+const cfg = DB.get('config’) || {};
 
-if (!g) return React.createElement(‘div’, { className: “p-8 text-center text-slate-400”  ,}, “Sin datos de cálculo en esta calibración.”      );
+if (!g) return React.createElement('div’, { className: "p-8 text-center text-slate-400”  ,}, "Sin datos de cálculo en esta calibración.”      );
 
 return (
-React.createElement(‘div’, { className: “bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden”     ,}
+React.createElement('div’, { className: "bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden”     ,}
 /* accent stripe */
-, React.createElement(‘div’, { style: { height: 4, background: ‘linear-gradient(90deg, #2563eb, #0d9488)’ },} )
-, React.createElement(‘div’, { className: “p-8 space-y-5” ,}
+, React.createElement('div’, { style: { height: 4, background: 'linear-gradient(90deg, #2563eb, #0d9488)’ },} )
+, React.createElement('div’, { className: "p-8 space-y-5” ,}
 /* header */
-, React.createElement(‘div’, { className: “flex justify-between items-start border-b-2 border-slate-900 pb-5”     ,}
-, React.createElement(‘div’, { className: “flex items-center gap-4”  ,}
-, cfg.logoData && React.createElement(‘img’, { src: cfg.logoData, alt: “Logo”, className: “h-12 object-contain” ,} )
-, React.createElement(‘div’, null
-, React.createElement(‘div’, { className: “font-black text-xl text-slate-900”  ,}, cal.labName || ‘Laboratorio de Metrología’)
-, React.createElement(‘div’, { className: “text-xs text-slate-400 tracking-widest uppercase mt-0.5”    ,}, “Laboratorio Acreditado · ISO/IEC 17025:2017”    )
+, React.createElement('div’, { className: "flex justify-between items-start border-b-2 border-slate-900 pb-5”     ,}
+, React.createElement('div’, { className: "flex items-center gap-4”  ,}
+, cfg.logoData && React.createElement('img’, { src: cfg.logoData, alt: "Logo”, className: "h-12 object-contain” ,} )
+, React.createElement('div’, null
+, React.createElement('div’, { className: "font-black text-xl text-slate-900”  ,}, cal.labName || 'Laboratorio de Metrología’)
+, React.createElement('div’, { className: "text-xs text-slate-400 tracking-widest uppercase mt-0.5”    ,}, "Laboratorio Acreditado · ISO/IEC 17025:2017”    )
 )
 )
-, React.createElement(‘div’, { className: “text-right”,}
-, React.createElement(‘div’, { className: “bg-slate-900 text-white text-xs font-black px-3 py-1 rounded tracking-widest”       ,}, “ENAC”)
-, React.createElement(‘div’, { className: “text-[10px] text-slate-400 mt-1.5”  ,}, “EURAMET cg-10 · JCGM 100:2008”    )
+, React.createElement('div’, { className: "text-right”,}
+, React.createElement('div’, { className: "bg-slate-900 text-white text-xs font-black px-3 py-1 rounded tracking-widest”       ,}, "ENAC”)
+, React.createElement('div’, { className: "text-[10px] text-slate-400 mt-1.5”  ,}, "EURAMET cg-10 · JCGM 100:2008”    )
 )
 )
-, React.createElement(‘div’, { className: “text-center”,}
-, React.createElement(‘div’, { className: “font-black text-2xl tracking-widest uppercase”   ,}, “Certificado de Calibración”  )
-, React.createElement(‘div’, { className: “font-mono text-slate-500 mt-1”  ,}, “Nº “ , cal.certNum)
+, React.createElement('div’, { className: "text-center”,}
+, React.createElement('div’, { className: "font-black text-2xl tracking-widest uppercase”   ,}, "Certificado de Calibración”  )
+, React.createElement('div’, { className: "font-mono text-slate-500 mt-1”  ,}, "Nº " , cal.certNum)
 )
 /* §1 */
-, React.createElement(CertSection, { title: “§1 Identificación” ,}
-, React.createElement(KV, { label: “Nº Certificado” , value: cal.certNum,} )
-, React.createElement(KV, { label: “Fecha”, value: fmtDate(cal.date),} )
-, React.createElement(KV, { label: “Cliente”, value: cal.clientName,} )
-, React.createElement(KV, { label: “Referencia equipo” , value: cal.equipRef,} )
-, React.createElement(KV, { label: “Técnico”, value: cal.techName,} )
+, React.createElement(CertSection, { title: "§1 Identificación” ,}
+, React.createElement(KV, { label: "Nº Certificado” , value: cal.certNum,} )
+, React.createElement(KV, { label: "Fecha”, value: fmtDate(cal.date),} )
+, React.createElement(KV, { label: "Cliente”, value: cal.clientName,} )
+, React.createElement(KV, { label: "Referencia equipo” , value: cal.equipRef,} )
+, React.createElement(KV, { label: "Técnico”, value: cal.techName,} )
 )
 /* §2 */
-, React.createElement(CertSection, { title: “§2 Elemento calibrado”  ,}
-, React.createElement(KV, { label: “Rosca”, value: cal.threadName,} )
-, React.createElement(KV, { label: “Dirección”, value: cal.direction === ‘external’ ? ‘Tornillo (externo)’ : ‘Tuerca (interno)’,} )
-, React.createElement(KV, { label: “Clase tolerancia” , value: cal.tolClass || ‘—’,} )
-, React.createElement(KV, { label: “Material”, value: Object.keys(MATERIALS).find(k => MATERIALS[k].alpha === +cal.alpha_th) || ‘—’,} )
+, React.createElement(CertSection, { title: "§2 Elemento calibrado”  ,}
+, React.createElement(KV, { label: "Rosca”, value: cal.threadName,} )
+, React.createElement(KV, { label: "Dirección”, value: cal.direction === 'external’ ? 'Tornillo (externo)’ : 'Tuerca (interno)’,} )
+, React.createElement(KV, { label: "Clase tolerancia” , value: cal.tolClass || '—’,} )
+, React.createElement(KV, { label: "Material”, value: Object.keys(MATERIALS).find(k => MATERIALS[k].alpha === +cal.alpha_th) || '—’,} )
 )
 /* §3 */
-, React.createElement(CertSection, { title: “§3 Instrumento” ,}
-, React.createElement(KV, { label: “Banco”, value: machine ? `${machine.brand} ${machine.model}${machine.sn ? ` · SN: ${machine.sn}` : ''}` : ‘—’,} )
-, React.createElement(KV, { label: “U cal banco (k=2)”   , value: machine ? `${machine.uCal} mm` : ‘—’,} )
-, React.createElement(KV, { label: “Hilo W” , value: cal.wireDiam ? `${cal.wireDiam} mm · cert: ${cal.wireCert || '—'}` : ‘—’,} )
-, React.createElement(KV, { label: “Temperatura”, value: `${cal.temp} °C (ref. 20.0 °C — ISO 1:2016)`,} )
-, React.createElement(KV, { label: “Humedad”, value: `${cal.humidity || '—'} %`,} )
+, React.createElement(CertSection, { title: "§3 Instrumento” ,}
+, React.createElement(KV, { label: "Banco”, value: machine ? `${machine.brand} ${machine.model}${machine.sn ? ` · SN: ${machine.sn}` : ''}` : '—’,} )
+, React.createElement(KV, { label: "U cal banco (k=2)”   , value: machine ? `${machine.uCal} mm` : '—’,} )
+, React.createElement(KV, { label: "Hilo W” , value: cal.wireDiam ? `${cal.wireDiam} mm · cert: ${cal.wireCert || '—'}` : '—’,} )
+, React.createElement(KV, { label: "Temperatura”, value: `${cal.temp} °C (ref. 20.0 °C — ISO 1:2016)`,} )
+, React.createElement(KV, { label: "Humedad”, value: `${cal.humidity || '—'} %`,} )
 )
 /* §4 RESULT */
-, React.createElement(CertSection, { title: “§4 Resultado” ,}
-, React.createElement(‘div’, { className: “col-span-2 bg-gradient-to-br from-blue-50 to-sky-50 border border-blue-200 rounded-xl p-5 text-center”        ,}
-, React.createElement(‘div’, { className: “text-xs text-slate-400 mb-2 font-mono”   ,}, “Diámetro de paso E”   )
-, React.createElement(‘div’, { className: “text-2xl font-black font-mono text-blue-800”   ,}, “E = (”  , g.mean.toFixed(5), “ ± “  , fmt(g.U), “) mm” )
-, React.createElement(‘div’, { className: “text-xs text-slate-400 mt-2”  ,}, “U = k·uc · k = “      , g.k.toFixed(3), “ · p ≈ 95.45% · νeff = “        , g.nuEff < 1e9 ? g.nuEff.toFixed(1) : ‘∞’)
+, React.createElement(CertSection, { title: "§4 Resultado” ,}
+, React.createElement('div’, { className: "col-span-2 bg-gradient-to-br from-blue-50 to-sky-50 border border-blue-200 rounded-xl p-5 text-center”        ,}
+, React.createElement('div’, { className: "text-xs text-slate-400 mb-2 font-mono”   ,}, "Diámetro de paso E”   )
+, React.createElement('div’, { className: "text-2xl font-black font-mono text-blue-800”   ,}, "E = (”  , g.mean.toFixed(5), " ± "  , fmt(g.U), ") mm” )
+, React.createElement('div’, { className: "text-xs text-slate-400 mt-2”  ,}, "U = k·uc · k = "      , g.k.toFixed(3), " · p ≈ 95.45% · νeff = "        , g.nuEff < 1e9 ? g.nuEff.toFixed(1) : '∞’)
 )
-, React.createElement(KV, { label: “n lecturas” , value: g.n,} )
-, React.createElement(KV, { label: “Media Ē” , value: `${g.mean.toFixed(7)} mm`, mono: true,} )
-, React.createElement(KV, { label: “Desviación estándar s”  , value: `${g.s.toExponential(3)} mm`, mono: true,} )
-, React.createElement(KV, { label: “Incertidumbre combinada uc”  , value: `${fmt(g.uc, 6)} mm`, mono: true,} )
+, React.createElement(KV, { label: "n lecturas” , value: g.n,} )
+, React.createElement(KV, { label: "Media Ē” , value: `${g.mean.toFixed(7)} mm`, mono: true,} )
+, React.createElement(KV, { label: "Desviación estándar s”  , value: `${g.s.toExponential(3)} mm`, mono: true,} )
+, React.createElement(KV, { label: "Incertidumbre combinada uc”  , value: `${fmt(g.uc, 6)} mm`, mono: true,} )
 )
 /* §5 BUDGET */
-, React.createElement(‘div’, null
-, React.createElement(‘div’, { className: “bg-slate-900 text-white text-[10px] font-black px-3 py-1.5 rounded-sm tracking-widest uppercase inline-block mb-3”          ,}, “§5 Presupuesto GUM — JCGM 100:2008”     )
-, React.createElement(‘table’, { className: “w-full text-xs border border-slate-200 rounded-lg overflow-hidden”     ,}
-, React.createElement(‘thead’, { className: “bg-slate-50”,}
-, React.createElement(‘tr’, null, [‘Fuente’,‘Tipo’,‘u(xi) mm’,’%’].map(h => React.createElement(‘th’, { key: h, className: “px-4 py-2 text-left text-[10px] font-bold text-slate-500 uppercase tracking-wide”       ,}, h)))
+, React.createElement('div’, null
+, React.createElement('div’, { className: "bg-slate-900 text-white text-[10px] font-black px-3 py-1.5 rounded-sm tracking-widest uppercase inline-block mb-3”          ,}, "§5 Presupuesto GUM — JCGM 100:2008”     )
+, React.createElement('table’, { className: "w-full text-xs border border-slate-200 rounded-lg overflow-hidden”     ,}
+, React.createElement('thead’, { className: "bg-slate-50”,}
+, React.createElement('tr’, null, ['Fuente’,'Tipo’,'u(xi) mm’,’%’].map(h => React.createElement('th’, { key: h, className: "px-4 py-2 text-left text-[10px] font-bold text-slate-500 uppercase tracking-wide”       ,}, h)))
 )
-, React.createElement(‘tbody’, null
+, React.createElement('tbody’, null
 , g.comps.map((c, i) => (
-React.createElement(‘tr’, { key: i, className: “border-t border-slate-100” ,}
-, React.createElement(‘td’, { className: “px-4 py-2 text-slate-700”  ,}, c.name)
-, React.createElement(‘td’, { className: “px-4 py-2 font-bold”  , style: { color: c.type === ‘A’ ? ‘#1d4ed8’ : ‘#0d9488’ },}, c.type)
-, React.createElement(‘td’, { className: “px-4 py-2 font-mono text-right”   ,}, fmt(c.u, 6))
-, React.createElement(‘td’, { className: “px-4 py-2 text-right”  ,}, c.pct.toFixed(1), “%”)
+React.createElement('tr’, { key: i, className: "border-t border-slate-100” ,}
+, React.createElement('td’, { className: "px-4 py-2 text-slate-700”  ,}, c.name)
+, React.createElement('td’, { className: "px-4 py-2 font-bold”  , style: { color: c.type === 'A’ ? '#1d4ed8’ : '#0d9488’ },}, c.type)
+, React.createElement('td’, { className: "px-4 py-2 font-mono text-right”   ,}, fmt(c.u, 6))
+, React.createElement('td’, { className: "px-4 py-2 text-right”  ,}, c.pct.toFixed(1), "%”)
 )
 ))
-, React.createElement(‘tr’, { className: “bg-blue-50 border-t-2 border-blue-200”  ,}
-, React.createElement(‘td’, { colSpan: 2, className: “px-4 py-2 font-black text-blue-900”   ,}, “U = “  , g.k.toFixed(3), “ × uc”  )
-, React.createElement(‘td’, { className: “px-4 py-2 font-mono font-black text-right text-blue-700”     ,}, fmt(g.U, 6))
-, React.createElement(‘td’, null )
+, React.createElement('tr’, { className: "bg-blue-50 border-t-2 border-blue-200”  ,}
+, React.createElement('td’, { colSpan: 2, className: "px-4 py-2 font-black text-blue-900”   ,}, "U = "  , g.k.toFixed(3), " × uc”  )
+, React.createElement('td’, { className: "px-4 py-2 font-mono font-black text-right text-blue-700”     ,}, fmt(g.U, 6))
+, React.createElement('td’, null )
 )
 )
 )
 )
 /* §6 */
-, React.createElement(CertSection, { title: “§6 Trazabilidad” ,}
-, React.createElement(‘p’, { className: “col-span-2 text-sm text-slate-600 leading-relaxed”   ,}, “Las mediciones son trazables a patrones nacionales del CEM (Centro Español de Metrología) mediante cadena documentada: BIPM → CEM → Laboratorio acreditado ENAC → Instrumento de medición.”                          )
-, React.createElement(‘p’, { className: “col-span-2 text-sm text-slate-600”  ,}, “Método: EURAMET cg-10. Correcciones aplicadas: térmica (ISO 1:2016) + deformación elástica Hertz. Software: ThreadCal Pro v4.”               )
+, React.createElement(CertSection, { title: "§6 Trazabilidad” ,}
+, React.createElement('p’, { className: "col-span-2 text-sm text-slate-600 leading-relaxed”   ,}, "Las mediciones son trazables a patrones nacionales del CEM (Centro Español de Metrología) mediante cadena documentada: BIPM → CEM → Laboratorio acreditado ENAC → Instrumento de medición.”                          )
+, React.createElement('p’, { className: "col-span-2 text-sm text-slate-600”  ,}, "Método: EURAMET cg-10. Correcciones aplicadas: térmica (ISO 1:2016) + deformación elástica Hertz. Software: ThreadCal Pro v4.”               )
 )
 /* Signatures */
-, React.createElement(‘div’, { className: “flex justify-between items-end pt-6 border-t border-slate-200”     ,}
-, React.createElement(‘div’, { className: “text-center”,}
-, cal.signature ? React.createElement(‘img’, { src: cal.signature, alt: “Firma”, className: “h-14 mb-2 mx-auto”  ,} ) : React.createElement(‘div’, { className: “w-36 border-t border-slate-400 mb-2 mx-auto”    , style: { marginTop: 40 },} )
-, React.createElement(‘div’, { className: “font-bold text-sm text-slate-800”  ,}, cal.techName || ‘—’)
-, React.createElement(‘div’, { className: “text-xs text-slate-400” ,}, “Técnico de calibración”  )
+, React.createElement('div’, { className: "flex justify-between items-end pt-6 border-t border-slate-200”     ,}
+, React.createElement('div’, { className: "text-center”,}
+, cal.signature ? React.createElement('img’, { src: cal.signature, alt: "Firma”, className: "h-14 mb-2 mx-auto”  ,} ) : React.createElement('div’, { className: "w-36 border-t border-slate-400 mb-2 mx-auto”    , style: { marginTop: 40 },} )
+, React.createElement('div’, { className: "font-bold text-sm text-slate-800”  ,}, cal.techName || '—’)
+, React.createElement('div’, { className: "text-xs text-slate-400” ,}, "Técnico de calibración”  )
 )
-, React.createElement(‘div’, { className: “text-center text-xs text-slate-400 space-y-0.5”   ,}
-, React.createElement(‘div’, { className: “font-mono”,}, cal.certNum)
-, React.createElement(‘div’, null, fmtDate(cal.date))
-, React.createElement(‘div’, null, “ThreadCal Pro v4”  )
-, React.createElement(‘div’, { className: “text-[10px]”,}, “Válido sólo íntegramente”  )
+, React.createElement('div’, { className: "text-center text-xs text-slate-400 space-y-0.5”   ,}
+, React.createElement('div’, { className: "font-mono”,}, cal.certNum)
+, React.createElement('div’, null, fmtDate(cal.date))
+, React.createElement('div’, null, "ThreadCal Pro v4”  )
+, React.createElement('div’, { className: "text-[10px]”,}, "Válido sólo íntegramente”  )
 )
-, React.createElement(‘div’, { className: “text-center”,}
-, React.createElement(‘div’, { className: “w-36 border-t border-slate-400 mb-2 mx-auto”    , style: { marginTop: 40 },} )
-, React.createElement(‘div’, { className: “font-bold text-sm text-slate-800”  ,}, “Responsable Técnico” )
-, React.createElement(‘div’, { className: “text-xs text-slate-400” ,}, “Revisión y aprobación”  )
+, React.createElement('div’, { className: "text-center”,}
+, React.createElement('div’, { className: "w-36 border-t border-slate-400 mb-2 mx-auto”    , style: { marginTop: 40 },} )
+, React.createElement('div’, { className: "font-bold text-sm text-slate-800”  ,}, "Responsable Técnico” )
+, React.createElement('div’, { className: "text-xs text-slate-400” ,}, "Revisión y aprobación”  )
 )
 )
 )
@@ -1308,15 +1308,15 @@ React.createElement(‘tr’, { key: i, className: “border-t border-slate-100�
 }
 
 const CertSection = ({ title, children }) => (
-React.createElement(‘div’, null
-, React.createElement(‘div’, { className: “bg-slate-900 text-white text-[10px] font-black px-3 py-1.5 rounded-sm tracking-widest uppercase inline-block mb-3”          ,}, title)
-, React.createElement(‘div’, { className: “grid grid-cols-2 gap-x-8 gap-y-1.5”   ,}, children)
+React.createElement('div’, null
+, React.createElement('div’, { className: "bg-slate-900 text-white text-[10px] font-black px-3 py-1.5 rounded-sm tracking-widest uppercase inline-block mb-3”          ,}, title)
+, React.createElement('div’, { className: "grid grid-cols-2 gap-x-8 gap-y-1.5”   ,}, children)
 )
 );
 const KV = ({ label, value, mono }) => (
-React.createElement(‘div’, { className: “flex gap-3 text-sm border-b border-slate-50 pb-1.5”     ,}
-, React.createElement(‘span’, { className: “text-slate-400 w-44 flex-shrink-0”  ,}, label, “:”)
-, React.createElement(‘span’, { className: `font-semibold text-slate-800 ${mono ? 'font-mono text-xs' : ''}`,}, value || ‘—’)
+React.createElement('div’, { className: "flex gap-3 text-sm border-b border-slate-50 pb-1.5”     ,}
+, React.createElement('span’, { className: "text-slate-400 w-44 flex-shrink-0”  ,}, label, ":”)
+, React.createElement('span’, { className: `font-semibold text-slate-800 ${mono ? 'font-mono text-xs' : ''}`,}, value || '—’)
 )
 );
 
@@ -1324,113 +1324,113 @@ React.createElement(‘div’, { className: “flex gap-3 text-sm border-b borde
 // CONFIGURACIÓN TAB
 // ═══════════════════════════════════════════════════════════
 function ConfigSection() {
-const [tab, setTab] = useState(‘lab’);
+const [tab, setTab] = useState('lab’);
 const tabs = [
-{ id:‘lab’, l:‘Laboratorio’, icon:‘🏛️’ },
-{ id:‘machines’, l:‘Bancos’, icon:‘🔧’ },
-{ id:‘techs’, l:‘Técnicos’, icon:‘👷’ },
-{ id:‘threads’, l:‘Roscas’, icon:‘⚙️’ },
-{ id:‘wires’, l:‘Hilos’, icon:‘📏’ },
-{ id:‘formulas’, l:‘Fórmulas’, icon:‘📐’ },
+{ id:'lab’, l:'Laboratorio’, icon:'🏛️’ },
+{ id:'machines’, l:'Bancos’, icon:'🔧’ },
+{ id:'techs’, l:'Técnicos’, icon:'👷’ },
+{ id:'threads’, l:'Roscas’, icon:'⚙️’ },
+{ id:'wires’, l:'Hilos’, icon:'📏’ },
+{ id:'formulas’, l:'Fórmulas’, icon:'📐’ },
 ];
 return (
-React.createElement(‘div’, { className: “space-y-4”,}
-, React.createElement(‘div’, null, React.createElement(‘h2’, { className: “font-bold text-slate-800 text-lg”  ,}, “Configuración”), React.createElement(‘p’, { className: “text-xs text-slate-400 mt-0.5”  ,}, “Bancos, técnicos, hilos, roscas y datos del laboratorio”       ))
-, React.createElement(‘div’, { className: “flex gap-1.5 border-b border-slate-200 pb-0”    ,}
+React.createElement('div’, { className: "space-y-4”,}
+, React.createElement('div’, null, React.createElement('h2’, { className: "font-bold text-slate-800 text-lg”  ,}, "Configuración”), React.createElement('p’, { className: "text-xs text-slate-400 mt-0.5”  ,}, "Bancos, técnicos, hilos, roscas y datos del laboratorio”       ))
+, React.createElement('div’, { className: "flex gap-1.5 border-b border-slate-200 pb-0”    ,}
 , tabs.map(t => (
-React.createElement(‘button’, { key: t.id, onClick: () => setTab(t.id),
+React.createElement('button’, { key: t.id, onClick: () => setTab(t.id),
 className: `flex items-center gap-1.5 px-4 py-2.5 text-sm font-semibold transition-all border-b-2 -mb-px ${tab === t.id ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-500 hover:text-slate-700'}`,}
-, React.createElement(‘span’, null, t.icon), t.l
+, React.createElement('span’, null, t.icon), t.l
 )
 ))
 )
-, React.createElement(‘div’, { className: “pt-2”,}
-, tab === ‘lab’ && React.createElement(LabConfig, null )
-, tab === ‘machines’ && React.createElement(MachinesConfig, null )
-, tab === ‘techs’ && React.createElement(TechsConfig, null )
-, tab === ‘threads’ && React.createElement(ThreadsConfig, null )
-, tab === ‘wires’ && React.createElement(WiresConfig, null )
-, tab === ‘formulas’ && React.createElement(FormulasInfo, null )
+, React.createElement('div’, { className: "pt-2”,}
+, tab === 'lab’ && React.createElement(LabConfig, null )
+, tab === 'machines’ && React.createElement(MachinesConfig, null )
+, tab === 'techs’ && React.createElement(TechsConfig, null )
+, tab === 'threads’ && React.createElement(ThreadsConfig, null )
+, tab === 'wires’ && React.createElement(WiresConfig, null )
+, tab === 'formulas’ && React.createElement(FormulasInfo, null )
 )
 )
 );
 }
 
 function LabConfig() {
-const [cfg, setCfg] = useState(() => DB.get(‘config’) || { labName:’’, address:’’, accred:’’, logoData:’’ });
-const save = () => { DB.set(‘config’, cfg); alert(‘✅ Configuración guardada’); };
+const [cfg, setCfg] = useState(() => DB.get('config’) || { labName:’’, address:’’, accred:’’, logoData:’’ });
+const save = () => { DB.set('config’, cfg); alert('✅ Configuración guardada’); };
 const F = (k,v) => setCfg(c => ({…c,[k]:v}));
-const handleLogo = (e) => { const f=e.target.files[0]; if(!f) return; const r=new FileReader(); r.onload=ev=>F(‘logoData’,ev.target.result); r.readAsDataURL(f); };
+const handleLogo = (e) => { const f=e.target.files[0]; if(!f) return; const r=new FileReader(); r.onload=ev=>F('logoData’,ev.target.result); r.readAsDataURL(f); };
 return (
-React.createElement(‘div’, { className: “max-w-xl space-y-4” ,}
+React.createElement('div’, { className: "max-w-xl space-y-4” ,}
 , React.createElement(Card, null
-, React.createElement(Hdg, { icon: “🏛️”, title: “Datos del laboratorio”  , sub: “Aparecen en todos los certificados”    ,} )
-, React.createElement(‘div’, { className: “p-5 space-y-3” ,}
-, React.createElement(Fld, { label: “Nombre del laboratorio”  ,}, React.createElement(Inp, { value: cfg.labName, onChange: e=>F(‘labName’,e.target.value), placeholder: “Laboratorio de Metrología Dimensional”   ,} ))
-, React.createElement(Fld, { label: “Dirección”,}, React.createElement(Inp, { value: cfg.address, onChange: e=>F(‘address’,e.target.value),} ))
-, React.createElement(Fld, { label: “Nº Acreditación ENAC”  ,}, React.createElement(Inp, { value: cfg.accred, onChange: e=>F(‘accred’,e.target.value), placeholder: “ENAC-I-XXX/LE-XXX”,} ))
+, React.createElement(Hdg, { icon: "🏛️”, title: "Datos del laboratorio”  , sub: "Aparecen en todos los certificados”    ,} )
+, React.createElement('div’, { className: "p-5 space-y-3” ,}
+, React.createElement(Fld, { label: "Nombre del laboratorio”  ,}, React.createElement(Inp, { value: cfg.labName, onChange: e=>F('labName’,e.target.value), placeholder: "Laboratorio de Metrología Dimensional”   ,} ))
+, React.createElement(Fld, { label: "Dirección”,}, React.createElement(Inp, { value: cfg.address, onChange: e=>F('address’,e.target.value),} ))
+, React.createElement(Fld, { label: "Nº Acreditación ENAC”  ,}, React.createElement(Inp, { value: cfg.accred, onChange: e=>F('accred’,e.target.value), placeholder: "ENAC-I-XXX/LE-XXX”,} ))
 )
 )
 , React.createElement(Card, null
-, React.createElement(Hdg, { icon: “🖼️”, title: “Logo”, sub: “PNG, JPG o SVG — aparece en los certificados”        , color: “teal”,} )
-, React.createElement(‘div’, { className: “p-5 space-y-3” ,}
-, React.createElement(‘label’, { className: “flex items-center gap-3 p-4 border-2 border-dashed border-slate-200 rounded-xl cursor-pointer hover:border-blue-300 hover:bg-blue-50 transition-all”           ,}
-, React.createElement(‘span’, { className: “text-2xl”,}, “📁”)
-, React.createElement(‘div’, null, React.createElement(‘div’, { className: “font-semibold text-slate-700 text-sm”  ,}, “Cargar logo” ), React.createElement(‘div’, { className: “text-xs text-slate-400” ,}, “PNG · JPG · SVG · máx. 2MB”       ))
+, React.createElement(Hdg, { icon: "🖼️”, title: "Logo”, sub: "PNG, JPG o SVG — aparece en los certificados”        , color: "teal”,} )
+, React.createElement('div’, { className: "p-5 space-y-3” ,}
+, React.createElement('label’, { className: "flex items-center gap-3 p-4 border-2 border-dashed border-slate-200 rounded-xl cursor-pointer hover:border-blue-300 hover:bg-blue-50 transition-all”           ,}
+, React.createElement('span’, { className: "text-2xl”,}, "📁”)
+, React.createElement('div’, null, React.createElement('div’, { className: "font-semibold text-slate-700 text-sm”  ,}, "Cargar logo” ), React.createElement('div’, { className: "text-xs text-slate-400” ,}, "PNG · JPG · SVG · máx. 2MB”       ))
 , React.createElement('input', { type: "file", accept: "image/*", className: "hidden", onChange: handleLogo,} )
           )
 , cfg.logoData && (
-React.createElement(‘div’, { className: “flex items-center gap-4”  ,}
-, React.createElement(‘img’, { src: cfg.logoData, alt: “Logo”, className: “h-14 object-contain border border-slate-200 rounded-lg p-2 bg-white”      ,} )
-, React.createElement(‘button’, { onClick: () => F(‘logoData’,’’), className: “text-xs text-red-500 hover:text-red-700”  ,}, “× Eliminar logo”  )
+React.createElement('div’, { className: "flex items-center gap-4”  ,}
+, React.createElement('img’, { src: cfg.logoData, alt: "Logo”, className: "h-14 object-contain border border-slate-200 rounded-lg p-2 bg-white”      ,} )
+, React.createElement('button’, { onClick: () => F('logoData’,’’), className: "text-xs text-red-500 hover:text-red-700”  ,}, "× Eliminar logo”  )
 )
 )
 )
 )
-, React.createElement(‘div’, { className: “flex justify-end” ,}, React.createElement(Btn, { onClick: save, icon: “💾”,}, “Guardar configuración” ))
+, React.createElement('div’, { className: "flex justify-end” ,}, React.createElement(Btn, { onClick: save, icon: "💾”,}, "Guardar configuración” ))
 )
 );
 }
 
 function MachinesConfig() {
-const [machines, setMachines] = useState(() => DB.get(‘machines’) || MACHINE_SEED);
+const [machines, setMachines] = useState(() => DB.get('machines’) || MACHINE_SEED);
 const [modal, setModal] = useState(false);
 const [editing, setEditing] = useState(null);
 const [del, setDel] = useState(null);
-const blank = { id:uid(), brand:’’, model:’’, sn:’’, uCal:0.0006, resolution:0.0001, force:4, forceUnit:‘cN’, cert:’’, certDate:’’, certExpiry:’’, note:’’ };
+const blank = { id:uid(), brand:’’, model:’’, sn:’’, uCal:0.0006, resolution:0.0001, force:4, forceUnit:'cN’, cert:’’, certDate:’’, certExpiry:’’, note:’’ };
 const [form, setForm] = useState(blank);
-const save = (m) => { DB.set(‘machines’, m); setMachines(m); };
+const save = (m) => { DB.set('machines’, m); setMachines(m); };
 const F = (k,v) => setForm(f=>({…f,[k]:v}));
 const submit = () => { save(editing ? machines.map(m=>m.id===editing?form:m) : […machines,form]); setModal(false); };
 return (
-React.createElement(‘div’, { className: “space-y-4”,}
-, React.createElement(‘div’, { className: “flex justify-between items-center”  ,}
-, React.createElement(‘div’, null, React.createElement(‘h3’, { className: “font-bold text-slate-800” ,}, “Bancos de medición”  ), React.createElement(‘p’, { className: “text-xs text-slate-400” ,}, “Máquinas reutilizables en calibraciones”   ))
-, React.createElement(Btn, { onClick: ()=>{setEditing(null);setForm({…blank,id:uid()});setModal(true);}, icon: “➕”, size: “sm”,}, “Nuevo banco” )
+React.createElement('div’, { className: "space-y-4”,}
+, React.createElement('div’, { className: "flex justify-between items-center”  ,}
+, React.createElement('div’, null, React.createElement('h3’, { className: "font-bold text-slate-800” ,}, "Bancos de medición”  ), React.createElement('p’, { className: "text-xs text-slate-400” ,}, "Máquinas reutilizables en calibraciones”   ))
+, React.createElement(Btn, { onClick: ()=>{setEditing(null);setForm({…blank,id:uid()});setModal(true);}, icon: "➕”, size: "sm”,}, "Nuevo banco” )
 )
-, React.createElement(Card, null, React.createElement(Tbl, { cols: [{k:‘brand’,l:‘Marca’,bold:true},{k:‘model’,l:‘Modelo’,bold:true},{k:‘sn’,l:‘S/N’},{k:‘uCal’,l:‘U(k=2) mm’,mono:true},{k:‘force’,l:‘Fuerza’,mono:true},{k:‘cert’,l:‘Certificado’},{k:‘certExpiry’,l:‘Válido hasta’}],
+, React.createElement(Card, null, React.createElement(Tbl, { cols: [{k:'brand’,l:'Marca’,bold:true},{k:'model’,l:'Modelo’,bold:true},{k:'sn’,l:'S/N’},{k:'uCal’,l:'U(k=2) mm’,mono:true},{k:'force’,l:'Fuerza’,mono:true},{k:'cert’,l:'Certificado’},{k:'certExpiry’,l:'Válido hasta’}],
 rows: machines.map(m=>({…m,force:`${m.force} ${m.forceUnit}`})),
 onEdit: row=>{const m=machines.find(x=>x.sn===row.sn&&x.model===row.model)||machines[0];setEditing(m.id);setForm({…m});setModal(true);},
-onDel: row=>setDel(machines.find(x=>x.model===row.model)), empty: “Sin bancos registrados”  ,} ))
-, React.createElement(Modal, { open: modal, onClose: ()=>setModal(false), title: editing?‘Editar banco’:‘Nuevo banco’, wide: true,}
-, React.createElement(‘div’, { className: “grid grid-cols-2 gap-4”  ,}
-, React.createElement(Fld, { label: “Marca”,}, React.createElement(Inp, { value: form.brand, onChange: e=>F(‘brand’,e.target.value),} ))
-, React.createElement(Fld, { label: “Modelo”,}, React.createElement(Inp, { value: form.model, onChange: e=>F(‘model’,e.target.value),} ))
-, React.createElement(Fld, { label: “Nº serie” ,}, React.createElement(Inp, { value: form.sn, onChange: e=>F(‘sn’,e.target.value),} ))
-, React.createElement(Fld, { label: “U cal (k=2)”  , unit: “mm”,}, React.createElement(Inp, { type: “number”, value: form.uCal, onChange: e=>F(‘uCal’,+e.target.value), step: “0.00001”,} ))
-, React.createElement(Fld, { label: “Resolución”, unit: “mm”,}, React.createElement(Inp, { type: “number”, value: form.resolution, onChange: e=>F(‘resolution’,+e.target.value), step: “0.00001”,} ))
-, React.createElement(‘div’, { className: “flex gap-2” ,}
-, React.createElement(Fld, { label: “Fuerza”,}, React.createElement(Inp, { type: “number”, value: form.force, onChange: e=>F(‘force’,+e.target.value), step: “0.01”,} ))
-, React.createElement(Fld, { label: “Unidad”,}, React.createElement(Sel, { value: form.forceUnit, onChange: e=>F(‘forceUnit’,e.target.value), className: “!w-20”,}, React.createElement(‘option’, null, “cN”), React.createElement(‘option’, null, “N”), React.createElement(‘option’, null, “daN”)))
+onDel: row=>setDel(machines.find(x=>x.model===row.model)), empty: "Sin bancos registrados”  ,} ))
+, React.createElement(Modal, { open: modal, onClose: ()=>setModal(false), title: editing?'Editar banco’:'Nuevo banco’, wide: true,}
+, React.createElement('div’, { className: "grid grid-cols-2 gap-4”  ,}
+, React.createElement(Fld, { label: "Marca”,}, React.createElement(Inp, { value: form.brand, onChange: e=>F('brand’,e.target.value),} ))
+, React.createElement(Fld, { label: "Modelo”,}, React.createElement(Inp, { value: form.model, onChange: e=>F('model’,e.target.value),} ))
+, React.createElement(Fld, { label: "Nº serie” ,}, React.createElement(Inp, { value: form.sn, onChange: e=>F('sn’,e.target.value),} ))
+, React.createElement(Fld, { label: "U cal (k=2)”  , unit: "mm”,}, React.createElement(Inp, { type: "number”, value: form.uCal, onChange: e=>F('uCal’,+e.target.value), step: "0.00001”,} ))
+, React.createElement(Fld, { label: "Resolución”, unit: "mm”,}, React.createElement(Inp, { type: "number”, value: form.resolution, onChange: e=>F('resolution’,+e.target.value), step: "0.00001”,} ))
+, React.createElement('div’, { className: "flex gap-2” ,}
+, React.createElement(Fld, { label: "Fuerza”,}, React.createElement(Inp, { type: "number”, value: form.force, onChange: e=>F('force’,+e.target.value), step: "0.01”,} ))
+, React.createElement(Fld, { label: "Unidad”,}, React.createElement(Sel, { value: form.forceUnit, onChange: e=>F('forceUnit’,e.target.value), className: "!w-20”,}, React.createElement('option’, null, "cN”), React.createElement('option’, null, "N”), React.createElement('option’, null, "daN”)))
 )
-, React.createElement(Fld, { label: “Certificado”,}, React.createElement(Inp, { value: form.cert, onChange: e=>F(‘cert’,e.target.value),} ))
-, React.createElement(Fld, { label: “Fecha cal.” ,}, React.createElement(Inp, { type: “date”, value: form.certDate, onChange: e=>F(‘certDate’,e.target.value),} ))
-, React.createElement(Fld, { label: “Válido hasta” ,}, React.createElement(Inp, { type: “date”, value: form.certExpiry, onChange: e=>F(‘certExpiry’,e.target.value),} ))
-, React.createElement(‘div’, { className: “col-span-2”,}, React.createElement(Fld, { label: “Notas”,}, React.createElement(‘textarea’, { className: “w-full text-sm px-3 py-2 rounded-lg border border-slate-200 bg-slate-50 focus:bg-white focus:border-blue-400 outline-none resize-none h-14”            , value: form.note, onChange: e=>F(‘note’,e.target.value),} )))
+, React.createElement(Fld, { label: "Certificado”,}, React.createElement(Inp, { value: form.cert, onChange: e=>F('cert’,e.target.value),} ))
+, React.createElement(Fld, { label: "Fecha cal.” ,}, React.createElement(Inp, { type: "date”, value: form.certDate, onChange: e=>F('certDate’,e.target.value),} ))
+, React.createElement(Fld, { label: "Válido hasta” ,}, React.createElement(Inp, { type: "date”, value: form.certExpiry, onChange: e=>F('certExpiry’,e.target.value),} ))
+, React.createElement('div’, { className: "col-span-2”,}, React.createElement(Fld, { label: "Notas”,}, React.createElement('textarea’, { className: "w-full text-sm px-3 py-2 rounded-lg border border-slate-200 bg-slate-50 focus:bg-white focus:border-blue-400 outline-none resize-none h-14”            , value: form.note, onChange: e=>F('note’,e.target.value),} )))
 )
-, React.createElement(‘div’, { className: “flex justify-end gap-2 mt-4 pt-4 border-t border-slate-100”      ,}
-, React.createElement(Btn, { variant: “ghost”, onClick: ()=>setModal(false),}, “Cancelar”)
-, React.createElement(Btn, { onClick: submit, icon: “💾”,}, editing?‘Guardar’:‘Crear’)
+, React.createElement('div’, { className: "flex justify-end gap-2 mt-4 pt-4 border-t border-slate-100”      ,}
+, React.createElement(Btn, { variant: "ghost”, onClick: ()=>setModal(false),}, "Cancelar”)
+, React.createElement(Btn, { onClick: submit, icon: "💾”,}, editing?'Guardar’:'Crear’)
 )
 )
 , React.createElement(Confirm, { open: !!del, msg: `¿Eliminar banco "${_optionalChain([del, 'optionalAccess', _50 => _50.model])}"?`, onOk: ()=>{save(machines.filter(m=>m.id!==del.id));setDel(null);}, onCancel: ()=>setDel(null),} )
@@ -1439,34 +1439,34 @@ onDel: row=>setDel(machines.find(x=>x.model===row.model)), empty: “Sin bancos 
 }
 
 function TechsConfig() {
-const [techs, setTechs] = useState(() => DB.get(‘techs’) || []);
+const [techs, setTechs] = useState(() => DB.get('techs’) || []);
 const [modal, setModal] = useState(false);
 const [editing, setEditing] = useState(null);
 const [del, setDel] = useState(null);
-const blank = { id:uid(), code:’’, name:’’, role:‘Técnico de calibración’, email:’’, qual:’’ };
+const blank = { id:uid(), code:’’, name:’’, role:'Técnico de calibración’, email:’’, qual:’’ };
 const [form, setForm] = useState(blank);
-const save = (t) => { DB.set(‘techs’, t); setTechs(t); };
+const save = (t) => { DB.set('techs’, t); setTechs(t); };
 const F = (k,v) => setForm(f=>({…f,[k]:v}));
 const submit = () => { save(editing ? techs.map(t=>t.id===editing?form:t) : […techs,form]); setModal(false); };
 return (
-React.createElement(‘div’, { className: “space-y-4”,}
-, React.createElement(‘div’, { className: “flex justify-between items-center”  ,}
-, React.createElement(‘div’, null, React.createElement(‘h3’, { className: “font-bold text-slate-800” ,}, “Técnicos”), React.createElement(‘p’, { className: “text-xs text-slate-400” ,}, “Personal habilitado para calibraciones”   ))
-, React.createElement(Btn, { onClick: ()=>{setEditing(null);setForm({…blank,id:uid()});setModal(true);}, icon: “➕”, size: “sm”,}, “Nuevo técnico” )
+React.createElement('div’, { className: "space-y-4”,}
+, React.createElement('div’, { className: "flex justify-between items-center”  ,}
+, React.createElement('div’, null, React.createElement('h3’, { className: "font-bold text-slate-800” ,}, "Técnicos”), React.createElement('p’, { className: "text-xs text-slate-400” ,}, "Personal habilitado para calibraciones”   ))
+, React.createElement(Btn, { onClick: ()=>{setEditing(null);setForm({…blank,id:uid()});setModal(true);}, icon: "➕”, size: "sm”,}, "Nuevo técnico” )
 )
-, React.createElement(Card, null, React.createElement(Tbl, { cols: [{k:‘code’,l:‘Código’,bold:true},{k:‘name’,l:‘Nombre’,bold:true},{k:‘role’,l:‘Rol’},{k:‘qual’,l:‘Cualificación’},{k:‘email’,l:‘Email’}],
-rows: techs, onEdit: row=>{setEditing(row.id);setForm({…row});setModal(true);}, onDel: row=>setDel(row), empty: “Sin técnicos” ,} ))
-, React.createElement(Modal, { open: modal, onClose: ()=>setModal(false), title: editing?‘Editar técnico’:‘Nuevo técnico’,}
-, React.createElement(‘div’, { className: “grid grid-cols-2 gap-4”  ,}
-, React.createElement(Fld, { label: “Código”,}, React.createElement(Inp, { value: form.code, onChange: e=>F(‘code’,e.target.value), placeholder: “OP-001”,} ))
-, React.createElement(Fld, { label: “Nombre”,}, React.createElement(Inp, { value: form.name, onChange: e=>F(‘name’,e.target.value),} ))
-, React.createElement(‘div’, { className: “col-span-2”,}, React.createElement(Fld, { label: “Rol”,}, React.createElement(Inp, { value: form.role, onChange: e=>F(‘role’,e.target.value),} )))
-, React.createElement(Fld, { label: “Cualificación”,}, React.createElement(Inp, { value: form.qual, onChange: e=>F(‘qual’,e.target.value),} ))
-, React.createElement(Fld, { label: “Email”,}, React.createElement(Inp, { type: “email”, value: form.email, onChange: e=>F(‘email’,e.target.value),} ))
+, React.createElement(Card, null, React.createElement(Tbl, { cols: [{k:'code’,l:'Código’,bold:true},{k:'name’,l:'Nombre’,bold:true},{k:'role’,l:'Rol’},{k:'qual’,l:'Cualificación’},{k:'email’,l:'Email’}],
+rows: techs, onEdit: row=>{setEditing(row.id);setForm({…row});setModal(true);}, onDel: row=>setDel(row), empty: "Sin técnicos” ,} ))
+, React.createElement(Modal, { open: modal, onClose: ()=>setModal(false), title: editing?'Editar técnico’:'Nuevo técnico’,}
+, React.createElement('div’, { className: "grid grid-cols-2 gap-4”  ,}
+, React.createElement(Fld, { label: "Código”,}, React.createElement(Inp, { value: form.code, onChange: e=>F('code’,e.target.value), placeholder: "OP-001”,} ))
+, React.createElement(Fld, { label: "Nombre”,}, React.createElement(Inp, { value: form.name, onChange: e=>F('name’,e.target.value),} ))
+, React.createElement('div’, { className: "col-span-2”,}, React.createElement(Fld, { label: "Rol”,}, React.createElement(Inp, { value: form.role, onChange: e=>F('role’,e.target.value),} )))
+, React.createElement(Fld, { label: "Cualificación”,}, React.createElement(Inp, { value: form.qual, onChange: e=>F('qual’,e.target.value),} ))
+, React.createElement(Fld, { label: "Email”,}, React.createElement(Inp, { type: "email”, value: form.email, onChange: e=>F('email’,e.target.value),} ))
 )
-, React.createElement(‘div’, { className: “flex justify-end gap-2 mt-4 pt-4 border-t border-slate-100”      ,}
-, React.createElement(Btn, { variant: “ghost”, onClick: ()=>setModal(false),}, “Cancelar”)
-, React.createElement(Btn, { onClick: submit, icon: “💾”,}, editing?‘Guardar’:‘Crear’)
+, React.createElement('div’, { className: "flex justify-end gap-2 mt-4 pt-4 border-t border-slate-100”      ,}
+, React.createElement(Btn, { variant: "ghost”, onClick: ()=>setModal(false),}, "Cancelar”)
+, React.createElement(Btn, { onClick: submit, icon: "💾”,}, editing?'Guardar’:'Crear’)
 )
 )
 , React.createElement(Confirm, { open: !!del, msg: `¿Eliminar técnico "${_optionalChain([del, 'optionalAccess', _51 => _51.name])}"?`, onOk: ()=>{save(techs.filter(t=>t.id!==del.id));setDel(null);}, onCancel: ()=>setDel(null),} )
@@ -1478,8 +1478,8 @@ function ThreadsConfig() {
 const [filter, setFilter] = useState(’’);
 const [stdFilter, setStdFilter] = useState(’’);
 const [modal, setModal] = useState(false);
-const [customThreads, setCustomThreads] = useState(() => DB.get(‘customThreads’) || []);
-const blank = { id:uid(), std:‘CUSTOM’, name:’’, d:’’, p:’’, d2:’’, d1:’’, alpha:60, tolExt:’’, tolInt:’’, norm:’’ };
+const [customThreads, setCustomThreads] = useState(() => DB.get('customThreads’) || []);
+const blank = { id:uid(), std:'CUSTOM’, name:’’, d:’’, p:’’, d2:’’, d1:’’, alpha:60, tolExt:’’, tolInt:’’, norm:’’ };
 const [form, setForm] = useState(blank);
 const F = (k,v) => setForm(f=>({…f,[k]:v}));
 const allThreads = […THREADS, …customThreads];
@@ -1489,48 +1489,48 @@ const filtered = allThreads.filter(t =>
 );
 const submit = () => {
 const upd = […customThreads, form];
-DB.set(‘customThreads’, upd); setCustomThreads(upd); setModal(false);
+DB.set('customThreads’, upd); setCustomThreads(upd); setModal(false);
 };
-const stdColor = { M:‘blue’, UNC:‘teal’, UNF:‘teal’, BSW:‘amber’, BSF:‘amber’, Tr:‘purple’, ACME:‘red’, NPT:‘green’, BSPP:‘green’, BSPT:‘green’, CUSTOM:‘slate’ };
+const stdColor = { M:'blue’, UNC:'teal’, UNF:'teal’, BSW:'amber’, BSF:'amber’, Tr:'purple’, ACME:'red’, NPT:'green’, BSPP:'green’, BSPT:'green’, CUSTOM:'slate’ };
 return (
-React.createElement(‘div’, { className: “space-y-4”,}
-, React.createElement(‘div’, { className: “flex items-center justify-between”  ,}
-, React.createElement(‘div’, null, React.createElement(‘h3’, { className: “font-bold text-slate-800” ,}, “Base de datos de roscas”    ), React.createElement(‘p’, { className: “text-xs text-slate-400” ,}, THREADS.length, “ roscas precargadas · “    , customThreads.length, “ personalizadas” ))
-, React.createElement(Btn, { onClick: ()=>{setForm({…blank,id:uid()});setModal(true);}, icon: “➕”, size: “sm”,}, “Añadir rosca” )
+React.createElement('div’, { className: "space-y-4”,}
+, React.createElement('div’, { className: "flex items-center justify-between”  ,}
+, React.createElement('div’, null, React.createElement('h3’, { className: "font-bold text-slate-800” ,}, "Base de datos de roscas”    ), React.createElement('p’, { className: "text-xs text-slate-400” ,}, THREADS.length, " roscas precargadas · "    , customThreads.length, " personalizadas” ))
+, React.createElement(Btn, { onClick: ()=>{setForm({…blank,id:uid()});setModal(true);}, icon: "➕”, size: "sm”,}, "Añadir rosca” )
 )
-, React.createElement(‘div’, { className: “flex gap-3” ,}
-, React.createElement(‘input’, { className: “flex-1 text-sm px-3 py-2 rounded-lg border border-slate-200 bg-white focus:border-blue-400 outline-none”         , placeholder: “Buscar rosca…” , value: filter, onChange: e=>setFilter(e.target.value),} )
-, React.createElement(Sel, { value: stdFilter, onChange: e=>setStdFilter(e.target.value), className: “w-44”,}
-, React.createElement(‘option’, { value: “”,}, “Todas las normas”  )
-, THREAD_STANDARDS.filter(s=>s.id!==‘CUSTOM’).map(s=>React.createElement(‘option’, { key: s.id, value: s.id,}, s.label))
+, React.createElement('div’, { className: "flex gap-3” ,}
+, React.createElement('input’, { className: "flex-1 text-sm px-3 py-2 rounded-lg border border-slate-200 bg-white focus:border-blue-400 outline-none”         , placeholder: "Buscar rosca…” , value: filter, onChange: e=>setFilter(e.target.value),} )
+, React.createElement(Sel, { value: stdFilter, onChange: e=>setStdFilter(e.target.value), className: "w-44”,}
+, React.createElement('option’, { value: "”,}, "Todas las normas”  )
+, THREAD_STANDARDS.filter(s=>s.id!=='CUSTOM’).map(s=>React.createElement('option’, { key: s.id, value: s.id,}, s.label))
 )
 )
 , React.createElement(Card, null
 , React.createElement(Tbl, { cols: [
-{k:‘stdB’,l:‘Norma’},{k:‘name’,l:‘Designación’,bold:true},
-{k:‘d’,l:‘D [mm]’,mono:true},{k:‘p’,l:‘p [mm]’,mono:true},{k:‘d2’,l:‘d2 [mm]’,mono:true},
-{k:‘alpha’,l:‘α [°]’,mono:true},{k:‘tolExt’,l:‘Tol.Ext’,mono:true},{k:‘tolInt’,l:‘Tol.Int’,mono:true},
+{k:'stdB’,l:'Norma’},{k:'name’,l:'Designación’,bold:true},
+{k:'d’,l:'D [mm]’,mono:true},{k:'p’,l:'p [mm]’,mono:true},{k:'d2’,l:'d2 [mm]’,mono:true},
+{k:'alpha’,l:'α [°]’,mono:true},{k:'tolExt’,l:'Tol.Ext’,mono:true},{k:'tolInt’,l:'Tol.Int’,mono:true},
 ], rows: filtered.map(t=>({
 …t,
-stdB: React.createElement(Badge, { color: stdColor[t.std]||‘slate’,}, t.std),
+stdB: React.createElement(Badge, { color: stdColor[t.std]||'slate’,}, t.std),
 d: (+t.d).toFixed(3), p: (+t.p).toFixed(3), d2: (+t.d2).toFixed(4),
 _raw: t,
-})), empty: “Sin resultados” ,} )
+})), empty: "Sin resultados” ,} )
 )
-, React.createElement(Modal, { open: modal, onClose: ()=>setModal(false), title: “Nueva rosca personalizada”  ,}
-, React.createElement(‘div’, { className: “grid grid-cols-2 gap-4”  ,}
-, React.createElement(Fld, { label: “Designación”,}, React.createElement(Inp, { value: form.name, onChange: e=>F(‘name’,e.target.value), placeholder: “M14×1.5-CUSTOM”,} ))
-, React.createElement(Fld, { label: “Norma”,}, React.createElement(Inp, { value: form.norm, onChange: e=>F(‘norm’,e.target.value), placeholder: “ISO / DIN / ASME…”    ,} ))
-, React.createElement(Fld, { label: “D nominal” , unit: “mm”,}, React.createElement(Inp, { type: “number”, value: form.d, onChange: e=>F(‘d’,+e.target.value), step: “0.001”,} ))
-, React.createElement(Fld, { label: “Paso p” , unit: “mm”,}, React.createElement(Inp, { type: “number”, value: form.p, onChange: e=>F(‘p’,+e.target.value), step: “0.001”,} ))
-, React.createElement(Fld, { label: “d2 (paso)” , unit: “mm”,}, React.createElement(Inp, { type: “number”, value: form.d2, onChange: e=>F(‘d2’,+e.target.value), step: “0.0001”,} ))
-, React.createElement(Fld, { label: “d1 (menor)” , unit: “mm”,}, React.createElement(Inp, { type: “number”, value: form.d1, onChange: e=>F(‘d1’,+e.target.value), step: “0.0001”,} ))
-, React.createElement(Fld, { label: “Ángulo α” , unit: “°”,}, React.createElement(Inp, { type: “number”, value: form.alpha, onChange: e=>F(‘alpha’,+e.target.value), step: “0.5”,} ))
-, React.createElement(Fld, { label: “Tolerancia ext.” ,}, React.createElement(Inp, { value: form.tolExt, onChange: e=>F(‘tolExt’,e.target.value),} ))
+, React.createElement(Modal, { open: modal, onClose: ()=>setModal(false), title: "Nueva rosca personalizada”  ,}
+, React.createElement('div’, { className: "grid grid-cols-2 gap-4”  ,}
+, React.createElement(Fld, { label: "Designación”,}, React.createElement(Inp, { value: form.name, onChange: e=>F('name’,e.target.value), placeholder: "M14×1.5-CUSTOM”,} ))
+, React.createElement(Fld, { label: "Norma”,}, React.createElement(Inp, { value: form.norm, onChange: e=>F('norm’,e.target.value), placeholder: "ISO / DIN / ASME…”    ,} ))
+, React.createElement(Fld, { label: "D nominal” , unit: "mm”,}, React.createElement(Inp, { type: "number”, value: form.d, onChange: e=>F('d’,+e.target.value), step: "0.001”,} ))
+, React.createElement(Fld, { label: "Paso p” , unit: "mm”,}, React.createElement(Inp, { type: "number”, value: form.p, onChange: e=>F('p’,+e.target.value), step: "0.001”,} ))
+, React.createElement(Fld, { label: "d2 (paso)” , unit: "mm”,}, React.createElement(Inp, { type: "number”, value: form.d2, onChange: e=>F('d2’,+e.target.value), step: "0.0001”,} ))
+, React.createElement(Fld, { label: "d1 (menor)” , unit: "mm”,}, React.createElement(Inp, { type: "number”, value: form.d1, onChange: e=>F('d1’,+e.target.value), step: "0.0001”,} ))
+, React.createElement(Fld, { label: "Ángulo α” , unit: "°”,}, React.createElement(Inp, { type: "number”, value: form.alpha, onChange: e=>F('alpha’,+e.target.value), step: "0.5”,} ))
+, React.createElement(Fld, { label: "Tolerancia ext.” ,}, React.createElement(Inp, { value: form.tolExt, onChange: e=>F('tolExt’,e.target.value),} ))
 )
-, React.createElement(‘div’, { className: “flex justify-end gap-2 mt-4 pt-4 border-t border-slate-100”      ,}
-, React.createElement(Btn, { variant: “ghost”, onClick: ()=>setModal(false),}, “Cancelar”)
-, React.createElement(Btn, { onClick: submit, icon: “💾”,}, “Añadir rosca” )
+, React.createElement('div’, { className: "flex justify-end gap-2 mt-4 pt-4 border-t border-slate-100”      ,}
+, React.createElement(Btn, { variant: "ghost”, onClick: ()=>setModal(false),}, "Cancelar”)
+, React.createElement(Btn, { onClick: submit, icon: "💾”,}, "Añadir rosca” )
 )
 )
 )
@@ -1538,48 +1538,48 @@ _raw: t,
 }
 
 function WiresConfig() {
-const [userWires, setUserWires] = useState(() => DB.get(‘userWires’) || []);
+const [userWires, setUserWires] = useState(() => DB.get('userWires’) || []);
 const [modal, setModal] = useState(false);
 const [editing, setEditing] = useState(null);
 const blank = { id:uid(), code:’’, diam:’’, uW:0.0002, cert:’’, certExpiry:’’, pMin:’’, pMax:’’, note:’’ };
 const [form, setForm] = useState(blank);
 const allWires = […WIRES, …userWires];
-const save = (w) => { DB.set(‘userWires’, w); setUserWires(w); };
+const save = (w) => { DB.set('userWires’, w); setUserWires(w); };
 const F = (k,v) => setForm(f=>({…f,[k]:v}));
 const submit = () => {
 const upd = editing ? userWires.map(w=>w.id===editing?form:w) : […userWires,form];
 save(upd); setModal(false);
 };
 return (
-React.createElement(‘div’, { className: “space-y-4”,}
-, React.createElement(‘div’, { className: “flex items-center justify-between”  ,}
-, React.createElement(‘div’, null, React.createElement(‘h3’, { className: “font-bold text-slate-800” ,}, “Hilos de medición”  ), React.createElement(‘p’, { className: “text-xs text-slate-400” ,}, WIRES.length, “ hilos ISO estándar precargados · “      , userWires.length, “ personalizados” ))
-, React.createElement(Btn, { onClick: ()=>{setEditing(null);setForm({…blank,id:uid()});setModal(true);}, icon: “➕”, size: “sm”,}, “Añadir hilo” )
+React.createElement('div’, { className: "space-y-4”,}
+, React.createElement('div’, { className: "flex items-center justify-between”  ,}
+, React.createElement('div’, null, React.createElement('h3’, { className: "font-bold text-slate-800” ,}, "Hilos de medición”  ), React.createElement('p’, { className: "text-xs text-slate-400” ,}, WIRES.length, " hilos ISO estándar precargados · "      , userWires.length, " personalizados” ))
+, React.createElement(Btn, { onClick: ()=>{setEditing(null);setForm({…blank,id:uid()});setModal(true);}, icon: "➕”, size: "sm”,}, "Añadir hilo” )
 )
 , React.createElement(Card, null
 , React.createElement(Tbl, { cols: [
-{k:‘code’,l:‘Código’,bold:true},{k:‘diam’,l:‘W [mm]’,mono:true},
-{k:‘uW’,l:‘u(W) k=1’,mono:true},{k:‘cert’,l:‘Certificado’},
-{k:‘pMin’,l:‘p mín’,mono:true},{k:‘pMax’,l:‘p máx’,mono:true},{k:‘note’,l:‘Aplicación’},
+{k:'code’,l:'Código’,bold:true},{k:'diam’,l:'W [mm]’,mono:true},
+{k:'uW’,l:'u(W) k=1’,mono:true},{k:'cert’,l:'Certificado’},
+{k:'pMin’,l:'p mín’,mono:true},{k:'pMax’,l:'p máx’,mono:true},{k:'note’,l:'Aplicación’},
 ], rows: allWires.map(w=>({…w,diam:w.diam.toFixed(5)})),
 onEdit: row=>{const w=userWires.find(x=>x.code===row.code);if(w){setEditing(w.id);setForm({…w});setModal(true);}},
 onDel: row=>{const w=userWires.find(x=>x.code===row.code);if(w)save(userWires.filter(x=>x.id!==w.id));},
-empty: “Sin hilos” ,} )
+empty: "Sin hilos” ,} )
 )
-, React.createElement(Modal, { open: modal, onClose: ()=>setModal(false), title: editing?‘Editar hilo’:‘Nuevo hilo’, wide: true,}
-, React.createElement(‘div’, { className: “grid grid-cols-3 gap-4”  ,}
-, React.createElement(Fld, { label: “Código”,}, React.createElement(Inp, { value: form.code, onChange: e=>F(‘code’,e.target.value), placeholder: “W-0.866”,} ))
-, React.createElement(Fld, { label: “Diámetro W” , unit: “mm”,}, React.createElement(Inp, { type: “number”, value: form.diam, onChange: e=>F(‘diam’,+e.target.value), step: “0.00001”,} ))
-, React.createElement(Fld, { label: “u(W) k=1” , unit: “mm”,}, React.createElement(Inp, { type: “number”, value: form.uW, onChange: e=>F(‘uW’,+e.target.value), step: “0.00001”,} ))
-, React.createElement(Fld, { label: “Certificado”,}, React.createElement(Inp, { value: form.cert, onChange: e=>F(‘cert’,e.target.value),} ))
-, React.createElement(Fld, { label: “Válido hasta” ,}, React.createElement(Inp, { type: “date”, value: form.certExpiry, onChange: e=>F(‘certExpiry’,e.target.value),} ))
-, React.createElement(Fld, { label: “p mín” , unit: “mm”,}, React.createElement(Inp, { type: “number”, value: form.pMin, onChange: e=>F(‘pMin’,+e.target.value), step: “0.01”,} ))
-, React.createElement(Fld, { label: “p máx” , unit: “mm”,}, React.createElement(Inp, { type: “number”, value: form.pMax, onChange: e=>F(‘pMax’,+e.target.value), step: “0.01”,} ))
-, React.createElement(‘div’, { className: “col-span-3”,}, React.createElement(Fld, { label: “Nota / aplicación”  ,}, React.createElement(Inp, { value: form.note, onChange: e=>F(‘note’,e.target.value),} )))
+, React.createElement(Modal, { open: modal, onClose: ()=>setModal(false), title: editing?'Editar hilo’:'Nuevo hilo’, wide: true,}
+, React.createElement('div’, { className: "grid grid-cols-3 gap-4”  ,}
+, React.createElement(Fld, { label: "Código”,}, React.createElement(Inp, { value: form.code, onChange: e=>F('code’,e.target.value), placeholder: "W-0.866”,} ))
+, React.createElement(Fld, { label: "Diámetro W” , unit: "mm”,}, React.createElement(Inp, { type: "number”, value: form.diam, onChange: e=>F('diam’,+e.target.value), step: "0.00001”,} ))
+, React.createElement(Fld, { label: "u(W) k=1” , unit: "mm”,}, React.createElement(Inp, { type: "number”, value: form.uW, onChange: e=>F('uW’,+e.target.value), step: "0.00001”,} ))
+, React.createElement(Fld, { label: "Certificado”,}, React.createElement(Inp, { value: form.cert, onChange: e=>F('cert’,e.target.value),} ))
+, React.createElement(Fld, { label: "Válido hasta” ,}, React.createElement(Inp, { type: "date”, value: form.certExpiry, onChange: e=>F('certExpiry’,e.target.value),} ))
+, React.createElement(Fld, { label: "p mín” , unit: "mm”,}, React.createElement(Inp, { type: "number”, value: form.pMin, onChange: e=>F('pMin’,+e.target.value), step: "0.01”,} ))
+, React.createElement(Fld, { label: "p máx” , unit: "mm”,}, React.createElement(Inp, { type: "number”, value: form.pMax, onChange: e=>F('pMax’,+e.target.value), step: "0.01”,} ))
+, React.createElement('div’, { className: "col-span-3”,}, React.createElement(Fld, { label: "Nota / aplicación”  ,}, React.createElement(Inp, { value: form.note, onChange: e=>F('note’,e.target.value),} )))
 )
-, React.createElement(‘div’, { className: “flex justify-end gap-2 mt-4 pt-4 border-t border-slate-100”      ,}
-, React.createElement(Btn, { variant: “ghost”, onClick: ()=>setModal(false),}, “Cancelar”)
-, React.createElement(Btn, { onClick: submit, icon: “💾”,}, editing?‘Guardar’:‘Añadir hilo’)
+, React.createElement('div’, { className: "flex justify-end gap-2 mt-4 pt-4 border-t border-slate-100”      ,}
+, React.createElement(Btn, { variant: "ghost”, onClick: ()=>setModal(false),}, "Cancelar”)
+, React.createElement(Btn, { onClick: submit, icon: "💾”,}, editing?'Guardar’:'Añadir hilo’)
 )
 )
 )
@@ -1588,52 +1588,52 @@ empty: “Sin hilos” ,} )
 
 function FormulasInfo() {
 const sections = [
-{ title:‘EURAMET cg-10 — Tres Hilos’, color:’#2563eb’, items:[
-{ f:‘E = M − W·(1 + 1/sin(α/2)) + p / (2·tan(α/2))’, d:‘Diámetro de paso a partir de la lectura del banco. M=lectura, W=diám. hilo, α=ángulo flanco, p=paso.’ },
-{ f:‘Para α=60° (ISO): E = M − 3·W + 0.86603·p’, d:‘Simplificación directa para roscas Métricas ISO.’ },
-{ f:‘W_opt = p / (2·cos(α/2))’, d:‘Hilo óptimo. Para α=60°: W = p/√3 ≈ 0.5774·p’ },
-{ f:‘0.56·p ≤ W ≤ 0.90·p’, d:‘Rango válido de hilos para contacto correcto en el flanco.’ },
+{ title:'EURAMET cg-10 — Tres Hilos’, color:’#2563eb’, items:[
+{ f:'E = M − W·(1 + 1/sin(α/2)) + p / (2·tan(α/2))’, d:'Diámetro de paso a partir de la lectura del banco. M=lectura, W=diám. hilo, α=ángulo flanco, p=paso.’ },
+{ f:'Para α=60° (ISO): E = M − 3·W + 0.86603·p’, d:'Simplificación directa para roscas Métricas ISO.’ },
+{ f:'W_opt = p / (2·cos(α/2))’, d:'Hilo óptimo. Para α=60°: W = p/√3 ≈ 0.5774·p’ },
+{ f:'0.56·p ≤ W ≤ 0.90·p’, d:'Rango válido de hilos para contacto correcto en el flanco.’ },
 ]},
-{ title:‘Corrección Térmica — ISO 1:2016’, color:’#d97706’, items:[
-{ f:‘ΔM = −M · α_th · (T − 20°C)’, d:‘T_ref = 20 °C. α_th = coef. dilatación material (K⁻¹).’ },
-{ f:‘M_th = M + ΔM’, d:‘M corregida por temperatura antes de aplicar Hertz.’ },
+{ title:'Corrección Térmica — ISO 1:2016’, color:’#d97706’, items:[
+{ f:'ΔM = −M · α_th · (T − 20°C)’, d:'T_ref = 20 °C. α_th = coef. dilatación material (K⁻¹).’ },
+{ f:'M_th = M + ΔM’, d:'M corregida por temperatura antes de aplicar Hertz.’ },
 ]},
-{ title:‘Corrección de Hertz’, color:’#0d9488’, items:[
-{ f:‘δ_H = 2·[3F/(4E*)]^(2/3)·(1/R)^(1/3)’, d:‘F=fuerza(N), R=radio hilo(m), E*=módulo reducido(Pa).’ },
-{ f:‘E* = E_mat / (2·(1−ν²))’, d:‘Módulo reducido de contacto elástico.’ },
-{ f:‘M_c = M_th − δ_H’, d:‘Lectura final corregida térmica y elásticamente.’ },
+{ title:'Corrección de Hertz’, color:’#0d9488’, items:[
+{ f:'δ_H = 2·[3F/(4E*)]^(2/3)·(1/R)^(1/3)’, d:'F=fuerza(N), R=radio hilo(m), E*=módulo reducido(Pa).’ },
+{ f:'E* = E_mat / (2·(1−ν²))’, d:'Módulo reducido de contacto elástico.’ },
+{ f:'M_c = M_th − δ_H’, d:'Lectura final corregida térmica y elásticamente.’ },
 ]},
-{ title:‘GUM — JCGM 100:2008’, color:’#7c3aed’, items:[
-{ f:‘u_A1 = s/√n’, d:‘Tipo A. s=desv.est. lecturas E, n=número de lecturas.’ },
-{ f:‘u_A2 = |Ē_0° − Ē_90°|/√2’, d:‘Tipo A. Variación entre planos de medición.’ },
-{ f:‘u_B1 = U_cal/k_cal’, d:‘Tipo B. Incertidumbre certificado banco (k_cal=2).’ },
-{ f:‘u_B2 = r/(2√3)’, d:‘Tipo B. Resolución encoder. Distribución rectangular.’ },
-{ f:‘u_B3 = |c_W|·u(W), c_W = −(1+1/sin(α/2))’, d:‘Tipo B. Sensibilidad al diámetro del hilo.’ },
-{ f:‘u_c = √[Σ(u_i)²]’, d:‘Incertidumbre combinada. Propagación cuadrática.’ },
-{ f:‘ν_eff = u_c⁴ / Σ[u_i⁴/ν_i]’, d:‘Welch-Satterthwaite. Grados de libertad efectivos.’ },
-{ f:‘U = k·u_c  (k ≈ 2.00 para ν_eff ≥ 30)’, d:‘Incertidumbre expandida al 95.45%.’ },
+{ title:'GUM — JCGM 100:2008’, color:’#7c3aed’, items:[
+{ f:'u_A1 = s/√n’, d:'Tipo A. s=desv.est. lecturas E, n=número de lecturas.’ },
+{ f:'u_A2 = |Ē_0° − Ē_90°|/√2’, d:'Tipo A. Variación entre planos de medición.’ },
+{ f:'u_B1 = U_cal/k_cal’, d:'Tipo B. Incertidumbre certificado banco (k_cal=2).’ },
+{ f:'u_B2 = r/(2√3)’, d:'Tipo B. Resolución encoder. Distribución rectangular.’ },
+{ f:'u_B3 = |c_W|·u(W), c_W = −(1+1/sin(α/2))’, d:'Tipo B. Sensibilidad al diámetro del hilo.’ },
+{ f:'u_c = √[Σ(u_i)²]’, d:'Incertidumbre combinada. Propagación cuadrática.’ },
+{ f:'ν_eff = u_c⁴ / Σ[u_i⁴/ν_i]’, d:'Welch-Satterthwaite. Grados de libertad efectivos.’ },
+{ f:'U = k·u_c  (k ≈ 2.00 para ν_eff ≥ 30)’, d:'Incertidumbre expandida al 95.45%.’ },
 ]},
-{ title:‘Conformidad — JCGM 106:2012’, color:’#059669’, items:[
-{ f:‘CONFORME: [Ē−U, Ē+U] ⊆ [T_inf, T_sup]’, d:‘Intervalo completo dentro de tolerancia.’ },
-{ f:‘NO CONFORME: Ē ∉ [T_inf, T_sup]’, d:‘Valor nominal fuera de tolerancia.’ },
-{ f:‘INDETERMINADO: Ē ∈ T pero intervalo solapa frontera’, d:‘Requiere análisis adicional (JCGM 106 §6).’ },
+{ title:'Conformidad — JCGM 106:2012’, color:’#059669’, items:[
+{ f:'CONFORME: [Ē−U, Ē+U] ⊆ [T_inf, T_sup]’, d:'Intervalo completo dentro de tolerancia.’ },
+{ f:'NO CONFORME: Ē ∉ [T_inf, T_sup]’, d:'Valor nominal fuera de tolerancia.’ },
+{ f:'INDETERMINADO: Ē ∈ T pero intervalo solapa frontera’, d:'Requiere análisis adicional (JCGM 106 §6).’ },
 ]},
 ];
 return (
-React.createElement(‘div’, { className: “space-y-4 max-w-3xl” ,}
-, React.createElement(‘div’, { className: “bg-emerald-50 border border-emerald-100 rounded-xl p-4 text-sm text-emerald-800”      ,}
-, React.createElement(‘strong’, null, “Conformidad normativa:” ), “ EURAMET cg-10 · JCGM 100:2008 (GUM) · ISO 1:2016 · ISO/IEC 17025:2017 · JCGM 106:2012”
+React.createElement('div’, { className: "space-y-4 max-w-3xl” ,}
+, React.createElement('div’, { className: "bg-emerald-50 border border-emerald-100 rounded-xl p-4 text-sm text-emerald-800”      ,}
+, React.createElement('strong’, null, "Conformidad normativa:” ), " EURAMET cg-10 · JCGM 100:2008 (GUM) · ISO 1:2016 · ISO/IEC 17025:2017 · JCGM 106:2012”
 )
 , sections.map(sec => (
 React.createElement(Card, { key: sec.title,}
-, React.createElement(Hdg, { icon: “📐”, title: sec.title,} )
-, React.createElement(‘div’, { className: “divide-y divide-slate-50” ,}
+, React.createElement(Hdg, { icon: "📐”, title: sec.title,} )
+, React.createElement('div’, { className: "divide-y divide-slate-50” ,}
 , sec.items.map((item, i) => (
-React.createElement(‘div’, { key: i, className: “p-4”,}
-, React.createElement(‘div’, { className: “font-mono text-sm rounded-lg px-4 py-3 mb-2 overflow-x-auto whitespace-nowrap”       , style: { background:’#0f172a’, color:’#34d399’ },}
+React.createElement('div’, { key: i, className: "p-4”,}
+, React.createElement('div’, { className: "font-mono text-sm rounded-lg px-4 py-3 mb-2 overflow-x-auto whitespace-nowrap”       , style: { background:’#0f172a’, color:’#34d399’ },}
 , item.f
 )
-, item.d && React.createElement(‘p’, { className: “text-xs text-slate-500” ,}, item.d)
+, item.d && React.createElement('p’, { className: "text-xs text-slate-500” ,}, item.d)
 )
 ))
 )
@@ -1647,24 +1647,24 @@ React.createElement(‘div’, { key: i, className: “p-4”,}
 // APP ROOT
 // ═══════════════════════════════════════════════════════════
 const NAV = [
-{ id:‘clients’, label:‘Clientes’, icon:‘🏭’, sub:‘Equipos · Calibraciones’ },
-{ id:‘config’,  label:‘Configuración’, icon:‘⚙️’, sub:‘Bancos · Técnicos · Roscas · Hilos’ },
+{ id:'clients’, label:'Clientes’, icon:'🏭’, sub:'Equipos · Calibraciones’ },
+{ id:'config’,  label:'Configuración’, icon:'⚙️’, sub:'Bancos · Técnicos · Roscas · Hilos’ },
 ];
 
 const AppMain = function App() {
-const [section, setSection] = useState(‘clients’);
-const cfg = DB.get(‘config’) || {};
+const [section, setSection] = useState('clients’);
+const cfg = DB.get('config’) || {};
 
 return (
-React.createElement(‘div’, { className: “min-h-screen bg-slate-50 flex”  , style: { fontFamily: “‘system-ui’, sans-serif” },}
+React.createElement('div’, { className: "min-h-screen bg-slate-50 flex”  , style: { fontFamily: "'system-ui’, sans-serif” },}
 /* SIDEBAR */
-, React.createElement(‘aside’, { className: “w-52 bg-white border-r border-slate-200 flex flex-col flex-shrink-0 shadow-sm”       ,}
+, React.createElement('aside’, { className: "w-52 bg-white border-r border-slate-200 flex flex-col flex-shrink-0 shadow-sm”       ,}
 /* Brand */
-, React.createElement(‘div’, { className: “px-4 py-5 border-b border-slate-100”   ,}
-, React.createElement(‘div’, { className: “flex items-center gap-2.5”  ,}
+, React.createElement('div’, { className: "px-4 py-5 border-b border-slate-100”   ,}
+, React.createElement('div’, { className: "flex items-center gap-2.5”  ,}
 , cfg.logoData
-? React.createElement(‘img’, { src: cfg.logoData, alt: “Logo”, className: “h-8 w-8 object-contain rounded-lg”   ,} )
-: React.createElement(‘div’, { className: “w-9 h-9 rounded-xl flex items-center justify-center text-white font-black text-sm shadow-sm”         , style: { background: ‘linear-gradient(135deg,#2563eb,#0d9488)’ },}, “TC”)
+? React.createElement('img’, { src: cfg.logoData, alt: "Logo”, className: "h-8 w-8 object-contain rounded-lg”   ,} )
+: React.createElement('div’, { className: "w-9 h-9 rounded-xl flex items-center justify-center text-white font-black text-sm shadow-sm”         , style: { background: 'linear-gradient(135deg,#2563eb,#0d9488)’ },}, "TC”)
 
         , React.createElement('div', null
           , React.createElement('div', { className: "font-black text-slate-900 text-sm tracking-tight"   ,}, "ThreadCal")
@@ -1711,7 +1711,7 @@ React.createElement(‘div’, { className: “min-h-screen bg-slate-50 flex” 
 }
 
 // Mount
-const _root = ReactDOM.createRoot(document.getElementById(‘root’));
+const _root = ReactDOM.createRoot(document.getElementById('root’));
 _root.render(React.createElement(AppMain));
 </script>
 
